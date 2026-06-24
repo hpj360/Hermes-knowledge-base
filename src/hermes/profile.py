@@ -70,11 +70,13 @@ def get_profile_markdown() -> str:
 
     _render_basic(lines, p)
     _render_pets(lines, p)
-    _render_career(lines, p)
     _render_contact(lines, p)
+    _render_social_accounts(lines, p)
+    _render_career(lines, p)
     _render_skills(lines, p)
+    _render_alcohol(lines, p)
     _render_interests(lines, p)
-    _render_content_plans(lines, p)
+    _render_content(lines, p)
     _render_work_style(lines, p)
     _render_projects(lines, p)
     _render_goals(lines, p)
@@ -103,6 +105,8 @@ def _render_basic(lines: list[str], p: dict[str, Any]) -> None:
     lines.append(f"- **年龄段**: {basic.get('age_range') or '未设置'}")
     lines.append(f"- **MBTI**: {basic.get('mbti') or '未设置'}")
     lines.append(f"- **所在地**: {basic.get('location') or '未设置'}")
+    if basic.get("city_district"):
+        lines.append(f"- **常用活动区域**: {basic['city_district']}")
     lines.append(f"- **就业状态**: {basic.get('employment_status') or '未设置'}")
     lines.append(f"- **时区**: {basic.get('timezone') or 'Asia/Shanghai'}")
     lines.append(f"- **职业**: {basic.get('occupation') or '未设置'}")
@@ -151,9 +155,33 @@ def _render_contact(lines: list[str], p: dict[str, Any]) -> None:
     if basic.get("phone"):
         lines.append(f"- **电话**: {basic['phone']}")
     lines.append(f"- **Email**: {contact.get('email') or '未设置'}")
+    if contact.get("wechat"):
+        lines.append(f"- **微信**: {contact['wechat']}")
     lines.append(f"- **GitHub**: {contact.get('github') or '未设置'}")
     blog_or_site = contact.get("blog") or contact.get("website")
     lines.append(f"- **博客/网站**: {blog_or_site or '未设置'}")
+    lines.append("")
+
+
+def _render_social_accounts(lines: list[str], p: dict[str, Any]) -> None:
+    accounts = p.get("social_accounts", {})
+    if not accounts:
+        return
+    lines.append("## 自媒体账号矩阵")
+    lines.append("")
+    for key, acc in accounts.items():
+        if not isinstance(acc, dict):
+            continue
+        platform = acc.get("platform", key)
+        acc_id = acc.get("id") or "未设置"
+        fans = acc.get("fans") or "未统计"
+        status = acc.get("status") or ""
+        line = f"- **{platform}**: `{acc_id}`"
+        if fans and fans != "未统计":
+            line += f"  · 粉丝：{fans}"
+        if status:
+            line += f"  · {status}"
+        lines.append(line)
     lines.append("")
 
 
@@ -216,15 +244,61 @@ def _render_career(lines: list[str], p: dict[str, Any]) -> None:
         lines.append("")
 
 
+def _render_alcohol(lines: list[str], p: dict[str, Any]) -> None:
+    alcohol = p.get("alcohol_preferences")
+    if not alcohol:
+        return
+    lines.append("## 酒类偏好 🍸")
+    lines.append("")
+    if alcohol.get("identity"):
+        lines.append(f"> {alcohol['identity']}")
+        lines.append("")
+
+    cb = alcohol.get("craft_beer_ranking", [])
+    if cb:
+        lines.append(f"- **精酿偏好排名**: {' > '.join(cb)}")
+
+    wk = alcohol.get("whiskey_preference", {})
+    if wk:
+        wk_rank = wk.get("ranking", [])
+        if wk_rank:
+            lines.append(f"- **威士忌偏好**: {' > '.join(wk_rank)}")
+        fav_dist = wk.get("favorite_distilleries", [])
+        fav_bot = wk.get("favorite_bottles", [])
+        if fav_dist:
+            lines.append(f"  - 喜欢酒厂: {_join(fav_dist)}")
+        if fav_bot:
+            lines.append(f"  - 喜欢款: {_join(fav_bot)}")
+
+    ct = alcohol.get("cocktail", {})
+    if ct:
+        ct_style = ct.get("style")
+        home_bar = ct.get("home_bar")
+        ct_note = ct.get("note", "")
+        if ct_style:
+            home_marker = "（家里有调酒原料🏠）" if home_bar else ""
+            lines.append(f"- **鸡尾酒**: {ct_style}{home_marker}")
+            if ct_note:
+                lines.append(f"  - {ct_note}")
+
+    gin = alcohol.get("gin", {})
+    if gin:
+        gin_pref = gin.get("preference")
+        gin_brands = gin.get("favorite_brands", [])
+        if gin_pref:
+            lines.append(f"- **金酒**: {gin_pref}")
+        if gin_brands:
+            lines.append(f"  - 喜欢品牌: {_join(gin_brands)}")
+
+    lines.append("")
+
+
 def _render_interests(lines: list[str], p: dict[str, Any]) -> None:
     interests = p.get("interests", {})
     lines.append("## 兴趣爱好")
     lines.append("")
     lines.append(f"- **技术兴趣**: {_join(interests.get('tech_interests', []))}")
     lines.append(f"- **日常爱好**: {_join(interests.get('hobbies', []))}")
-
-    if interests.get("alcohol"):
-        lines.append(f"- **酒类偏好**: {_join(interests['alcohol'])}（酒类爱好者）")
 
     food = interests.get("food")
     if food and isinstance(food, dict):
@@ -245,7 +319,20 @@ def _render_interests(lines: list[str], p: dict[str, Any]) -> None:
         equip = _join(photo.get("equipment", []))
         lines.append(f"- **摄影**: 拍{subj}（设备：{equip}）")
 
-    lines.append(f"- **运动**: {_join(interests.get('sports', []))}")
+    fitness = interests.get("fitness")
+    if fitness and isinstance(fitness, dict):
+        goal = fitness.get("goal")
+        freq = fitness.get("frequency")
+        parts = []
+        if goal:
+            parts.append(f"目标：{goal}")
+        if freq:
+            parts.append(freq)
+        lines.append(f"- **健身**: {'，'.join(parts)}")
+
+    ski = interests.get("ski_resorts")
+    if ski:
+        lines.append(f"- **滑雪常去**: {_join(ski)}")
 
     sk = interests.get("script_kill")
     if sk and isinstance(sk, dict):
@@ -276,16 +363,27 @@ def _render_interests(lines: list[str], p: dict[str, Any]) -> None:
     lines.append("")
 
 
-def _render_content_plans(lines: list[str], p: dict[str, Any]) -> None:
-    cp = p.get("content_plans")
-    if not cp:
+def _render_content(lines: list[str], p: dict[str, Any]) -> None:
+    cc = p.get("content_creation") or p.get("content_plans")
+    if not cc:
         return
     lines.append("## 内容创业计划 🚀")
     lines.append("")
-    lines.append(f"- **状态**: {cp.get('status') or '未设置'}")
-    lines.append(f"- **方向**: {_join(cp.get('directions', []))}")
-    lines.append(f"- **平台**: {_join(cp.get('platforms', []))}")
-    roles = cp.get("hermes_roles", [])
+    lines.append(f"- **状态**: {cc.get('status') or '未设置'}")
+    styles = cc.get("video_styles")
+    if styles:
+        lines.append(f"- **视频形式**: {_join(styles)}")
+    freq = cc.get("update_frequency")
+    if freq:
+        lines.append(f"- **更新节奏**: {freq}")
+    lines.append(f"- **方向**: {_join(cc.get('directions', []))}")
+    lines.append(f"- **平台**: {_join(cc.get('platforms', []))}")
+    priority = cc.get("hermes_priority_tasks", [])
+    if priority:
+        lines.append("- **Hermes 三步落地方案**:")
+        for t in priority:
+            lines.append(f"  - {t}")
+    roles = cc.get("hermes_roles", [])
     if roles:
         lines.append(f"- **Hermes 协作角色**: {_join(roles)}")
     lines.append("")
@@ -336,7 +434,7 @@ def _render_notes(lines: list[str], p: dict[str, Any]) -> None:
 
 def _default_profile() -> dict[str, Any]:
     return {
-        "version": 3,
+        "version": 4,
         "updated_at": None,
         "basic_info": {
             "name": None,
@@ -344,6 +442,7 @@ def _default_profile() -> dict[str, Any]:
             "gender": None,
             "age_range": None,
             "location": None,
+            "city_district": None,
             "timezone": "Asia/Shanghai",
             "occupation": None,
             "industry": None,
@@ -358,9 +457,11 @@ def _default_profile() -> dict[str, Any]:
         "contact": {
             "email": None,
             "github": "hpj360",
+            "wechat": None,
             "blog": None,
             "website": None,
         },
+        "social_accounts": {},
         "pets": [],
         "career": {
             "tags": [],
@@ -382,13 +483,23 @@ def _default_profile() -> dict[str, Any]:
             "languages_spoken": [],
             "skill_level": {},
         },
+        "alcohol_preferences": {
+            "craft_beer_ranking": [],
+            "whiskey_preference": {
+                "ranking": [],
+                "favorite_distilleries": [],
+                "favorite_bottles": [],
+            },
+            "cocktail": {"style": None, "home_bar": False, "note": None},
+            "gin": {"preference": None, "favorite_brands": []},
+            "identity": None,
+        },
         "interests": {
             "tech_interests": [],
             "hobbies": [],
             "reading": [],
             "music": [],
             "sports": [],
-            "alcohol": [],
             "film_directors": [],
             "film_genres": [],
             "food": {"preference": None, "signature_dishes": None, "style": None},
@@ -396,7 +507,18 @@ def _default_profile() -> dict[str, Any]:
             "script_kill": {"preferred_types": []},
             "theater": None,
             "investing": [],
+            "ski_resorts": [],
+            "fitness": {"goal": None, "frequency": None},
             "other_interests": [],
+        },
+        "content_creation": {
+            "status": None,
+            "video_styles": [],
+            "update_frequency": None,
+            "directions": [],
+            "platforms": [],
+            "hermes_priority_tasks": [],
+            "hermes_roles": [],
         },
         "work_style": {
             "preferred_language": "中文",
@@ -404,12 +526,6 @@ def _default_profile() -> dict[str, Any]:
             "work_habits": [],
             "communication_style": [],
             "tools_preferred": [],
-        },
-        "content_plans": {
-            "status": None,
-            "directions": [],
-            "platforms": [],
-            "hermes_roles": [],
         },
         "personal_projects": [],
         "goals": {
