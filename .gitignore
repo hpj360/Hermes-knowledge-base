@@ -62,6 +62,7 @@ logs/
 .state/
 .cache/
 .hermes_kb/
+.loops/
 
 # User profile (contains personal data, do not commit)
 data/profile.json
