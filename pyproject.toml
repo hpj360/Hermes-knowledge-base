@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hermes"
-version = "0.2.0"
-description = "Hermes - AI 原生知识库平台（酒类冷启动）"
+version = "0.3.0"
+description = "Hermes - AI 原生知识库平台 + Independent agent layer"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
