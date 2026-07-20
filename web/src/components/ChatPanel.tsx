@@ -5,6 +5,7 @@ import type { Citation, SSEEvent } from "../types";
 
 interface ChatPanelProps {
   refreshDocs: () => void;
+  onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
 }
 
 interface Message {
@@ -19,7 +20,7 @@ interface Message {
 }
 
 /** 问答面板（M1-03：SSE 流式生成）。 */
-export function ChatPanel({ refreshDocs }: ChatPanelProps) {
+export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -190,7 +191,7 @@ export function ChatPanel({ refreshDocs }: ChatPanelProps) {
                     )}
                   </p>
                   {m.citations && m.citations.length > 0 && (
-                    <CitationList citations={m.citations} />
+                    <CitationList citations={m.citations} onJumpToDoc={onJumpToDoc} />
                   )}
                   {m.latencyMs !== undefined && !m.streaming && (
                     <div className="text-xs text-gray-400 mt-2">

@@ -23,6 +23,7 @@ class Document(SQLModel, table=True):
     file_type: str = Field(default="txt", max_length=16)  # txt / md / pdf
     source_path: str | None = Field(default=None, max_length=512)
     chunk_count: int = Field(default=0)
+    category: str = Field(default="", max_length=32, index=True)  # M2-06：分类（单选）
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -35,6 +36,24 @@ class Chunk(SQLModel, table=True):
     text: str = Field(default="", sa_column=Column("text", Text))
     char_start: int = Field(default=0)
     char_end: int = Field(default=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class Tag(SQLModel, table=True):
+    """M2-06：标签。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True, max_length=32, unique=True)
+    color: str = Field(default="#6b7280", max_length=16)  # hex 颜色
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class DocumentTag(SQLModel, table=True):
+    """M2-06：文档-标签关联（多对多）。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    doc_id: str = Field(index=True, max_length=64)
+    tag_id: int = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -51,3 +70,15 @@ class QueryLog(SQLModel, table=True):
     latency_ms: int = Field(default=0)
     feedback: int = Field(default=0)  # 1=up / -1=down / 0=none
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
+# M2-06 预设分类
+PRESET_CATEGORIES = [
+    "烈酒",
+    "葡萄酒",
+    "啤酒",
+    "中国白酒",
+    "利口酒",
+    "资料",
+    "其他",
+]

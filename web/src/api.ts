@@ -1,12 +1,16 @@
 // Hermes KB API 客户端
 
 import type {
+  BatchImportResult,
+  CategoryInfo,
+  DocumentDetail,
   DocumentItem,
   HealthStatus,
   HistoryItem,
   RAGAnswer,
   SSEEvent,
   SeedResult,
+  TagInfo,
 } from "./types";
 
 const BASE = "";
@@ -55,14 +59,28 @@ export const api = {
   // -------------------------------------------------------------------------
   // 文档管理
   // -------------------------------------------------------------------------
-  async listDocuments(): Promise<{ total: number; items: DocumentItem[] }> {
-    return request("/api/documents");
+  async listDocuments(category?: string, tagId?: number): Promise<{ total: number; items: DocumentItem[] }> {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (tagId) params.set("tag_id", String(tagId));
+    const qs = params.toString();
+    return request(`/api/documents${qs ? "?" + qs : ""}`);
   },
 
-  async importText(title: string, content: string): Promise<{ doc_id: string; status: string }> {
+  async importText(
+    title: string,
+    content: string,
+    category?: string
+  ): Promise<{ doc_id: string; status: string }> {
     return request("/api/documents/import-text", {
       method: "POST",
-      body: JSON.stringify({ title, content, source_type: "local", file_type: "txt" }),
+      body: JSON.stringify({
+        title,
+        content,
+        source_type: "local",
+        file_type: "txt",
+        category: category || "",
+      }),
     });
   },
 
@@ -81,8 +99,79 @@ export const api = {
     return resp.json();
   },
 
+  async uploadBatch(files: File[]): Promise<BatchImportResult> {
+    const form = new FormData();
+    for (const f of files) form.append("files", f);
+    const resp = await fetch(`${BASE}/api/documents/upload-batch`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: form,
+    });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`批量上传失败: ${txt}`);
+    }
+    return resp.json();
+  },
+
   async deleteDocument(docId: string): Promise<{ status: string }> {
     return request(`/api/documents/${docId}`, { method: "DELETE" });
+  },
+
+  // M2-03：文档详情
+  async getDocument(docId: string): Promise<DocumentDetail> {
+    return request(`/api/documents/${docId}`);
+  },
+
+  async downloadDocumentRaw(docId: string): Promise<void> {
+    const resp = await fetch(`${BASE}/api/documents/${docId}/raw`, {
+      headers: authHeaders(),
+    });
+    if (!resp.ok) throw new Error(`下载失败: HTTP ${resp.status}`);
+    const blob = await resp.blob();
+    const cd = resp.headers.get("Content-Disposition") || "";
+    const m = cd.match(/filename="([^"]+)"/);
+    const filename = m ? m[1] : `${docId}.txt`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  // M2-06：元信息更新
+  async updateDocMetadata(
+    docId: string,
+    data: { title?: string; category?: string; tag_ids?: number[] }
+  ): Promise<{ status: string }> {
+    return request(`/api/documents/${docId}/metadata`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // M2-06：标签管理
+  async listTags(): Promise<{ total: number; items: TagInfo[] }> {
+    return request("/api/tags");
+  },
+
+  async createTag(name: string, color?: string): Promise<TagInfo> {
+    return request("/api/tags", {
+      method: "POST",
+      body: JSON.stringify({ name, color: color || "#6b7280" }),
+    });
+  },
+
+  async deleteTag(tagId: number): Promise<{ status: string }> {
+    return request(`/api/tags/${tagId}`, { method: "DELETE" });
+  },
+
+  // M2-06：分类列表
+  async listCategories(): Promise<{ total: number; items: CategoryInfo[] }> {
+    return request("/api/categories");
   },
 
   // -------------------------------------------------------------------------

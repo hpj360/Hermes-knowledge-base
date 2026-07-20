@@ -26,7 +26,57 @@ export interface DocumentItem {
   source_type: string;
   file_type: string;
   chunk_count: number;
+  category: string;
+  tags: TagInfo[];
   created_at: string | null;
+}
+
+export interface TagInfo {
+  id: number;
+  name: string;
+  color: string;
+  doc_count?: number;
+}
+
+export interface CategoryInfo {
+  name: string;
+  doc_count: number;
+}
+
+export interface ChunkInfo {
+  rowid: number;
+  idx: number;
+  text: string;
+  char_start: number;
+  char_end: number;
+}
+
+export interface DocumentDetail {
+  doc: {
+    doc_id: string;
+    title: string;
+    source_type: string;
+    file_type: string;
+    chunk_count: number;
+    category: string;
+    content_length: number;
+    created_at: string | null;
+  };
+  tags: TagInfo[];
+  chunks: ChunkInfo[];
+}
+
+export interface BatchImportResult {
+  total: number;
+  imported: number;
+  failed: number;
+  results: Array<{
+    filename: string;
+    status: "imported" | "failed";
+    doc_id?: string;
+    chunk_count?: number;
+    error?: string;
+  }>;
 }
 
 export interface HealthStatus {

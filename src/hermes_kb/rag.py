@@ -31,6 +31,7 @@ from hermes_kb.database import get_engine, get_session
 from hermes_kb.embedding import EmbeddingService
 from hermes_kb.llm import LLMClient
 from hermes_kb.models import QueryLog
+from hermes_kb.query_rewriter import QueryRewriter
 from hermes_kb.retrieval import HybridRetriever, RetrievalHit
 
 # ---------------------------------------------------------------------------
@@ -163,9 +164,18 @@ class RAGEngine:
         self,
         retriever: HybridRetriever | None = None,
         llm_client: LLMClient | None = None,
+        rewriter: QueryRewriter | None = None,
     ) -> None:
         self.retriever = retriever or HybridRetriever()
         self.llm_client = llm_client or LLMClient()
+        self.rewriter = rewriter or QueryRewriter(self.llm_client)
+
+    def _rewrite_query(self, query: str) -> str:
+        """M2-02：查询改写（失败降级原 query）。"""
+        try:
+            return self.rewriter.rewrite(query)
+        except Exception:
+            return query
 
     def answer(self, query: str, top_k: int | None = None) -> RAGAnswer:
         """端到端问答：检索 → 生成 → 引用。"""
@@ -186,7 +196,9 @@ class RAGEngine:
             self._log_query(result)
             return result
 
-        hits = self.retriever.retrieve(query, top_k=top_k)
+        # M2-02：查询改写（用于检索，原 query 仍传给 LLM）
+        retrieval_query = self._rewrite_query(query)
+        hits = self.retriever.retrieve(retrieval_query, top_k=top_k)
         citations = self._build_citations(hits)
 
         # M1-06：低置信度直接返回提示，不调用 LLM
@@ -255,7 +267,7 @@ class RAGEngine:
             ))
             return
 
-        hits = self.retriever.retrieve(query, top_k=top_k)
+        hits = self.retriever.retrieve(self._rewrite_query(query), top_k=top_k)
         citations = self._build_citations(hits)
 
         # M1-06：低置信度

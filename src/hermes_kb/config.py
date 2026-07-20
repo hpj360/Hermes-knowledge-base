@@ -81,6 +81,11 @@ class Settings:
     # 未成年保护（M1-08）
     age_gate_enabled: bool = field(default_factory=lambda: _env_bool("KB_AGE_GATE", True))
 
+    # 查询改写（M2-02）
+    query_rewrite_enabled: bool = field(default_factory=lambda: _env_bool("KB_QUERY_REWRITE", True))
+    # HyDE（M2-02 可选，默认关闭，W1 末评估后决定）
+    hyde_enabled: bool = field(default_factory=lambda: _env_bool("KB_HYDE", False))
+
     @property
     def llm_available(self) -> bool:
         """是否启用真实 LLM。"""

@@ -1,0 +1,50 @@
+{"id": "q001", "query": "金酒的核心风味是什么", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["杜松子", "松木", "柑橘"], "category": "金酒"}
+{"id": "q002", "query": "金酒起源于哪个国家", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["荷兰", "Genever"], "category": "金酒"}
+{"id": "q003", "query": "London Dry Gin 是什么风格", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["杜松子", "干爽", "经典"], "category": "金酒"}
+{"id": "q004", "query": "金酒的经典鸡尾酒有哪些", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["马天尼", "金汤力", "尼格罗尼"], "category": "金酒"}
+{"id": "q005", "query": "必富达和哥顿是什么品牌", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["必富达", "哥顿", "Beefeater", "Gordon"], "category": "金酒"}
+{"id": "q006", "query": "亨利爵士金酒有什么特色", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["黄瓜", "玫瑰", "Hendrick"], "category": "金酒"}
+{"id": "q007", "query": "金酒的酒精度一般是多少", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["35%", "55%"], "category": "金酒"}
+{"id": "q008", "query": "Genever 和 London Dry Gin 有什么区别", "expected_doc_title": "金酒（Gin）百科", "expected_keywords": ["荷兰", "麦芽", "谷物"], "category": "金酒"}
+{"id": "q009", "query": "威士忌的主要原料是什么", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["谷物", "大麦", "玉米"], "category": "威士忌"}
+{"id": "q010", "query": "苏格兰威士忌的法律陈酿要求", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["3 年", "橡木桶", "40%"], "category": "威士忌"}
+{"id": "q011", "query": "斯佩塞产区的威士忌特点", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["花果香", "轻盈", "麦卡伦"], "category": "威士忌"}
+{"id": "q012", "query": "艾雷岛威士忌的风味特征", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["泥煤", "烟熏", "海盐"], "category": "威士忌"}
+{"id": "q013", "query": "波本威士忌的原料要求", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["玉米", "51%", "新橡木桶"], "category": "威士忌"}
+{"id": "q014", "query": "日本威士忌的代表品牌", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["三得利", "山崎", "响"], "category": "威士忌"}
+{"id": "q015", "query": "单一麦芽威士忌的定义", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["单一酒厂", "麦芽", "壶式蒸馏"], "category": "威士忌"}
+{"id": "q016", "query": "调和威士忌是什么", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["麦芽", "谷物", "调和"], "category": "威士忌"}
+{"id": "q017", "query": "威士忌的高波饮法", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["苏打水", "Highball", "日式"], "category": "威士忌"}
+{"id": "q018", "query": "田纳西威士忌和波本的区别", "expected_doc_title": "威士忌 Whisky 百科", "expected_keywords": ["糖枫木炭", "过滤", "杰克丹尼"], "category": "威士忌"}
+{"id": "q019", "query": "葡萄酒按颜色如何分类", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["红", "白", "桃红"], "category": "葡萄酒"}
+{"id": "q020", "query": "赤霞珠葡萄的特点", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["波尔多", "单宁", "黑醋栗"], "category": "葡萄酒"}
+{"id": "q021", "query": "黑皮诺是哪个产区的主角", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["勃艮第", "优雅", "细腻"], "category": "葡萄酒"}
+{"id": "q022", "query": "雷司令葡萄的风味", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["花香", "矿物", "酸度"], "category": "葡萄酒"}
+{"id": "q023", "query": "香槟是什么类型的酒", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["起泡酒", "二氧化碳"], "category": "葡萄酒"}
+{"id": "q024", "query": "波特酒和雪莉酒属于什么类型", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["加强酒", "白兰地"], "category": "葡萄酒"}
+{"id": "q025", "query": "葡萄酒品鉴的 5S 步骤", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["看", "摇", "闻", "尝", "评"], "category": "葡萄酒"}
+{"id": "q026", "query": "霞多丽葡萄的风格特点", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["多变", "清瘦", "浓郁"], "category": "葡萄酒"}
+{"id": "q027", "query": "新西兰长相思的产区", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["马尔堡", "新西兰"], "category": "葡萄酒"}
+{"id": "q028", "query": "葡萄酒发酵浸渍的作用", "expected_doc_title": "葡萄酒 Wine 百科", "expected_keywords": ["色素", "单宁", "带皮"], "category": "葡萄酒"}
+{"id": "q029", "query": "中国白酒的香型有多少种", "expected_doc_title": "中国白酒百科", "expected_keywords": ["12", "香型"], "category": "白酒"}
+{"id": "q030", "query": "酱香型白酒的代表品牌", "expected_doc_title": "中国白酒百科", "expected_keywords": ["茅台", "郎酒", "习酒"], "category": "白酒"}
+{"id": "q031", "query": "浓香型白酒的特点", "expected_doc_title": "中国白酒百科", "expected_keywords": ["窖香", "绵甜", "五粮液"], "category": "白酒"}
+{"id": "q032", "query": "清香型白酒的代表", "expected_doc_title": "中国白酒百科", "expected_keywords": ["汾酒", "二锅头", "地缸"], "category": "白酒"}
+{"id": "q033", "query": "茅台酒的工艺特点", "expected_doc_title": "中国白酒百科", "expected_keywords": ["端午制曲", "重阳下沙", "9 次蒸煮", "7 次取酒"], "category": "白酒"}
+{"id": "q034", "query": "白酒的糖化发酵剂有哪些", "expected_doc_title": "中国白酒百科", "expected_keywords": ["大曲", "小曲", "麸曲"], "category": "白酒"}
+{"id": "q035", "query": "西凤酒属于什么香型", "expected_doc_title": "中国白酒百科", "expected_keywords": ["凤香", "西凤"], "category": "白酒"}
+{"id": "q036", "query": "白酒的主要产地有哪些", "expected_doc_title": "中国白酒百科", "expected_keywords": ["川黔", "黄淮", "北方"], "category": "白酒"}
+{"id": "q037", "query": "酒鬼酒是什么香型", "expected_doc_title": "中国白酒百科", "expected_keywords": ["馥郁香", "酒鬼酒"], "category": "白酒"}
+{"id": "q038", "query": "老白干香型的代表", "expected_doc_title": "中国白酒百科", "expected_keywords": ["衡水老白干", "老白干"], "category": "白酒"}
+{"id": "q039", "query": "兼香型白酒的特点", "expected_doc_title": "中国白酒百科", "expected_keywords": ["酱浓", "一口两香", "白云边"], "category": "白酒"}
+{"id": "q040", "query": "朗姆酒的原料是什么", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["甘蔗", "糖蜜", "甘蔗汁"], "category": "朗姆+龙舌兰"}
+{"id": "q041", "query": "朗姆酒起源于哪里", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["加勒比", "巴巴多斯", "17 世纪"], "category": "朗姆+龙舌兰"}
+{"id": "q042", "query": "农业朗姆和工业朗姆的区别", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["甘蔗汁", "糖蜜", "马提尼克"], "category": "朗姆+龙舌兰"}
+{"id": "q043", "query": "莫吉托是用什么基酒调的", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["白朗姆", "薄荷", "青柠"], "category": "朗姆+龙舌兰"}
+{"id": "q044", "query": "Tequila 和 Mezcal 的区别", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["蓝色龙舌兰", "Weber", "子集"], "category": "朗姆+龙舌兰"}
+{"id": "q045", "query": "龙舌兰植物的成熟期多久", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["7", "10", "年"], "category": "朗姆+龙舌兰"}
+{"id": "q046", "query": "Reposado 龙舌兰的陈年要求", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["2", "12", "橡木桶"], "category": "朗姆+龙舌兰"}
+{"id": "q047", "query": "玛格丽特鸡尾酒的基酒", "expected_doc_title": "朗姆酒与龙舌兰百科", "expected_keywords": ["Tequila", "君度", "青柠"], "category": "朗姆+龙舌兰"}
+{"id": "q048", "query": "金酒和威士忌的原料区别", "expected_doc_titles": ["金酒（Gin）百科", "威士忌 Whisky 百科"], "expected_keywords": ["杜松子", "谷物"], "category": "跨酒种"}
+{"id": "q049", "query": "哪些酒是鸡尾酒的重要基酒", "expected_doc_titles": ["金酒（Gin）百科", "朗姆酒与龙舌兰百科"], "expected_keywords": ["金酒", "朗姆", "龙舌兰"], "category": "跨酒种"}
+{"id": "q050", "query": "白酒和威士忌的酒精度对比", "expected_doc_titles": ["中国白酒百科", "威士忌 Whisky 百科"], "expected_keywords": ["38", "65", "40", "46"], "category": "跨酒种"}
