@@ -69,6 +69,7 @@ data/profile.json
 # 前端构建产物（M0 起保留 dist 以支持单进程部署）
 web/node_modules/
 web/.vite/
+web/tsconfig.tsbuildinfo
 
 # 临时数据库
 *.db
