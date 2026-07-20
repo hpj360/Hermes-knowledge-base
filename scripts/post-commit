@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# .git/hooks/post-commit
+#
+# 根治代码丢失：每次 commit 后自动 push 到远端。
+# 失败不阻塞 commit（避免阻断工作），但会输出醒目警告。
+#
+# 安装：cp scripts/post-commit .git/hooks/post-commit && chmod +x .git/hooks/post-commit
+
+set +e  # 不阻断 commit
+
+cd "$(git rev-parse --show-toplevel)"
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+REMOTE="$(git config "branch.${BRANCH}.remote" || echo origin)"
+
+# 仅在已设置上游时尝试 push（首次推送需手动 git push -u）
+if ! git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  echo ""
+  echo "⚠️  [post-commit hook] 当前分支 $BRANCH 未设置上游"
+  echo "  本地 commit 已创建但未推送，请立即执行："
+  echo "    git push -u $REMOTE $BRANCH"
+  echo ""
+  exit 0
+fi
+
+# 静默 fetch + push
+if git push --quiet 2>/dev/null; then
+  LOCAL_SHA=$(git rev-parse --short HEAD)
+  echo ""
+  echo "✓ [post-commit hook] 已自动推送到 $REMOTE/$BRANCH @ $LOCAL_SHA"
+  exit 0
+else
+  echo ""
+  echo "=============================================" >&2
+  echo "⚠️  [post-commit hook] 自动 push 失败！" >&2
+  echo "  本地 commit 已创建但未推送到 $REMOTE/$BRANCH" >&2
+  echo "  请立即手动推送：git push" >&2
+  echo "=============================================" >&2
+  exit 0  # 不阻断 commit，仅警告
+fi
