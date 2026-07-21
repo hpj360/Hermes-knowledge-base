@@ -366,11 +366,16 @@ def create_app() -> FastAPI:
         tmp_path, _ = _save_upload_tmp(file, tmp_dir)
         try:
             return importer.import_file(tmp_path, title=title or file.filename)
-        except RuntimeError as e:
+        except (RuntimeError, ValueError) as e:
             # P1 修复：PDF 解析失败等返回 400 而非 500
             logger.warning("文件解析失败: %s", e)
             raise HTTPException(status_code=400, detail=f"文件解析失败: {e}")
         except Exception as e:
+            # pypdf 等可能抛 PdfStreamError 等非 RuntimeError
+            exc_name = type(e).__name__
+            if "Pdf" in exc_name or "parse" in str(e).lower() or "stream" in str(e).lower():
+                logger.warning("文件解析失败（%s）: %s", exc_name, e)
+                raise HTTPException(status_code=400, detail=f"文件解析失败: {e}")
             logger.exception("文件导入异常")
             raise HTTPException(status_code=500, detail=f"导入失败: {e}")
         finally:
@@ -658,17 +663,25 @@ def create_app() -> FastAPI:
                 )
             except HTTPException:
                 raise
-            except RuntimeError as e:
+            except (RuntimeError, ValueError) as e:
                 # PDF 解析失败等
                 logger.warning("批量导入文件解析失败: %s", e)
                 results.append(
                     {"filename": f.filename, "status": "failed", "error": str(e)}
                 )
             except Exception as e:
-                logger.exception("批量导入异常")
-                results.append(
-                    {"filename": f.filename, "status": "failed", "error": str(e)}
-                )
+                # pypdf 等可能抛 PdfStreamError
+                exc_name = type(e).__name__
+                if "Pdf" in exc_name or "parse" in str(e).lower() or "stream" in str(e).lower():
+                    logger.warning("批量导入文件解析失败（%s）: %s", exc_name, e)
+                    results.append(
+                        {"filename": f.filename, "status": "failed", "error": str(e)}
+                    )
+                else:
+                    logger.exception("批量导入异常")
+                    results.append(
+                        {"filename": f.filename, "status": "failed", "error": str(e)}
+                    )
             finally:
                 try:
                     tmp_path.unlink(missing_ok=True)
