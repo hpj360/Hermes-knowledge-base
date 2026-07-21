@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass, field, replace
 from pathlib import Path
+
+# 默认 JWT 密钥：仅 dev 模式使用，prod 模式缺失则启动失败
+_DEFAULT_JWT_SECRET = "hermes-kb-dev-only-secret-DO-NOT-USE-IN-PROD"
 
 
 def _env_int(key: str, default: int) -> int:
@@ -35,6 +39,24 @@ def _env_bool(key: str, default: bool) -> bool:
     return v.strip().lower() in ("1", "true", "yes", "on")
 
 
+def _resolve_jwt_secret() -> str:
+    """解析 JWT 密钥：prod 模式缺失则报错；dev 模式使用默认值并告警。"""
+    secret = os.environ.get("KB_JWT_SECRET", "")
+    if secret:
+        return secret
+    env = os.environ.get("KB_ENV", "dev")
+    if env == "prod":
+        raise RuntimeError(
+            "KB_JWT_SECRET 未设置。生产环境（KB_ENV=prod）必须显式配置 JWT 密钥。"
+        )
+    warnings.warn(
+        "KB_JWT_SECRET 未设置，使用 dev 默认密钥。切勿用于生产环境！",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return _DEFAULT_JWT_SECRET
+
+
 @dataclass
 class Settings:
     """全局配置。"""
@@ -42,7 +64,9 @@ class Settings:
     db_path: str = field(default_factory=lambda: _env_str("KB_DB_PATH", ".hermes_kb/hermes_kb.db"))
     host: str = field(default_factory=lambda: _env_str("KB_HOST", "127.0.0.1"))
     port: int = field(default_factory=lambda: _env_int("KB_PORT", 8765))
-    cors_origins: list[str] = field(default_factory=lambda: _env_list("KB_CORS", ["*"]))
+    cors_origins: list[str] = field(default_factory=lambda: _env_list("KB_CORS", []))
+    # 环境标识：prod 模式下强制要求 JWT 密钥等敏感配置
+    env: str = field(default_factory=lambda: _env_str("KB_ENV", "dev"))
 
     # 分片
     chunk_size: int = field(default_factory=lambda: _env_int("KB_CHUNK_SIZE", 500))
@@ -75,7 +99,7 @@ class Settings:
     auth_enabled: bool = field(default_factory=lambda: _env_bool("KB_AUTH_ENABLED", False))
     auth_password: str = field(default_factory=lambda: _env_str("KB_AUTH_PASSWORD", ""))
     auth_username: str = field(default_factory=lambda: _env_str("KB_USERNAME", "admin"))
-    jwt_secret: str = field(default_factory=lambda: _env_str("KB_JWT_SECRET", "hermes-kb-default-secret-please-change"))
+    jwt_secret: str = field(default_factory=lambda: _resolve_jwt_secret())
     jwt_ttl_hours: int = field(default_factory=lambda: _env_int("KB_JWT_TTL_HOURS", 24))
 
     # 未成年保护（M1-08）
@@ -107,6 +131,18 @@ class Settings:
         p = Path(self.db_path)
         p.parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{p.absolute()}"
+
+    @property
+    def is_prod(self) -> bool:
+        """是否生产环境。"""
+        return self.env == "prod"
+
+    @property
+    def cors_credentials_allowed(self) -> bool:
+        """CORS 是否允许携带凭证：仅当 origins 不含通配符 * 时允许。"""
+        if not self.cors_origins:
+            return False
+        return "*" not in self.cors_origins
 
 
 _SETTINGS: Settings | None = None

@@ -15,6 +15,7 @@ M1 增强：
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import time
@@ -260,14 +261,19 @@ class RAGEngine:
             yield f"data: {json.dumps({'type': 'delta', 'content': _JAILBREAK_NOTICE}, ensure_ascii=False)}\n\n"
             done = {"type": "done", "latency_ms": int((time.time() - started) * 1000)}
             yield f"data: {json.dumps(done, ensure_ascii=False)}\n\n"
-            self._log_query(RAGAnswer(
-                answer_id=answer_id, query=query, answer=_JAILBREAK_NOTICE,
-                citations=[], model_used="mock-llm",
-                latency_ms=int((time.time() - started) * 1000), rejected=True,
-            ))
+            await asyncio.to_thread(
+                self._log_query,
+                RAGAnswer(
+                    answer_id=answer_id, query=query, answer=_JAILBREAK_NOTICE,
+                    citations=[], model_used="mock-llm",
+                    latency_ms=int((time.time() - started) * 1000), rejected=True,
+                )
+            )
             return
 
-        hits = self.retriever.retrieve(self._rewrite_query(query), top_k=top_k)
+        hits = await asyncio.to_thread(
+            self.retriever.retrieve, self._rewrite_query(query), top_k
+        )
         citations = self._build_citations(hits)
 
         # M1-06：低置信度
@@ -285,11 +291,14 @@ class RAGEngine:
             yield f"data: {json.dumps({'type': 'delta', 'content': _LOW_CONFIDENCE_NOTICE}, ensure_ascii=False)}\n\n"
             done = {"type": "done", "latency_ms": int((time.time() - started) * 1000)}
             yield f"data: {json.dumps(done, ensure_ascii=False)}\n\n"
-            self._log_query(RAGAnswer(
-                answer_id=answer_id, query=query, answer=_LOW_CONFIDENCE_NOTICE,
-                citations=citations, model_used="mock-llm",
-                latency_ms=int((time.time() - started) * 1000), low_confidence=True,
-            ))
+            await asyncio.to_thread(
+                self._log_query,
+                RAGAnswer(
+                    answer_id=answer_id, query=query, answer=_LOW_CONFIDENCE_NOTICE,
+                    citations=citations, model_used="mock-llm",
+                    latency_ms=int((time.time() - started) * 1000), low_confidence=True,
+                )
+            )
             return
 
         context = self._build_context(citations, hits)
@@ -322,11 +331,14 @@ class RAGEngine:
         yield f"data: {json.dumps(done, ensure_ascii=False)}\n\n"
 
         # 记录日志
-        self._log_query(RAGAnswer(
-            answer_id=answer_id, query=query, answer=final_answer,
-            citations=citations, model_used=self.llm_client.backend_name,
-            latency_ms=int((time.time() - started) * 1000),
-        ))
+        await asyncio.to_thread(
+            self._log_query,
+            RAGAnswer(
+                answer_id=answer_id, query=query, answer=final_answer,
+                citations=citations, model_used=self.llm_client.backend_name,
+                latency_ms=int((time.time() - started) * 1000),
+            )
+        )
 
     def _build_citations(self, hits: list[RetrievalHit]) -> list[Citation]:
         return [

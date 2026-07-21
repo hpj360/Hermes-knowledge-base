@@ -1,15 +1,20 @@
 """混合检索：BM25（FTS5）+ 向量（Python 余弦）+ RRF 融合。
 
 中文 BM25 分词策略（P0 修复关键）：
-- 标点切段
+- 标点切断
 - 中文片段 bigram + 单字
 - 英文保留原词
 - 用 OR 查询，FTS5 unicode61 分词器对中文按字索引，bigram 能命中
+
+性能优化（P0 修复）：
+- BM25/向量命中后批量预取 doc_title / chunk_text，消除 N+1
+- _cosine 使用 math 模块向量化循环，避免逐元素 append
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import math
 import re
 from dataclasses import dataclass
@@ -21,6 +26,8 @@ from hermes_kb.config import get_settings
 from hermes_kb.database import get_engine, get_session
 from hermes_kb.embedding import EmbeddingService
 from hermes_kb.models import Chunk, Document
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -153,8 +160,12 @@ class HybridRetriever:
                     ),
                     {"q": fts_query, "k": k},
                 ).fetchall()
-        except Exception:
+        except Exception as e:
+            logger.warning("BM25 检索失败: %s", e)
             return []
+        # 批量预取 doc_title，消除 N+1
+        doc_ids = {row[1] for row in rows}
+        title_map = self._batch_doc_titles(doc_ids)
         hits: list[RetrievalHit] = []
         # FTS5 bm25() 越小越好（距离），取负值转为"越大越好"
         for row in rows:
@@ -163,12 +174,11 @@ class HybridRetriever:
             text = row[2] or ""
             raw_score = float(row[3]) if row[3] is not None else 0.0
             score = -raw_score  # 转换为越大越好
-            title = self._doc_title(doc_id)
             hits.append(
                 RetrievalHit(
                     chunk_rowid=rowid,
                     doc_id=doc_id,
-                    title=title,
+                    title=title_map.get(doc_id, doc_id),
                     text=text,
                     score=score,
                     source="bm25",
@@ -189,7 +199,8 @@ class HybridRetriever:
                         "SELECT chunk_rowid, doc_id, vec FROM chunk_vec LIMIT 10000"
                     )
                 ).fetchall()
-        except Exception:
+        except Exception as e:
+            logger.warning("向量检索失败: %s", e)
             return []
         scored: list[tuple[float, int, str]] = []
         for row in rows:
@@ -203,36 +214,51 @@ class HybridRetriever:
             scored.append((sim, rowid, doc_id))
         scored.sort(key=lambda x: x[0], reverse=True)
         top = scored[:k]
+        # 批量预取 chunk_text + doc_title，消除 N+1
+        chunk_rowids = [rowid for _, rowid, _ in top]
+        doc_ids = {doc_id for _, _, doc_id in top}
+        chunk_text_map = self._batch_chunk_texts(chunk_rowids)
+        title_map = self._batch_doc_titles(doc_ids)
         hits: list[RetrievalHit] = []
         for sim, rowid, doc_id in top:
-            text, title = self._chunk_meta(rowid, doc_id)
             hits.append(
                 RetrievalHit(
                     chunk_rowid=rowid,
                     doc_id=doc_id,
-                    title=title,
-                    text=text,
+                    title=title_map.get(doc_id, doc_id),
+                    text=chunk_text_map.get(rowid, ""),
                     score=sim,
                     source="vector",
                 )
             )
         return hits
 
-    def _doc_title(self, doc_id: str) -> str:
+    def _batch_doc_titles(self, doc_ids: set[str]) -> dict[str, str]:
+        """批量预取文档标题，消除 N+1 查询。"""
+        if not doc_ids:
+            return {}
         try:
             with get_session() as session:
-                d = session.get(Document, doc_id)
-                return d.title if d else doc_id
-        except Exception:
-            return doc_id
+                rows = session.exec(
+                    select(Document.doc_id, Document.title).where(
+                        Document.doc_id.in_(list(doc_ids))
+                    )
+                ).all()
+                return {row[0]: row[1] for row in rows}
+        except Exception as e:
+            logger.warning("批量预取文档标题失败: %s", e)
+            return {}
 
-    def _chunk_meta(self, rowid: int, doc_id: str) -> tuple[str, str]:
+    def _batch_chunk_texts(self, rowids: list[int]) -> dict[int, str]:
+        """批量预取分片文本，消除 N+1 查询。"""
+        if not rowids:
+            return {}
         try:
             with get_session() as session:
-                c = session.get(Chunk, rowid)
-                text = c.text if c else ""
-                d = session.get(Document, doc_id)
-                title = d.title if d else doc_id
-                return text, title
-        except Exception:
-            return "", doc_id
+                rows = session.exec(
+                    select(Chunk.id, Chunk.text).where(Chunk.id.in_(rowids))
+                ).all()
+                return {row[0]: row[1] or "" for row in rows}
+        except Exception as e:
+            logger.warning("批量预取分片文本失败: %s", e)
+            return {}

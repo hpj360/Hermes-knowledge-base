@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import hmac
 import json
@@ -185,7 +186,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_credentials=True,
+        allow_credentials=settings.cors_credentials_allowed,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -606,7 +607,8 @@ def create_app() -> FastAPI:
     async def ask(req: AskReq) -> dict[str, Any]:
         if not req.query or not req.query.strip():
             raise HTTPException(status_code=400, detail="query 不能为空")
-        result = rag.answer(req.query, top_k=req.top_k)
+        # P0 修复：rag.answer 内部调用同步 LLM/Embedding，用 to_thread 避免阻塞事件循环
+        result = await asyncio.to_thread(rag.answer, req.query, top_k=req.top_k)
         return result.to_dict()
 
     @app.post("/api/ask/stream", dependencies=[Depends(require_auth)])
