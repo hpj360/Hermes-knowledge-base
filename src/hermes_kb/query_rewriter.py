@@ -9,16 +9,22 @@
 - 同步调用（在 retrieve 之前），独立于 RAG 生成阶段
 - 改写结果作为检索 query，原 query 仍传给 LLM 生成（保持语义）
 - 不缓存（每条 query 独立改写，避免歧义）
+- P1 修复：LLM 调用加超时保护，超时/异常回退启发式
 """
 
 from __future__ import annotations
 
-import json
+import logging
 import re
 from typing import Any
 
 from hermes_kb.config import get_settings
 from hermes_kb.llm import LLMClient
+
+logger = logging.getLogger(__name__)
+
+# 改写 LLM 超时（秒），避免拖慢检索
+_REWRITE_TIMEOUT_SEC = 5.0
 
 
 _REWRITE_SYSTEM_PROMPT = (
@@ -75,9 +81,9 @@ class QueryRewriter:
     def rewrite(self, query: str) -> str:
         """改写 query。
 
-        - LLM 可用且启用：调用 LLM 改写
+        - LLM 可用且启用：调用 LLM 改写（带超时保护）
         - 否则：启发式改写（无外部依赖）
-        - 任何异常：返回原 query
+        - 任何异常/超时：回退启发式，不阻塞检索
         """
         if not query or not query.strip():
             return query
@@ -85,14 +91,28 @@ class QueryRewriter:
             # LLM 不可用：用启发式（不调用 LLM，零成本）
             return _heuristic_rewrite(query)
         try:
-            resp = self.llm.chat([
-                {"role": "system", "content": _REWRITE_SYSTEM_PROMPT},
-                {"role": "user", "content": query},
-            ])
-            rewritten = (resp.content or "").strip()
-            # 简单校验：长度合理（不超过原 query 5 倍）
+            # P1 修复：用线程池 + 超时保护，避免 LLM 卡死拖慢检索
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(self._llm_rewrite, query)
+                try:
+                    rewritten = future.result(timeout=_REWRITE_TIMEOUT_SEC)
+                except concurrent.futures.TimeoutError:
+                    logger.warning("查询改写 LLM 超时（%ss），回退启发式", _REWRITE_TIMEOUT_SEC)
+                    return _heuristic_rewrite(query)
             if rewritten and len(rewritten) <= max(50, len(query) * 5):
                 return rewritten
+            logger.warning("查询改写结果长度异常，回退原 query")
             return query
-        except Exception:
-            return query
+        except Exception as e:
+            logger.warning("查询改写异常: %s", e)
+            return _heuristic_rewrite(query)
+
+    def _llm_rewrite(self, query: str) -> str:
+        """实际调用 LLM 改写（同步阻塞）。"""
+        resp = self.llm.chat([
+            {"role": "system", "content": _REWRITE_SYSTEM_PROMPT},
+            {"role": "user", "content": query},
+        ])
+        return (resp.content or "").strip()

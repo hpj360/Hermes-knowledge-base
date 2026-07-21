@@ -23,11 +23,15 @@ import asyncio
 import hashlib
 import hmac
 import json
+import logging
+import re
 import time
+import uuid
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import (
     Depends,
@@ -56,6 +60,15 @@ from hermes_kb.models import (
 )
 from hermes_kb.rag import ImportService, RAGEngine
 from hermes_kb.seed import SEED_DOCS
+
+logger = logging.getLogger(__name__)
+
+# 单文件上传大小上限（10MB）
+_MAX_UPLOAD_SINGLE = 10 * 1024 * 1024
+# 批量上传总体积上限（100MB）
+_MAX_UPLOAD_BATCH_TOTAL = 100 * 1024 * 1024
+# 标签颜色正则：#RRGGBB
+_TAG_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 # ---------------------------------------------------------------------------
 # JWT 工具（HS256，无外部依赖）
@@ -168,6 +181,29 @@ class TagCreateReq(BaseModel):
     color: str = Field(default="#6b7280", max_length=16)
 
 
+def _validate_tag_color(color: str) -> str:
+    """校验标签颜色格式，非法则返回默认灰色。"""
+    if color and _TAG_COLOR_RE.match(color):
+        return color
+    return "#6b7280"
+
+
+def _save_upload_tmp(file: UploadFile, tmp_dir: Path) -> tuple[Path, bytes]:
+    """保存上传文件到临时路径，返回 (路径, 内容)。文件名加 UUID 防碰撞。"""
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    # P1 修复：用 uuid4 替代毫秒时间戳，避免并发碰撞
+    safe_name = Path(file.filename or "").name  # 防路径穿越
+    tmp_path = tmp_dir / f"{uuid.uuid4().hex}_{safe_name}"
+    content = file.file.read()
+    if len(content) > _MAX_UPLOAD_SINGLE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"文件 {file.filename} 超过单文件上限 10MB",
+        )
+    tmp_path.write_bytes(content)
+    return tmp_path, content
+
+
 # ---------------------------------------------------------------------------
 # 应用工厂
 # ---------------------------------------------------------------------------
@@ -220,7 +256,8 @@ def create_app() -> FastAPI:
         try:
             with get_session() as session:
                 doc_count = len(session.exec(select(Document)).all())
-        except Exception:
+        except Exception as e:
+            logger.warning("health 文档计数失败: %s", e)
             doc_count = 0
         return {
             "status": "ok",
@@ -325,48 +362,59 @@ def create_app() -> FastAPI:
                 status_code=400,
                 detail=f"不支持的文件类型: {suffix}（仅支持 txt/md/pdf）",
             )
-        # 保存到临时文件后由 parser 处理（PDF 需要二进制）
         tmp_dir = Path(settings.db_path).parent / "uploads"
-        tmp_dir.mkdir(parents=True, exist_ok=True)
-        tmp_path = tmp_dir / f"{int(time.time() * 1000)}_{file.filename}"
-        with tmp_path.open("wb") as f:
-            f.write(await file.read())
+        tmp_path, _ = _save_upload_tmp(file, tmp_dir)
         try:
             return importer.import_file(tmp_path, title=title or file.filename)
+        except RuntimeError as e:
+            # P1 修复：PDF 解析失败等返回 400 而非 500
+            logger.warning("文件解析失败: %s", e)
+            raise HTTPException(status_code=400, detail=f"文件解析失败: {e}")
+        except Exception as e:
+            logger.exception("文件导入异常")
+            raise HTTPException(status_code=500, detail=f"导入失败: {e}")
         finally:
             try:
                 tmp_path.unlink(missing_ok=True)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("临时文件删除失败: %s", e)
 
     @app.delete("/api/documents/{doc_id}", dependencies=[Depends(require_auth)])
     async def delete_document(doc_id: str) -> dict[str, Any]:
+        # P1 修复：tag 关联删除已并入 importer.delete_document，单事务原子化
         ok = importer.delete_document(doc_id)
         if not ok:
             raise HTTPException(status_code=404, detail="文档不存在")
-        # 同步删除 tag 关联
-        with get_session() as session:
-            links = session.exec(
-                select(DocumentTag).where(DocumentTag.doc_id == doc_id)
-            ).all()
-            for link in links:
-                session.delete(link)
-            session.commit()
         return {"doc_id": doc_id, "status": "deleted"}
 
     # -----------------------------------------------------------------------
     # M2-03：文档详情
     # -----------------------------------------------------------------------
     @app.get("/api/documents/{doc_id}", dependencies=[Depends(require_auth)])
-    async def get_document(doc_id: str) -> dict[str, Any]:
-        """文档详情：元信息 + 全部 chunks。"""
+    async def get_document(
+        doc_id: str,
+        chunk_limit: int | None = None,
+        chunk_offset: int = 0,
+    ) -> dict[str, Any]:
+        """文档详情：元信息 + chunks（支持分页）。
+
+        - chunk_limit：单页 chunk 数（默认全部返回，≤200 防超大响应）
+        - chunk_offset：偏移量，配合 chunk_limit 实现懒加载
+        """
         with get_session() as session:
             doc = session.get(Document, doc_id)
             if not doc:
                 raise HTTPException(status_code=404, detail="文档不存在")
-            chunks = session.exec(
-                select(Chunk).where(Chunk.doc_id == doc_id).order_by(Chunk.idx)
-            ).all()
+            # P1 修复：超大文档分页，避免单次响应过大
+            stmt = (
+                select(Chunk)
+                .where(Chunk.doc_id == doc_id)
+                .order_by(Chunk.idx)
+            )
+            total_chunks = doc.chunk_count or 0
+            if chunk_limit is not None and chunk_limit > 0:
+                stmt = stmt.offset(max(0, chunk_offset)).limit(min(chunk_limit, 200))
+            chunks = session.exec(stmt).all()
             tags = session.exec(
                 select(Tag).join(
                     DocumentTag, DocumentTag.tag_id == Tag.id, isouter=True
@@ -394,6 +442,13 @@ def create_app() -> FastAPI:
                     }
                     for c in chunks
                 ],
+                # P1 修复：分页元数据
+                "pagination": {
+                    "total": total_chunks,
+                    "offset": chunk_offset,
+                    "limit": chunk_limit,
+                    "returned": len(chunks),
+                },
             }
 
     @app.get("/api/documents/{doc_id}/raw", dependencies=[Depends(require_auth)])
@@ -404,16 +459,19 @@ def create_app() -> FastAPI:
             if not doc:
                 raise HTTPException(status_code=404, detail="文档不存在")
             ext = doc.file_type or "txt"
-            media = {
-                "md": "text/markdown; charset=utf-8",
-                "txt": "text/plain; charset=utf-8",
-                "pdf": "application/pdf",
-            }.get(ext, "text/plain; charset=utf-8")
-            filename = f"{doc.title}.{ext}"
+            # P1 修复：PDF 的 content 是解析后纯文本，不能声明 application/pdf
+            if ext == "pdf":
+                media = "text/plain; charset=utf-8"
+                download_ext = "txt"
+            else:
+                media = {
+                    "md": "text/markdown; charset=utf-8",
+                    "txt": "text/plain; charset=utf-8",
+                }.get(ext, "text/plain; charset=utf-8")
+                download_ext = ext
+            filename = f"{doc.title}.{download_ext}"
             # RFC 5987：filename* 用 UTF-8 percent-encoding（兼容中文）
             # filename 用 ASCII 兜底（latin-1 不支持中文）
-            from urllib.parse import quote
-
             filename_star = quote(filename)
             ascii_fallback = filename.encode("ascii", "ignore").decode("ascii") or "download"
             return Response(
@@ -434,15 +492,14 @@ def create_app() -> FastAPI:
     async def list_tags() -> dict[str, Any]:
         with get_session() as session:
             tags = session.exec(select(Tag).order_by(Tag.name)).all()
-            # 统计每个 tag 关联文档数
-            counts: dict[int, int] = {}
-            for t in tags:
-                cnt = len(
-                    session.exec(
-                        select(DocumentTag).where(DocumentTag.tag_id == t.id)
-                    ).all()
-                )
-                counts[t.id or 0] = cnt
+            # P1 修复：单条 GROUP BY 聚合，消除 N+1
+            from sqlalchemy import func as sa_func
+
+            count_rows = session.exec(
+                select(DocumentTag.tag_id, sa_func.count().label("cnt"))
+                .group_by(DocumentTag.tag_id)
+            ).all()
+            counts: dict[int, int] = {row[0]: row[1] for row in count_rows}
             return {
                 "total": len(tags),
                 "items": [
@@ -461,13 +518,15 @@ def create_app() -> FastAPI:
         name = req.name.strip()
         if not name:
             raise HTTPException(status_code=400, detail="标签名不能为空")
+        # P1 修复：颜色格式校验
+        color = _validate_tag_color(req.color)
         with get_session() as session:
             existing = session.exec(
                 select(Tag).where(Tag.name == name)
             ).first()
             if existing:
                 raise HTTPException(status_code=409, detail="标签已存在")
-            tag = Tag(name=name, color=req.color)
+            tag = Tag(name=name, color=color)
             session.add(tag)
             session.commit()
             session.refresh(tag)
@@ -523,6 +582,7 @@ def create_app() -> FastAPI:
                 doc.title = req.title.strip()
             if req.category is not None:
                 doc.category = req.category
+            skipped_tag_ids: list[int] = []
             if req.tag_ids is not None:
                 # 替换关联
                 old_links = session.exec(
@@ -533,27 +593,34 @@ def create_app() -> FastAPI:
                 for tid in req.tag_ids:
                     # 校验 tag 存在
                     if not session.get(Tag, tid):
+                        skipped_tag_ids.append(tid)
                         continue
                     session.add(DocumentTag(doc_id=doc_id, tag_id=tid))
             session.add(doc)
             session.commit()
-            return {"doc_id": doc_id, "status": "updated"}
+            # P1 修复：返回 skipped_tag_ids 让前端感知未关联的 tag
+            result: dict[str, Any] = {"doc_id": doc_id, "status": "updated"}
+            if skipped_tag_ids:
+                result["skipped_tag_ids"] = skipped_tag_ids
+            return result
 
     # -----------------------------------------------------------------------
     # M2-05：批量导入
     # -----------------------------------------------------------------------
     @app.post("/api/documents/upload-batch", dependencies=[Depends(require_auth)])
     async def upload_batch(files: list[UploadFile] = File(...)) -> dict[str, Any]:
-        """批量上传（≤ 20 文件）。"""
+        """批量上传（≤ 20 文件，总体积 ≤ 100MB）。"""
         settings = get_settings()
         if len(files) > 20:
             raise HTTPException(
                 status_code=400,
                 detail=f"单次最多 20 个文件，当前 {len(files)} 个",
             )
+        if not files:
+            raise HTTPException(status_code=400, detail="未提供文件")
         results: list[dict[str, Any]] = []
         tmp_dir = Path(settings.db_path).parent / "uploads"
-        tmp_dir.mkdir(parents=True, exist_ok=True)
+        total_size = 0
         for f in files:
             if not f.filename:
                 results.append(
@@ -570,10 +637,16 @@ def create_app() -> FastAPI:
                     }
                 )
                 continue
-            tmp_path = tmp_dir / f"{int(time.time() * 1000)}_{f.filename}"
             try:
-                content = await f.read()
-                tmp_path.write_bytes(content)
+                tmp_path, content = _save_upload_tmp(f, tmp_dir)
+                total_size += len(content)
+                # P1 修复：总体积上限
+                if total_size > _MAX_UPLOAD_BATCH_TOTAL:
+                    tmp_path.unlink(missing_ok=True)
+                    raise HTTPException(
+                        status_code=413,
+                        detail="批量上传总体积超过 100MB 上限",
+                    )
                 r = importer.import_file(tmp_path, title=f.filename)
                 results.append(
                     {
@@ -583,15 +656,24 @@ def create_app() -> FastAPI:
                         "chunk_count": r.get("chunk_count", 0),
                     }
                 )
+            except HTTPException:
+                raise
+            except RuntimeError as e:
+                # PDF 解析失败等
+                logger.warning("批量导入文件解析失败: %s", e)
+                results.append(
+                    {"filename": f.filename, "status": "failed", "error": str(e)}
+                )
             except Exception as e:
+                logger.exception("批量导入异常")
                 results.append(
                     {"filename": f.filename, "status": "failed", "error": str(e)}
                 )
             finally:
                 try:
                     tmp_path.unlink(missing_ok=True)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("临时文件删除失败: %s", e)
         ok = sum(1 for r in results if r["status"] == "imported")
         return {
             "total": len(files),
