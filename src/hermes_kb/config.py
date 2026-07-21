@@ -10,6 +10,17 @@ from pathlib import Path
 # 默认 JWT 密钥：仅 dev 模式使用，prod 模式缺失则启动失败
 _DEFAULT_JWT_SECRET = "hermes-kb-dev-only-secret-DO-NOT-USE-IN-PROD"
 
+# M2-06 预设分类（业务配置，归属 config 而非 models）
+PRESET_CATEGORIES = [
+    "烈酒",
+    "葡萄酒",
+    "啤酒",
+    "中国白酒",
+    "利口酒",
+    "资料",
+    "其他",
+]
+
 
 def _env_int(key: str, default: int) -> int:
     v = os.environ.get(key)

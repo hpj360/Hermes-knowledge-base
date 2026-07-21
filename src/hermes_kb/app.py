@@ -28,7 +28,7 @@ import re
 import time
 import uuid
 from base64 import urlsafe_b64decode, urlsafe_b64encode
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -263,7 +263,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "service": "hermes-kb",
             "version": "0.2.0",
-            "time": datetime.utcnow().isoformat(),
+            "time": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             "doc_count": doc_count,
             "llm_provider": settings.llm_provider,
             "llm_available": settings.llm_available,

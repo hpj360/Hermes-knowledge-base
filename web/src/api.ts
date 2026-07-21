@@ -15,6 +15,12 @@ import type {
 
 const BASE = "";
 
+// 401 回调：由 App 层注册，触发跳转登录
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null) {
+  onUnauthorized = fn;
+}
+
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("hermes_kb_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -32,6 +38,12 @@ async function request<T>(
       ...(options.headers || {}),
     },
   });
+  if (resp.status === 401) {
+    // P2 修复：token 过期/无效，清除并触发跳转登录
+    localStorage.removeItem("hermes_kb_token");
+    onUnauthorized?.();
+    throw new Error("登录已过期，请重新登录");
+  }
   if (!resp.ok) {
     let detail = `HTTP ${resp.status}`;
     try {
@@ -200,6 +212,12 @@ export const api = {
       body: JSON.stringify({ query, top_k: topK }),
       signal,
     });
+    if (resp.status === 401) {
+      // P2 修复：SSE 流式也处理 401
+      localStorage.removeItem("hermes_kb_token");
+      onUnauthorized?.();
+      throw new Error("登录已过期，请重新登录");
+    }
     if (!resp.ok || !resp.body) {
       throw new Error(`流式问答失败: HTTP ${resp.status}`);
     }

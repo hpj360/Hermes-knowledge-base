@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "./api";
+import { api, setUnauthorizedHandler } from "./api";
 import type { HealthStatus } from "./types";
 import { AgeGate } from "./components/AgeGate";
 import { Login } from "./components/Login";
@@ -43,7 +43,13 @@ export default function App() {
 
   useEffect(() => {
     if (ageConfirmed) refreshHealth();
-  }, [ageConfirmed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ageConfirmed]); // 依赖 ageConfirmed 触发一次性健康检查
+
+  // P2 修复：注册 401 处理器，token 过期自动跳登录
+  useEffect(() => {
+    setUnauthorizedHandler(() => setNeedLogin(true));
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   // 年龄门未确认
   if (!ageConfirmed) {
