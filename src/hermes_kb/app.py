@@ -242,9 +242,19 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def _generic_error_handler(_request: Request, exc: Exception):
+        correlation_id = uuid.uuid4().hex[:8]
+        logging.exception("unhandled exception (correlation_id=%s)", correlation_id)
+        if settings.debug:
+            detail: str = str(exc)
+        else:
+            detail = f"internal error, correlation_id={correlation_id}"
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": "internal", "detail": str(exc)},
+            content={
+                "error": "internal",
+                "detail": detail,
+                "correlation_id": correlation_id,
+            },
         )
 
     # -----------------------------------------------------------------------
