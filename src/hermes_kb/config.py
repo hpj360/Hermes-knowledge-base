@@ -158,6 +158,24 @@ class Settings:
             return False
         return "*" not in self.cors_origins
 
+    def __post_init__(self) -> None:
+        """启动期安全校验（A1-1）。
+
+        - 启用认证时必须显式配置非默认 jwt_secret，否则禁止启动。
+        """
+        if self.auth_enabled:
+            if not self.jwt_secret or not self.jwt_secret.strip():
+                raise RuntimeError(
+                    "jwt_secret must be set to a non-empty value when "
+                    "KB_AUTH_ENABLED=true (set KB_JWT_SECRET env var)"
+                )
+            if self.jwt_secret == "hermes-kb-default-secret-please-change":
+                raise RuntimeError(
+                    "jwt_secret is still the default value. Set a unique "
+                    "secret via the KB_JWT_SECRET environment variable before "
+                    "enabling auth (KB_AUTH_ENABLED=true)."
+                )
+
 
 _SETTINGS: Settings | None = None
 
