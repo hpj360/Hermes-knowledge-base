@@ -81,3 +81,35 @@ class QueryLog(SQLModel, table=True):
     latency_ms: int = Field(default=0)
     feedback: int = Field(default=0)  # 1=up / -1=down / 0=none
     created_at: datetime = Field(default_factory=_now_utc, index=True)
+
+
+# M2-06 预设分类
+PRESET_CATEGORIES = [
+    "烈酒",
+    "葡萄酒",
+    "啤酒",
+    "中国白酒",
+    "利口酒",
+    "资料",
+    "其他",
+]
+
+
+class RecipeStats(SQLModel, table=True):
+    """M3：配方使用统计。"""
+
+    doc_id: str = Field(primary_key=True, max_length=64)
+    match_count: int = Field(default=0)  # 被匹配命中次数
+    view_count: int = Field(default=0)  # 被点击查看次数
+    last_matched_at: datetime | None = Field(default=None)
+    last_viewed_at: datetime | None = Field(default=None)
+
+
+class IngredientSubstitute(SQLModel, table=True):
+    """M3：材料替代关系（L2 用户自定义 + L1 预置镜像）。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    canonical: str = Field(index=True, max_length=64)  # 原材料标准名
+    substitute: str = Field(max_length=64)  # 替代材料名
+    source: str = Field(default="preset", max_length=16)  # preset | user
+    created_at: datetime = Field(default_factory=_now_utc)
