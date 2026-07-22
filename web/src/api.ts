@@ -13,7 +13,7 @@ import type {
   TagInfo,
 } from "./types";
 
-const BASE = "";
+const BASE = import.meta.env.VITE_API_BASE || "";
 
 // 401 回调：由 App 层注册，触发跳转登录
 let onUnauthorized: (() => void) | null = null;
