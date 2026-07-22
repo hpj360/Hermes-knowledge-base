@@ -541,36 +541,13 @@ class ImportService:
         )
 
     def delete_document(self, doc_id: str) -> bool:
-        """删除文档（含 chunks + vectors + tag 关联），单事务原子化。"""
-        from sqlalchemy import bindparam
-
-        from hermes_kb.models import Chunk, Document, DocumentTag
+        """删除文档（关联表由数据库级联清理，A2-2）。"""
+        from hermes_kb.models import Document
 
         with get_session() as session:
             doc = session.get(Document, doc_id)
             if not doc:
                 return False
-            # 删 chunks（触发器自动清 FTS）
-            chunks = list(
-                session.exec(select(Chunk).where(Chunk.doc_id == doc_id)).all()
-            )
-            rowids = [c.id for c in chunks]
-            for c in chunks:
-                session.delete(c)
-            # 删 vectors（用 expanding bind 参数）
-            if rowids:
-                session.execute(
-                    sa_text("DELETE FROM chunk_vec WHERE chunk_rowid IN :rowids").bindparams(
-                        bindparam("rowids", expanding=True)
-                    ),
-                    {"rowids": rowids},
-                )
-            # 删 tag 关联（P1 修复：原子化，避免孤儿记录）
-            tag_links = session.exec(
-                select(DocumentTag).where(DocumentTag.doc_id == doc_id)
-            ).all()
-            for link in tag_links:
-                session.delete(link)
             session.delete(doc)
             session.commit()
             return True
