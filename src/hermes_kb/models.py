@@ -46,6 +46,21 @@ class Document(SQLModel, table=True):
     meta: str = Field(default="{}", sa_column=Column("metadata", Text))  # B 新增：JSON 字符串（属性名避开 SQLAlchemy 保留字 metadata）
     created_at: datetime = Field(default_factory=_now_utc)
 
+    def __init__(self, **data: object) -> None:
+        # 允许 `metadata=` 构造参数，映射到实际字段 `meta`
+        if "metadata" in data:
+            data["meta"] = data.pop("metadata")
+        super().__init__(**data)
+
+
+# 类创建完成后挂载 `metadata` 只读 property（避开 SQLAlchemy 在类声明期对
+# `metadata` 保留名的检查，同时不破坏 `cls.metadata` 在建表阶段返回 MetaData）。
+def _get_metadata(self: "Document") -> str:
+    return self.meta
+
+
+Document.metadata = property(_get_metadata)  # type: ignore[assignment]
+
 
 class Chunk(SQLModel, table=True):
     """文档分片。"""
