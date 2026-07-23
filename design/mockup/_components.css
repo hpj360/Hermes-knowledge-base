@@ -1,0 +1,700 @@
+/* Hermes KB 组件样式 —— 复用组件，各页面引用 _tokens.css 后引入本文件 */
+
+/* === C2: 全局氛围背景 === */
+body {
+  background: var(--paper-bg);
+  background-image: var(--noise-bg);
+  background-blend-mode: overlay;
+  background-attachment: fixed;
+}
+/* 页面装饰：顶部金箔分隔线 */
+.page-title {
+  position: relative;
+  padding-bottom: var(--sp-3);
+}
+.page-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--gold-foil);
+  border-radius: var(--r-full);
+}
+
+/* === 按钮 === */
+.btn-primary, .btn-secondary, .btn-ghost, .btn-danger {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: 500;
+  padding: var(--sp-2) var(--sp-4); border-radius: var(--r-md);
+  border: 1px solid transparent; cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.btn-primary { background: var(--brand-700); color: #fff; }
+.btn-primary:hover { background: var(--brand-500); color: #fff; }
+.btn-secondary { background: var(--gold-500); color: var(--ink-900); }
+.btn-secondary:hover { background: var(--gold-700); color: #fff; }
+.btn-ghost { background: transparent; color: var(--ink-600); border-color: var(--ink-200); }
+.btn-ghost:hover { color: var(--brand-700); border-color: var(--brand-700); }
+.btn-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn-danger:hover { background: var(--danger); color: #fff; }
+.btn-primary:disabled, .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* === 卡片 === */
+.card {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-6);
+  box-shadow: var(--shadow-sm); transition: box-shadow var(--duration-base);
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-title { font-family: var(--font-serif); font-size: var(--fs-lg); margin-bottom: var(--sp-2); }
+
+/* === 输入框 === */
+.input, .select, .textarea {
+  font-family: var(--font-sans); font-size: var(--fs-sm);
+  padding: var(--sp-2) var(--sp-3); border: 1px solid var(--ink-200);
+  border-radius: var(--r-md); background: #fff; color: var(--ink-900);
+  transition: border-color var(--duration-fast);
+  width: 100%;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none; border-color: var(--brand-700);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+.textarea { min-height: 120px; resize: vertical; }
+
+/* === 引用列表（05 核心原则：gold-100 背景 + gold-500 左边框 + 不折叠 + brand-700 编号） === */
+.citation-list {
+  background: var(--gold-100);
+  border-left: 3px solid var(--gold-500);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  padding: var(--sp-3) var(--sp-4);
+  margin: var(--sp-4) 0;
+}
+.citation-list .cite-title {
+  font-size: var(--fs-xs); color: var(--gold-700);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--sp-2);
+}
+.citation-item { display: flex; gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: 1px solid var(--gold-300); }
+.citation-item:last-child { border-bottom: none; }
+.citation-item .cite-num {
+  font-family: var(--font-serif); font-weight: 600; color: var(--brand-700);
+  min-width: 1.5rem;
+}
+.citation-item .cite-snippet { font-size: var(--fs-sm); color: var(--ink-600); flex: 1; }
+.citation-item a { color: var(--ink-900); }
+.citation-item a:hover { color: var(--brand-700); text-decoration: underline; }
+
+/* === chunk 高亮动画（05 场景 A 硬约束：2000ms 淡金 + smooth scroll） === */
+@keyframes highlightFade {
+  0% { background: var(--highlight); }
+  100% { background: var(--highlight-fade); }
+}
+.chunk-highlight {
+  animation: highlightFade var(--duration-highlight) var(--ease-out) forwards;
+  border-radius: var(--r-sm);
+  padding: var(--sp-1) var(--sp-2);
+  scroll-margin-top: calc(var(--nav-height) + var(--sp-4));
+}
+html { scroll-behavior: smooth; }
+
+/* === 标签 chip === */
+.tag {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  font-size: var(--fs-xs); padding: 2px var(--sp-2);
+  border-radius: var(--r-full); color: #fff;
+}
+.tag-gold { background: var(--gold-500); color: var(--ink-900); }
+.tag-brand { background: var(--brand-700); }
+.tag-info { background: var(--info); }
+.tag-success { background: var(--success); }
+.tag-warning { background: var(--warning); }
+.tag-danger { background: var(--danger); }
+.tag-ink { background: var(--ink-400); }
+.tag-outline { background: transparent; border: 1px solid var(--ink-200); color: var(--ink-600); }
+
+/* === 表格 === */
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.table thead { background: var(--ink-100); }
+.table th {
+  text-align: left; font-size: var(--fs-xs); text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--ink-400);
+  padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--ink-200);
+}
+.table td { padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--ink-100); }
+.table tbody tr:hover { background: var(--ink-50); }
+
+/* === Modal === */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(31, 28, 24, 0.6);
+  display: none; align-items: center; justify-content: center;
+  z-index: 100; padding: var(--sp-4);
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: #fff; border-radius: var(--r-lg);
+  max-width: 480px; width: 100%; padding: var(--sp-8);
+  box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto;
+}
+.modal-title { font-family: var(--font-serif); font-size: var(--fs-xl); margin-bottom: var(--sp-4); }
+
+/* === 骨架屏 === */
+.skeleton {
+  background: linear-gradient(90deg, var(--ink-100) 25%, var(--ink-50) 50%, var(--ink-100) 75%);
+  background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* === Toast === */
+.toast {
+  position: fixed; bottom: var(--sp-8); right: var(--sp-8);
+  background: var(--ink-900); color: #fff;
+  padding: var(--sp-3) var(--sp-6); border-radius: var(--r-md);
+  font-size: var(--fs-sm); box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(20px);
+  transition: all var(--duration-base); z-index: 200;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* === 空状态 === */
+.empty-state { text-align: center; padding: var(--sp-16) var(--sp-6); color: var(--ink-400); }
+.empty-state .empty-icon { font-size: var(--fs-3xl); margin-bottom: var(--sp-3); }
+.empty-state .empty-text { font-size: var(--fs-sm); }
+
+/* === 低置信标记 === */
+.low-confidence { color: var(--warning); font-size: var(--fs-xs); }
+
+/* === 导航栏 === */
+.nav {
+  height: var(--nav-height); background: #fff; border-bottom: 1px solid var(--ink-200);
+  position: sticky; top: 0; z-index: 50; display: flex; align-items: center;
+}
+.nav .container { display: flex; align-items: center; gap: var(--sp-6); width: 100%; }
+.nav-brand { font-family: var(--font-serif); font-size: var(--fs-lg); font-weight: 700; color: var(--brand-700); }
+.nav-links { display: flex; gap: var(--sp-4); list-style: none; }
+.nav-links a { color: var(--ink-600); font-size: var(--fs-sm); padding: var(--sp-1) 0; border-bottom: 2px solid transparent; }
+.nav-links a:hover { color: var(--brand-700); }
+.nav-links a.active { color: var(--brand-700); border-bottom-color: var(--gold-500); }
+.nav-actions { margin-left: auto; display: flex; gap: var(--sp-2); }
+
+
+/* === 实验室组件（M3） === */
+.material-selector {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-6);
+  box-shadow: var(--shadow-sm);
+}
+.material-search { width: 100%; margin-bottom: var(--sp-4); }
+.material-category {
+  margin-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--ink-100);
+  padding-bottom: var(--sp-3);
+}
+.material-category:last-of-type { border-bottom: none; }
+.material-category summary {
+  font-family: var(--font-serif); font-size: var(--fs-sm);
+  color: var(--brand-700); cursor: pointer;
+  padding: var(--sp-1) 0;
+}
+.chip-list { display: flex; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) 0; }
+.chip-chip {
+  font-family: var(--font-sans); font-size: var(--fs-xs);
+  padding: 4px var(--sp-3); border-radius: var(--r-full);
+  border: 1px solid var(--ink-200); background: var(--ink-100);
+  color: var(--ink-600); cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.chip-chip:hover { border-color: var(--brand-700); }
+.chip-chip.selected.cat-base_spirit { background: var(--brand-700); color: #fff; border-color: var(--brand-700); }
+.chip-chip.selected.cat-modifier { background: var(--gold-500); color: var(--ink-900); border-color: var(--gold-500); }
+.chip-chip.selected.cat-juice { background: var(--ink-600); color: #fff; border-color: var(--ink-600); }
+.chip-chip.selected.cat-garnish { background: var(--ink-400); color: var(--ink-900); border-color: var(--ink-400); }
+
+.selected-bar {
+  background: var(--gold-100); border-left: 3px solid var(--gold-500);
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md);
+  margin: var(--sp-4) 0;
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2);
+}
+.selected-chip {
+  background: var(--gold-500); color: var(--ink-900);
+  font-size: var(--fs-xs); padding: 2px var(--sp-2);
+  border-radius: var(--r-full); cursor: pointer;
+}
+.selected-chip:hover { background: var(--gold-700); color: #fff; }
+
+.recipe-card {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
+  margin-bottom: var(--sp-3); box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-base);
+}
+.recipe-card:hover { box-shadow: var(--shadow-md); }
+.recipe-card.full-match { border-left: 3px solid var(--brand-700); }
+.recipe-card.partial-match { border-left: 3px solid var(--gold-500); }
+.recipe-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--sp-2);
+}
+.recipe-name { font-family: var(--font-serif); font-size: var(--fs-base); color: var(--ink-900); }
+.match-badge { font-size: var(--fs-xs); padding: 2px var(--sp-2); border-radius: var(--r-full); }
+.match-badge.match-full { background: var(--brand-100); color: var(--brand-700); }
+.match-badge.match-partial { background: var(--gold-100); color: var(--gold-700); }
+.recipe-ingredients { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.ing { font-size: var(--fs-xs); padding: 2px var(--sp-2); border-radius: var(--r-sm); }
+.ing.have { background: var(--brand-50); color: var(--brand-700); }
+.ing.missing { background: var(--ink-100); color: var(--ink-400); text-decoration: line-through; }
+.substitute-suggest {
+  font-size: var(--fs-xs); color: var(--gold-700);
+  margin-bottom: var(--sp-2);
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2);
+}
+.sub-chip {
+  background: var(--gold-100); color: var(--gold-700);
+  border: 1px dashed var(--gold-500);
+  padding: 2px var(--sp-2); border-radius: var(--r-sm);
+  cursor: pointer; font-size: var(--fs-xs);
+}
+.sub-chip:hover { background: var(--gold-500); color: var(--ink-900); }
+.recipe-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: var(--sp-2); border-top: 1px dashed var(--ink-200);
+}
+.citation-link { color: var(--brand-700); font-size: var(--fs-xs); text-decoration: none; }
+.citation-link:hover { text-decoration: underline; }
+
+/* 首页热门配方区 */
+.hot-recipes {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-6);
+  box-shadow: var(--shadow-sm); margin: var(--sp-6) 0;
+}
+.hot-recipes h3 { font-family: var(--font-serif); font-size: var(--fs-lg); color: var(--brand-700); margin-bottom: var(--sp-3); }
+.hot-recipe {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--ink-100);
+  text-decoration: none; color: var(--ink-900);
+}
+.hot-recipe:last-child { border-bottom: none; }
+.hot-recipe:hover { background: var(--brand-50); }
+.hot-recipe .rank { font-family: var(--font-serif); color: var(--gold-500); font-size: var(--fs-lg); margin-right: var(--sp-3); }
+.hot-recipe .name { flex: 1; font-size: var(--fs-sm); }
+.hot-recipe .count { font-size: var(--fs-xs); color: var(--ink-400); }
+
+
+/* === M4.1 运营看板 === */
+.lab-dashboard {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-6);
+  box-shadow: var(--shadow-sm); margin: var(--sp-6) 0;
+}
+.lab-dashboard h3 {
+  font-family: var(--font-serif); font-size: var(--fs-lg);
+  color: var(--brand-700); margin-bottom: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-2);
+}
+.lab-dashboard h3 .lab-icon { color: var(--gold-500); }
+.lab-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-3);
+}
+.lab-metric {
+  background: var(--ink-50); border-radius: var(--r-md);
+  padding: var(--sp-3); text-align: center;
+}
+.lab-metric .lab-label { font-size: var(--fs-xs); color: var(--ink-400); margin-bottom: var(--sp-1); }
+.lab-metric .lab-num { font-family: var(--font-serif); font-size: var(--fs-xl); color: var(--ink-900); }
+.lab-metric .lab-sub { font-size: var(--fs-xs); color: var(--brand-700); margin-top: var(--sp-1); }
+.lab-metric.alert .lab-num { color: var(--gold-700); }
+
+
+/* === M4.1 运营组件 === */
+.daily-recipe {
+  background: linear-gradient(135deg, var(--brand-50) 0%, var(--gold-100) 100%);
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5) var(--sp-6);
+  margin: var(--sp-4) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  text-decoration: none;
+  color: var(--ink-900);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.daily-recipe:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.daily-recipe .daily-badge {
+  background: var(--gold-500); color: var(--ink-900);
+  font-size: var(--fs-xs); padding: 2px var(--sp-2);
+  border-radius: var(--r-full); white-space: nowrap;
+}
+.daily-recipe .daily-name { font-family: var(--font-serif); font-size: var(--fs-lg); flex: 1; }
+.daily-recipe .daily-reason { font-size: var(--fs-xs); color: var(--ink-400); }
+
+
+/* === M4.1 运营看板 === */
+.lab-dashboard {
+  background: #fff; border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg); padding: var(--sp-6);
+  box-shadow: var(--shadow-sm); margin: var(--sp-6) 0;
+}
+.lab-dashboard h3 {
+  font-family: var(--font-serif); font-size: var(--fs-lg);
+  color: var(--brand-700); margin-bottom: var(--sp-4);
+  display: flex; align-items: center; gap: var(--sp-2);
+}
+.lab-dashboard h3 .lab-icon { color: var(--gold-500); }
+.lab-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--sp-3);
+}
+.lab-metric {
+  background: var(--ink-50); border-radius: var(--r-md);
+  padding: var(--sp-3); text-align: center;
+}
+.lab-metric .lab-label { font-size: var(--fs-xs); color: var(--ink-400); margin-bottom: var(--sp-1); }
+.lab-metric .lab-num { font-family: var(--font-serif); font-size: var(--fs-xl); color: var(--ink-900); }
+.lab-metric .lab-sub { font-size: var(--fs-xs); color: var(--brand-700); margin-top: var(--sp-1); }
+.lab-metric.alert .lab-num { color: var(--gold-700); }
+
+/* === B7: 数据源同步面板 === */
+.lab-sync-panel { margin-top: var(--sp-4); padding: var(--sp-4); background: var(--ink-50); border: 1px dashed var(--ink-200); border-radius: var(--r-md); }
+.lab-sync-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-3); }
+.lab-sync-title { font-family: var(--font-serif); font-size: var(--fs-base); color: var(--brand-700); font-weight: 600; }
+.lab-sync-hint { font-size: var(--fs-xs); color: var(--ink-400); }
+.lab-sync-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.lab-sync-btn { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); padding: var(--sp-3) var(--sp-2); font-size: var(--fs-sm); }
+.lab-sync-btn .sync-icon { font-size: var(--fs-lg); color: var(--gold-500); }
+.lab-sync-btn small { font-size: var(--fs-xs); color: var(--ink-400); font-weight: 400; }
+.lab-sync-btn:disabled { opacity: 0.6; cursor: wait; }
+.lab-sync-result { margin-top: var(--sp-3); padding: var(--sp-3); background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-sm); }
+.sync-result-row { display: flex; justify-content: space-between; align-items: baseline; padding: var(--sp-1) 0; border-bottom: 1px dashed var(--ink-100); }
+.sync-result-row:last-child { border-bottom: none; }
+.sync-result-label { font-size: var(--fs-xs); color: var(--ink-400); text-transform: uppercase; letter-spacing: 0.04em; }
+.sync-result-val { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--ink-900); font-weight: 600; }
+.sync-result-val.success { color: var(--success); }
+.sync-result-val.warn { color: var(--warn, #c2410c); }
+@media (max-width: 640px) {
+  .lab-sync-actions { grid-template-columns: 1fr; }
+}
+
+/* === B7: 配方筛选器（docs.html） === */
+.filter-source { min-width: 150px; }
+.filter-verified { min-width: 120px; }
+.recipe-thumb { width: 40px; height: 40px; border-radius: var(--r-sm); object-fit: cover; background: var(--ink-100); }
+.recipe-thumb-placeholder { width: 40px; height: 40px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--ink-100), var(--ink-200)); display: inline-flex; align-items: center; justify-content: center; color: var(--ink-400); font-size: var(--fs-lg); }
+.verified-badge { display: inline-flex; align-items: center; gap: 2px; padding: 1px 6px; border-radius: var(--r-full); font-size: var(--fs-xs); font-weight: 500; }
+.verified-badge.yes { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+.verified-badge.no { background: rgba(234, 88, 12, 0.12); color: var(--warn, #c2410c); }
+.source-tag { display: inline-block; padding: 1px 6px; border-radius: var(--r-sm); font-size: var(--fs-xs); background: var(--ink-100); color: var(--ink-600); }
+.source-tag.thecocktaildb { background: rgba(220, 38, 38, 0.08); color: #b91c1c; }
+.source-tag.iba_dataset, .source-tag.iba { background: rgba(202, 138, 4, 0.12); color: var(--gold-700); }
+.source-tag.bar_assistant { background: rgba(37, 99, 235, 0.08); color: #1d4ed8; }
+.row-actions .btn-ghost { padding: 2px 8px; font-size: var(--fs-xs); }
+
+
+/* ════════════════════════════════════════════════════════════════════
+ * C2: 核心组件重构 — 金箔引用卡 + 杂志配方卡 + 氛围导航
+ * 设计宪法：frontend-design/SKILL.md（奢华精致 + 编辑杂志混合基调）
+ * 不删除已有组件，用追加/更具体选择器覆盖。
+ * ════════════════════════════════════════════════════════════════════ */
+
+/* === C2: 金箔引用卡片（差异化亮点） === */
+.citation-list {
+  /* 覆盖原有样式：金箔渐变边框 + 噪点底 + 戏剧化阴影 */
+  background: var(--gold-100);
+  background-image: var(--noise-bg);
+  background-blend-mode: overlay;
+  border: 1px solid transparent;
+  border-left: 4px solid var(--gold-500);
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+  padding: var(--sp-4) var(--sp-6);
+  margin: var(--sp-6) 0;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}
+.citation-list::before {
+  /* 金箔装饰角标 */
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  background: var(--gold-foil);
+  opacity: 0.15;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+.citation-list:hover {
+  box-shadow: var(--shadow-gold);
+}
+.citation-list .cite-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-sm);
+  color: var(--gold-700);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--sp-3);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.citation-list .cite-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--gold-foil);
+  opacity: 0.5;
+}
+.citation-list .cite-num {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  background: var(--gold-foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  min-width: 1.75rem;
+}
+
+/* === C2: 独立金箔卡片（英雄区/精选引用） === */
+.gold-foil-card {
+  background: #fff;
+  background-image: var(--noise-bg);
+  background-blend-mode: overlay;
+  border-radius: var(--r-lg);
+  padding: var(--sp-8);
+  box-shadow: var(--shadow-drama);
+  position: relative;
+  overflow: hidden;
+}
+.gold-foil-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  background: var(--gold-foil);
+  border-radius: var(--r-lg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.gold-foil-card .foil-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2xl);
+  background: var(--gold-foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--sp-3);
+}
+.gold-foil-card .foil-quote {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  font-style: italic;
+  color: var(--ink-900);
+  line-height: 1.7;
+  margin-bottom: var(--sp-4);
+}
+.gold-foil-card .foil-attribution {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-top: 1px solid var(--ink-200);
+  padding-top: var(--sp-3);
+}
+
+/* === C2: 杂志式配方卡片 === */
+.recipe-card-magazine {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  display: flex;
+  flex-direction: column;
+}
+.recipe-card-magazine:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+.recipe-card-magazine .mag-thumb {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: var(--brand-gradient);
+  position: relative;
+}
+.recipe-card-magazine .mag-thumb-placeholder {
+  width: 100%;
+  height: 200px;
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.recipe-card-magazine .mag-thumb-placeholder::after {
+  content: "◆";
+  font-size: var(--fs-3xl);
+  color: var(--gold-500);
+  opacity: 0.6;
+}
+.recipe-card-magazine .mag-body {
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+}
+.recipe-card-magazine .mag-kicker {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--gold-700);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--sp-2);
+}
+.recipe-card-magazine .mag-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-xl);
+  color: var(--ink-900);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--sp-2);
+}
+.recipe-card-magazine .mag-deck {
+  font-family: var(--font-serif);
+  font-size: var(--fs-sm);
+  font-style: italic;
+  color: var(--ink-600);
+  line-height: 1.6;
+  margin-bottom: var(--sp-3);
+}
+.recipe-card-magazine .mag-meta {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--ink-100);
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  color: var(--ink-400);
+}
+.recipe-card-magazine .mag-meta .mag-spirit {
+  color: var(--brand-700);
+  font-weight: 600;
+}
+.recipe-card-magazine .mag-meta .mag-abv {
+  font-family: var(--font-mono);
+  color: var(--gold-700);
+}
+
+/* === C2: 氛围导航 === */
+.navbar {
+  /* 覆盖原有：噪点底 + 深酒红渐变 + 金箔底边 */
+  background: var(--brand-900);
+  background-image: var(--noise-bg), var(--brand-gradient);
+  background-blend-mode: overlay, normal;
+  border-bottom: 2px solid transparent;
+  border-image: var(--gold-foil) 1;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar .nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+}
+.navbar .brand {
+  font-family: var(--font-serif);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.navbar .brand .brand-accent {
+  background: var(--gold-foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: italic;
+}
+.navbar .nav-links {
+  display: flex;
+  gap: var(--sp-6);
+}
+.navbar .nav-links a {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: var(--sp-1) 0;
+  border-bottom: 2px solid transparent;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+}
+.navbar .nav-links a:hover,
+.navbar .nav-links a.active {
+  color: #fff;
+  border-bottom-color: var(--gold-500);
+}
+
+/* 移动端折叠（纯 CSS checkbox 技巧预留） */
+@media (max-width: 640px) {
+  .navbar .nav-links { gap: var(--sp-3); }
+  .navbar .nav-links a { font-size: var(--fs-xs); }
+}
+
+/* === M4.3 UGC 配方编辑器 === */
+.recipe-editor { max-width: 720px; margin: 0 auto; padding: var(--sp-6) var(--sp-6) var(--sp-16); }
+.editor-field { margin-bottom: var(--sp-4); }
+.editor-field label { display: block; font-size: var(--fs-sm); color: var(--ink-600); margin-bottom: var(--sp-1); font-weight: 500; font-family: var(--font-sans); letter-spacing: 0.02em; }
+.editor-field input, .editor-field select, .editor-field textarea {
+  width: 100%; padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--ink-200); border-radius: var(--r-md);
+  font-size: var(--fs-sm); font-family: var(--font-sans);
+  background: #fff; color: var(--ink-900);
+  transition: border-color var(--duration-fast);
+}
+.editor-field textarea { min-height: 160px; resize: vertical; font-family: var(--font-mono); }
+.editor-field input:focus, .editor-field select:focus, .editor-field textarea:focus {
+  outline: none; border-color: var(--brand-500); box-shadow: 0 0 0 3px var(--brand-100);
+}
+.editor-ingredients { display: flex; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2); background: var(--ink-50); border-radius: var(--r-md); min-height: 48px; }
+.editor-ingredient-chip { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-2); background: var(--gold-100); color: var(--gold-700); border-radius: var(--r-full); font-size: var(--fs-xs); }
+.editor-ingredient-chip button { background: none; border: none; color: var(--gold-700); cursor: pointer; font-size: var(--fs-xs); padding: 0; }
+.editor-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-6); }
+.editor-status-banner { padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); margin-bottom: var(--sp-4); font-size: var(--fs-sm); }
+.editor-status-banner.draft { background: var(--ink-100); color: var(--ink-600); }
+.editor-status-banner.pending { background: var(--gold-100); color: var(--gold-700); }
+.editor-status-banner.published { background: rgba(46, 125, 91, 0.12); color: var(--success); }
+.editor-status-banner.rejected { background: rgba(179, 38, 30, 0.1); color: var(--danger); }
+
+/* === M4.3 待审核队列 === */
+.lab-pending-queue { margin-top: var(--sp-4); padding: var(--sp-4); background: var(--ink-50); border: 1px dashed var(--ink-200); border-radius: var(--r-md); }
+.pending-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+.pending-item { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-2) var(--sp-3); background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-sm); }
+.pending-item .pending-title { font-family: var(--font-serif); font-size: var(--fs-sm); color: var(--ink-900); font-weight: 600; }
+.pending-item .pending-meta { font-size: var(--fs-xs); color: var(--ink-400); font-family: var(--font-mono); }
+.pending-item .pending-actions { display: flex; gap: var(--sp-1); }
+.pending-item .pending-actions button { padding: 2px 8px; font-size: var(--fs-xs); border-radius: var(--r-sm); cursor: pointer; border: 1px solid transparent; }
+.pending-item .btn-approve { background: var(--success); color: #fff; }
+.pending-item .btn-reject { background: transparent; color: var(--danger); border-color: var(--danger); }
+.empty-state-mini { text-align: center; padding: var(--sp-4); color: var(--ink-400); font-size: var(--fs-sm); }
+
+/* === M4.3 变体列表 === */
+.doc-variants { margin: var(--sp-8) 0; }
+.variant-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--sp-3); }
+.variant-card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-md); padding: var(--sp-3); transition: box-shadow var(--duration-fast); }
+.variant-card:hover { box-shadow: var(--shadow-md); }
+.variant-card .variant-title { font-family: var(--font-serif); font-size: var(--fs-base); color: var(--brand-700); font-weight: 600; margin-bottom: var(--sp-1); }
+.variant-card .variant-note { font-size: var(--fs-xs); color: var(--ink-600); font-style: italic; }

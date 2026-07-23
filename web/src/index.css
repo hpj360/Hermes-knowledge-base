@@ -1,0 +1,293 @@
+/* C1 重构：引入 mockup 设计令牌，确保 web 与 mockup 视觉完全一致 */
+/* @import 必须置于文件顶部（CSS 规范：@import 仅可先于 @charset/@layer） */
+@import "../../design/mockup/_tokens.css";
+@import "../../design/mockup/_components.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    /* C1: 去 Inter，使用 _tokens.css 的衬线杂志字体 */
+    font-family: var(--font-sans);
+    color: var(--ink-900);
+    background: var(--paper-bg);
+    line-height: 1.7;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.25;
+  }
+}
+
+@layer components {
+  /* === UI 设计规范：杂志式按钮系统 ===
+   * 三级按钮层级：primary（深酒红实心）/ secondary（金线描边）/ ghost（无框）
+   * 杂志感：去除重阴影，用细线 + tracking 强化优雅 */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 font-medium
+      transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: var(--r-sm);
+    letter-spacing: var(--tracking-medium);
+    font-size: var(--fs-sm);
+  }
+  .btn-primary {
+    @apply btn text-white;
+    background: var(--brand-700);
+    border: 1px solid var(--brand-700);
+  }
+  .btn-primary:hover {
+    background: var(--brand-900);
+    border-color: var(--brand-900);
+  }
+  .btn-secondary {
+    @apply btn;
+    background: transparent;
+    color: var(--brand-700);
+    border: 1px solid var(--gold-500);
+  }
+  .btn-secondary:hover {
+    background: var(--gold-100);
+    border-color: var(--gold-700);
+  }
+  .btn-danger {
+    @apply btn;
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .btn-danger:hover {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-ghost {
+    @apply btn;
+    background: transparent;
+    color: var(--ink-600);
+    border: 1px solid transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--ink-100);
+    color: var(--ink-900);
+  }
+
+  /* === 杂志式输入框 === */
+  .input {
+    @apply w-full;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-sm);
+    background: #fff;
+    color: var(--ink-900);
+    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 1px var(--gold-500);
+  }
+
+  /* === 杂志式卡片（克制阴影 + 细线） === */
+  .card {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-md);
+    box-shadow: 0 1px 3px rgba(31, 28, 24, 0.04);
+  }
+  .card-elevated {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* === 杂志式编号系统 ===
+   * 大写小标题 + 金色 tracking，用于"来源/SOURCE"、"第 N 章"等 */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: var(--numeral-size);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--gold-700);
+  }
+  .numeral {
+    font-family: var(--numeral-font);
+    font-size: var(--numeral-size);
+    color: var(--ink-400);
+    font-feature-settings: "lnum";
+  }
+
+  /* === 杂志式分隔线 === */
+  .divider-gold {
+    height: 1px;
+    background: var(--divider-gold);
+    border: none;
+  }
+  .divider-hair {
+    border: none;
+    border-top: var(--divider-hair);
+  }
+
+  /* === 杂志式导航 tab ===
+   * 水平排列 + 金色下划线 active + 衬线标题 */
+  .nav-tab {
+    font-family: var(--font-serif);
+    font-size: var(--fs-sm);
+    color: var(--ink-600);
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 2px solid transparent;
+    transition: color var(--duration-fast), border-color var(--duration-fast);
+    white-space: nowrap;
+  }
+  .nav-tab:hover {
+    color: var(--ink-900);
+  }
+  .nav-tab-active {
+    color: var(--brand-700);
+    border-bottom-color: var(--gold-500);
+    font-weight: 600;
+  }
+
+  /* === 杂志式大标题 ===
+   * 微收紧字距 + 衬线 + 深墨色，用于页面主标题 */
+  .display-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--ink-900);
+  }
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink-900);
+  }
+}
+
+/* === F3: 骨架屏 shimmer 动效 ===
+ * 设计宪法："聚焦高光时刻，一次精心编排的加载动效 > 散落的微交互"。
+ * shimmer 微光从左扫到右，模拟内容正在流入。 */
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--ink-100) 0%,
+    var(--ink-200) 40%,
+    var(--ink-100) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s var(--ease-out) infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === F5: 页面加载 staggered reveals ===
+ * 设计宪法："一次精心编排的页面加载 + 错落显现 > 散落的微交互"。
+ * 用 CSS animation-delay 实现错落入场，无需 JS 动画库（符合"优先 CSS-only 方案"）。
+ * 用法：在容器加 .reveal-stagger，子元素自动按序入场；或单元素加 .reveal-item + .delay-N。 */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: reveal-up var(--duration-base) var(--ease-out) forwards;
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: reveal-up var(--duration-base) var(--ease-out) forwards;
+}
+.reveal-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.reveal-stagger > *:nth-child(2) { animation-delay: 90ms; }
+.reveal-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.reveal-stagger > *:nth-child(4) { animation-delay: 190ms; }
+.reveal-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.reveal-stagger > *:nth-child(6) { animation-delay: 290ms; }
+.reveal-stagger > *:nth-child(7) { animation-delay: 340ms; }
+.reveal-stagger > *:nth-child(8) { animation-delay: 390ms; }
+/* 超过 8 个子元素时兜底，保证仍可见且有渐入效果（不丢失错落感） */
+.reveal-stagger > *:nth-child(n+9) { animation-delay: 440ms; }
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 90ms; }
+.delay-3 { animation-delay: 140ms; }
+.delay-4 { animation-delay: 190ms; }
+.delay-5 { animation-delay: 240ms; }
+
+@keyframes reveal-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === a11y: prefers-reduced-motion 降级 ===
+ * WCAG 2.3.3：前庭功能障碍用户应可关闭非必要动画。
+ * shimmer 无限循环与 reveal 入场在此媒体查询下禁用；
+ * reveal 元素直接显示（opacity:1），避免动画被全局禁用时内容不可见。 */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .reveal-item,
+  .reveal-stagger > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* === F6: 氛围背景与金箔质感 utility ===
+ * 设计宪法："用渐变网格、噪点纹理、几何图案、分层透明、戏剧化阴影营造氛围与深度，而非纯色背景"。
+ * 令牌已在 _tokens.css 定义（--noise-bg / --gold-foil / --brand-gradient / --shadow-drama / --shadow-gold），
+ * 此处提供 utility 类便于在组件中引用。 */
+
+/* 噪点纸质感叠加层（固定定位，pointer-events:none，不拦截交互） */
+.bg-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--noise-bg);
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 深酒红渐变背景（用于英雄区/页头） */
+.bg-brand-gradient {
+  background: var(--brand-gradient);
+}
+
+/* 金箔文字（配合 background-clip: text） */
+.text-gold-foil {
+  background: var(--gold-foil-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--gold-500); /* fallback */
+}
+
+/* 金箔边框（用于引用卡片/装饰线） */
+.border-gold-foil {
+  border-image: var(--gold-foil) 1;
+}
+
+/* 戏剧化阴影（深酒红投影，用于金箔卡片/英雄区） */
+.shadow-drama {
+  box-shadow: var(--shadow-drama);
+}
+
+/* 金色光晕（用于引用卡片 hover/聚焦） */
+.shadow-gold-hover:hover {
+  box-shadow: var(--shadow-gold);
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}

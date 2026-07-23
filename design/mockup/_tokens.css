@@ -1,0 +1,158 @@
+/* Hermes KB 设计 Token —— 高级酒类杂志感视觉语言
+ * 集中管理色彩/字体/间距/圆角/阴影/动效，所有页面通过 CSS 变量引用。
+ */
+
+:root {
+  /* === 色彩 · 品牌主色（深酒红） === */
+  --brand-50: #FBF1F4;
+  --brand-100: #F5DDE4;
+  --brand-200: #E9B6C4;
+  --brand-500: #B8254A;
+  --brand-700: #8B1A36;   /* 主品牌色，按钮/强调 */
+  --brand-900: #4A0E1C;   /* 深底渐变终点 */
+
+  /* === 色彩 · 暗金（强调/引用/装饰） === */
+  --gold-100: #FAF3DC;
+  --gold-300: #E5D49A;
+  --gold-500: #C9A227;    /* 主金色，引用边框/数字 */
+  --gold-700: #8C7016;
+
+  /* === 色彩 · 暖灰墨色（文本/底色） === */
+  --ink-50: #F7F5F3;
+  --ink-100: #EDE9E4;
+  --ink-200: #D9D2C8;
+  --ink-400: #8A8378;
+  --ink-600: #4A4640;
+  --ink-900: #1F1C18;     /* 正文主色 */
+
+  /* === 语义色 === */
+  --highlight: #FFF3B8;           /* chunk 高亮背景 */
+  --highlight-fade: rgba(255, 243, 184, 0);  /* 高亮淡出终点 */
+  --success: #2E7D5B;
+  --warning: #C77A1A;
+  --danger: #B3261E;
+  --info: #2C6FB5;
+
+  /* === 字体（C1 重构：去 Inter，全衬线杂志感） ===
+   * 设计宪法：frontend-design/SKILL.md 明确禁止 Inter/Roboto/Arial。
+   * Display: Cormorant Garamond（优雅古典英文标题）→ Noto Serif SC（中文回退）
+   * Body:    Crimson Text（经典杂志正文衬线）→ Noto Serif SC（中文回退）
+   * Mono:    JetBrains Mono（数据/代码，保留）
+   */
+  --font-serif: "Cormorant Garamond", "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+  --font-sans: "Crimson Text", "Source Serif Pro", "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  /* === 字号 === */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
+  --fs-3xl: 2.5rem;
+  --fs-hero: 3.5rem;
+
+  /* === 间距 === */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* === 圆角 === */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-full: 9999px;
+
+  /* === 阴影 === */
+  --shadow-sm: 0 1px 2px rgba(31, 28, 24, 0.06);
+  --shadow-md: 0 4px 12px rgba(31, 28, 24, 0.08);
+  --shadow-lg: 0 12px 32px rgba(31, 28, 24, 0.12);
+  /* C1 新增：戏剧化阴影（深酒红投影，用于金箔卡片/英雄区） */
+  --shadow-drama: 0 20px 60px rgba(74, 14, 28, 0.28), 0 8px 24px rgba(31, 28, 24, 0.12);
+  /* C1 新增：金色光晕（用于引用卡片 hover/聚焦） */
+  --shadow-gold: 0 0 0 1px rgba(201, 162, 39, 0.35), 0 4px 16px rgba(201, 162, 39, 0.22);
+
+  /* === C1 新增：氛围背景与金箔质感 === */
+  /* 噪点纹理（SVG turbulence，纯 CSS 无外部依赖，叠加在背景上营造纸质感） */
+  --noise-bg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  /* 金箔渐变（用于引用卡片边框/标题/装饰线，模拟金属质感） */
+  --gold-foil: linear-gradient(135deg, #E5D49A 0%, #C9A227 25%, #FAF3DC 50%, #C9A227 75%, #8C7016 100%);
+  /* 金箔文字（配合 background-clip: text 使用） */
+  --gold-foil-text: linear-gradient(135deg, #8C7016 0%, #C9A227 30%, #FAF3DC 50%, #C9A227 70%, #8C7016 100%);
+  /* 深酒红渐变（用于英雄区/页头氛围背景） */
+  --brand-gradient: linear-gradient(135deg, #4A0E1C 0%, #8B1A36 50%, #B8254A 100%);
+  /* 杂志底纹（噪点 + 暖白渐变，用于 body 背景） */
+  --paper-bg: linear-gradient(180deg, #F7F5F3 0%, #FFFFFF 260px);
+
+  /* === 动效 === */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-highlight: 2000ms;   /* chunk 高亮淡出时长（05 场景 A 硬约束） */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* === 布局 === */
+  --nav-height: 60px;
+  --container: 1140px;
+  --sidebar: 300px;
+
+  /* === UI 设计规范扩展：杂志式排版系统 ===
+   * 参考 Kinfolk/Cereal 杂志：大量留白、编号系统、细线分割、克制金箔点缀。
+   * 字间距 tracking：标题宽间距强化杂志感，正文紧凑保持可读。
+   */
+  --tracking-wide: 0.18em;      /* 大写小标题：来源/SOURCE */
+  --tracking-medium: 0.08em;    /* 次级标题 */
+  --tracking-tight: -0.01em;    /* 大标题微收紧 */
+
+  /* 杂志式分隔线（比 border 更精致：渐变金线） */
+  --divider-gold: linear-gradient(90deg, transparent 0%, var(--gold-500) 20%, var(--gold-300) 50%, var(--gold-500) 80%, transparent 100%);
+  --divider-hair: 1px solid var(--ink-200);
+
+  /* 编号系统（杂志页码感） */
+  --numeral-font: "Cormorant Garamond", "Noto Serif SC", serif;
+  --numeral-size: 0.7rem;
+
+  /* 留白层级（比 sp-* 更大尺度，用于章节呼吸） */
+  --space-section: 5rem;        /* 章节级留白 */
+  --space-block: 2.5rem;        /* 区块级留白 */
+  --space-element: 1.25rem;     /* 元素级留白 */
+
+  /* 杂志式卡片（更克制：无重阴影，用细线+微阴影）—— 通过 .card utility 类实现 */
+  /* 顶部导航（水平 tab，杂志感） */
+  --nav-tab-active: inset 0 -2px 0 0 var(--gold-500);
+  --nav-tab-hover: var(--ink-100);
+}
+
+/* === 全局重置 === */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  color: var(--ink-900);
+  background: var(--ink-50);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .serif { font-family: var(--font-serif); font-weight: 600; line-height: 1.25; }
+
+a { color: var(--brand-700); text-decoration: none; transition: color var(--duration-fast); }
+a:hover { color: var(--brand-500); }
+
+.container { max-width: var(--container); margin: 0 auto; padding: 0 var(--sp-6); }
+.page-title { font-family: var(--font-serif); font-size: var(--fs-2xl); margin: var(--sp-6) 0; }
+
+/* === a11y：尊重用户的减少动效偏好 === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

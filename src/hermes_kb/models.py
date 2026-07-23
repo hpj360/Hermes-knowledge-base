@@ -1,0 +1,167 @@
+"""SQLModel 数据模型。"""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import Column, ForeignKey, Text, UniqueConstraint
+from sqlmodel import Field, SQLModel
+
+# P2 修复：PRESET_CATEGORIES 已移至 config.py，此处仅做向后兼容重导出
+from hermes_kb.config import PRESET_CATEGORIES  # noqa: F401
+
+
+def _now_utc() -> datetime:
+    """当前 UTC 时间（无时区信息的 datetime，兼容 SQLite）。
+
+    P2 修复：datetime.utcnow() 在 Python 3.12+ 已废弃。
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _gen_doc_id() -> str:
+    return f"doc_{uuid4().hex[:12]}"
+
+
+class Document(SQLModel, table=True):
+    """文档。"""
+
+    doc_id: str = Field(default_factory=_gen_doc_id, primary_key=True, max_length=64)
+    title: str = Field(index=True, max_length=200)
+    content: str = Field(default="", sa_column=Column("content", Text))
+    source_type: str = Field(default="local", max_length=32)  # local / upload / seed
+    file_type: str = Field(default="txt", max_length=16)  # txt / md / pdf
+    source_path: str | None = Field(default=None, max_length=512)
+    chunk_count: int = Field(default=0)
+    category: str = Field(default="", max_length=32, index=True)  # M2-06：分类（单选）
+    # B1: 数据源治理字段（向后兼容，均有默认值）
+    source: str = Field(default="local", max_length=32, index=True)  # local/iba/thecocktaildb/user/ugc
+    source_id: str | None = Field(default=None, max_length=64)
+    verified: bool = Field(default=True)
+    season: str | None = Field(default=None, max_length=16)  # spring/summer/autumn/winter
+    hidden: bool = Field(default=False)
+    status: str = Field(default="published", max_length=16)  # draft/pending/published/rejected
+    image_url: str | None = Field(default=None, max_length=512)  # B 新增：外部图片 URL
+    meta: str = Field(default="{}", sa_column=Column("metadata", Text))  # B 新增：JSON 字符串（属性名避开 SQLAlchemy 保留字 metadata）
+    created_at: datetime = Field(default_factory=_now_utc)
+
+    def __init__(self, **data: object) -> None:
+        # 允许 `metadata=` 构造参数，映射到实际字段 `meta`
+        if "metadata" in data:
+            data["meta"] = data.pop("metadata")
+        super().__init__(**data)
+
+
+# 类创建完成后挂载 `metadata` 只读 property（避开 SQLAlchemy 在类声明期对
+# `metadata` 保留名的检查，同时不破坏 `cls.metadata` 在建表阶段返回 MetaData）。
+def _get_metadata(self: "Document") -> str:
+    return self.meta
+
+
+Document.metadata = property(_get_metadata)  # type: ignore[assignment]
+
+
+class Chunk(SQLModel, table=True):
+    """文档分片。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
+    )
+    idx: int = Field(default=0)
+    text: str = Field(default="", sa_column=Column("text", Text))
+    char_start: int = Field(default=0)
+    char_end: int = Field(default=0)
+    created_at: datetime = Field(default_factory=_now_utc)
+
+
+class Tag(SQLModel, table=True):
+    """M2-06：标签。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True, max_length=32, unique=True)
+    color: str = Field(default="#6b7280", max_length=16)  # hex 颜色
+    created_at: datetime = Field(default_factory=_now_utc)
+
+
+class DocumentTag(SQLModel, table=True):
+    """M2-06：文档-标签关联（多对多）。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
+    )
+    tag_id: int = Field(
+        sa_column=Column("tag_id", ForeignKey("tag.id", ondelete="CASCADE"), index=True),
+    )
+    created_at: datetime = Field(default_factory=_now_utc)
+
+
+class QueryLog(SQLModel, table=True):
+    """问答日志。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    query: str = Field(max_length=2000)
+    answer: str = Field(default="", sa_column=Column("answer", Text))
+    citations: str = Field(
+        default="[]", sa_column=Column("citations", Text)
+    )  # JSON
+    model_used: str = Field(default="mock", max_length=64)
+    latency_ms: int = Field(default=0)
+    feedback: int = Field(default=0)  # 1=up / -1=down / 0=none
+    created_at: datetime = Field(default_factory=_now_utc, index=True)
+
+
+class RecipeStats(SQLModel, table=True):
+    """M3：配方使用统计。"""
+
+    doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), primary_key=True),
+    )
+    match_count: int = Field(default=0)  # 被匹配命中次数（累计）
+    view_count: int = Field(default=0)  # 被点击查看次数
+    weekly_match_count: int = Field(default=0)  # A4-1: 本周新增匹配数
+    last_matched_at: datetime | None = Field(default=None)
+    last_viewed_at: datetime | None = Field(default=None)
+
+
+class IngredientSubstitute(SQLModel, table=True):
+    """M3：材料替代关系（L2 用户自定义 + L1 预置镜像）。"""
+
+    __table_args__ = (
+        UniqueConstraint("canonical", "substitute", name="uq_ingredient_substitute"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    canonical: str = Field(index=True, max_length=64)  # 原材料标准名
+    substitute: str = Field(max_length=64)  # 替代材料名
+    source: str = Field(default="preset", max_length=16)  # preset | user
+    created_at: datetime = Field(default_factory=_now_utc)
+
+
+class MissingIngredientStats(SQLModel, table=True):
+    """M4.1：缺失材料统计（材料维度，反向优化替代表）。"""
+
+    canonical: str = Field(primary_key=True, max_length=64)
+    missing_count: int = Field(default=0)
+    last_missing_at: datetime | None = Field(default=None)
+
+
+class RecipeVariant(SQLModel, table=True):
+    """M4.3：配方变体关联。"""
+
+    id: int | None = Field(default=None, primary_key=True)
+    base_doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("base_doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
+    )  # 原配方
+    variant_doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("variant_doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
+    )  # 变体配方
+    variant_note: str = Field(default="", max_length=200)  # 变体说明
+    created_at: datetime = Field(default_factory=_now_utc)
