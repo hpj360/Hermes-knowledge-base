@@ -125,9 +125,10 @@ def test_backward_compatible():
     assert get_category("橄榄") == "garnish"
     assert get_category("不存在") is None
 
-    # list_by_category：原 5 种装饰不变
+    # list_by_category：原 5 种装饰仍在（M3-A 扩展后 garnish 增多，验证前 5 项不变）
     garnishes = list_by_category("garnish")
-    assert garnishes == ["橄榄", "柠檬片", "薄荷叶", "樱桃", "橙皮"]
+    assert garnishes[:5] == ["橄榄", "柠檬片", "薄荷叶", "樱桃", "橙皮"]
+    assert len(garnishes) >= 5
     # 原有基酒 6 种仍在
     spirits = list_by_category("base_spirit")
     for s in ["金酒", "威士忌", "朗姆酒", "龙舌兰", "白兰地", "伏特加"]:
