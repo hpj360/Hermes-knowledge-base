@@ -12,6 +12,7 @@ import { LabPanel } from "./components/LabPanel";
 import { RecipePanel } from "./components/RecipePanel";
 import { RecipeEditorPanel } from "./components/RecipeEditorPanel";
 import { Skeleton } from "./components/Skeleton";
+import { ToastHost } from "./components/Toast";
 
 type Tab = "chat" | "docs" | "detail" | "tags" | "lab" | "recipes" | "recipe-editor";
 
@@ -232,6 +233,9 @@ export default function App() {
           onImported={refreshDocs}
         />
       )}
+
+      {/* 全局 Toast 容器 */}
+      <ToastHost />
     </div>
   );
 }

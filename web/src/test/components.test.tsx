@@ -28,7 +28,7 @@ describe("CitationList", () => {
 
   it("渲染引用列表标题", () => {
     render(<CitationList citations={mockCitations} />);
-    expect(screen.getByText(/引用来源/)).toBeInTheDocument();
+    expect(screen.getByText(/来源溯源/)).toBeInTheDocument();
   });
 
   it("渲染所有引用项", () => {

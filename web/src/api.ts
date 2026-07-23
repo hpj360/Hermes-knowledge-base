@@ -7,6 +7,9 @@ import type {
   DocumentItem,
   HealthStatus,
   HistoryItem,
+  IMASearchItem,
+  IMASyncResult,
+  IMAKnowledgeBase,
   LabDashboard,
   LabDailyRecipe,
   LabHotRecipe,
@@ -496,5 +499,63 @@ export const api = {
     source: "frontmatter" | "estimated";
   }> {
     return request(`/api/lab/recipes/${encodeURIComponent(docId)}/stats`);
+  },
+
+  // B6+: GET /api/lab/substitutes — 查询替代关系（传 canonical 单条，不传全部）
+  async labListSubstitutes(canonical?: string): Promise<{
+    canonical?: string;
+    substitutes?: string[];
+    total?: number;
+    items?: Array<{ canonical: string; substitutes: string[] }>;
+  }> {
+    const qs = canonical
+      ? `?canonical=${encodeURIComponent(canonical)}`
+      : "";
+    return request(`/api/lab/substitutes${qs}`);
+  },
+
+  // B6: IMA 知识库同步 — 列出知识库 / 同步到本地 / 实时检索
+  async labImaListKbs(
+    query?: string,
+    limit?: number
+  ): Promise<{ items: IMAKnowledgeBase[]; total: number }> {
+    const sp = new URLSearchParams();
+    if (query) sp.set("query", query);
+    if (limit !== undefined) sp.set("limit", String(limit));
+    const qs = sp.toString();
+    return request(`/api/lab/ima/knowledge-bases${qs ? "?" + qs : ""}`);
+  },
+
+  async labImaSync(params: {
+    query?: string;
+    kb_id?: string;
+    limit?: number;
+    category?: string;
+  }): Promise<IMASyncResult> {
+    return request("/api/lab/ima/sync", {
+      method: "POST",
+      body: JSON.stringify({
+        query: params.query || "",
+        kb_id: params.kb_id || "",
+        limit: params.limit ?? 50,
+        category: params.category || "资料",
+      }),
+    });
+  },
+
+  async labImaSearch(
+    query: string,
+    kbId?: string,
+    limit?: number
+  ): Promise<{
+    info_list: IMASearchItem[];
+    cursor: string;
+    has_more: boolean;
+  }> {
+    const sp = new URLSearchParams();
+    sp.set("query", query);
+    if (kbId) sp.set("kb_id", kbId);
+    if (limit !== undefined) sp.set("limit", String(limit));
+    return request(`/api/lab/ima/search?${sp.toString()}`);
   },
 };

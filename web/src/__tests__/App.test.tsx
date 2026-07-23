@@ -25,6 +25,7 @@ vi.mock("../api", () => ({
     labDaily: vi.fn().mockResolvedValue({ title: null, reason: "empty" }),
     labRecipes: vi.fn().mockResolvedValue({ items: [] }),
   },
+  setUnauthorizedHandler: vi.fn(),
 }));
 
 import App from "../App";

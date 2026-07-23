@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
-import type { LabDailyRecipe, LabMatchItem, LabMatchResult } from "../types";
+import type {
+  IMASearchItem,
+  IMASyncResult,
+  LabDailyRecipe,
+  LabMatchItem,
+  LabMatchResult,
+} from "../types";
+import { Modal } from "./Modal";
+import { showToast } from "./Toast";
 
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
 }
 
-/** M3 实验室主面板：今日推荐 + 材料选择 + 匹配结果。 */
+/** M3 实验室主面板：今日推荐 + 材料选择 + 匹配结果 + 替代原料 + 制作步骤 + IMA 同步。 */
 export function LabPanel({ onJumpToDoc }: LabPanelProps) {
   const [daily, setDaily] = useState<LabDailyRecipe | null>(null);
   const [selected, setSelected] = useState<Record<string, string>>({});
@@ -14,6 +22,9 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
   const [result, setResult] = useState<LabMatchResult | null>(null);
   const [matching, setMatching] = useState(false);
   const [error, setError] = useState("");
+
+  // B6: IMA 知识库同步入口
+  const [showImaModal, setShowImaModal] = useState(false);
 
   // 加载今日推荐
   useEffect(() => {
@@ -43,6 +54,19 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
       }
       return next;
     });
+  };
+
+  /** B6+: 点击缺失材料的替代品 → 加入已选材料，重新匹配。 */
+  const applySubstitute = (canonical: string, sub: string) => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      // 仅当用户尚未拥有该替代品时加入
+      if (!next[sub]) {
+        next[sub] = prev[canonical] || "modifier";
+      }
+      return next;
+    });
+    showToast(`已加入替代原料：${sub}`, "success");
   };
 
   const clearAll = () => {
@@ -97,7 +121,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      {/* 页面头部：杂志式 eyebrow + display-title + 金线 */}
+      {/* 页面头部：杂志式 eyebrow + display-title + 金线 + IMA 入口 */}
       <div className="text-center mb-8">
         <p className="eyebrow mb-2">LABORATORY</p>
         <h2 className="display-title">🧪 鸡尾酒实验室</h2>
@@ -108,6 +132,16 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         >
           选择手头的材料，发现你能调的鸡尾酒
         </p>
+        <div className="mt-4">
+          <button
+            type="button"
+            className="btn-ghost text-xs"
+            onClick={() => setShowImaModal(true)}
+            aria-label="从 IMA 知识库同步内容"
+          >
+            📚 从 IMA 知识库同步
+          </button>
+        </div>
       </div>
 
       {/* 今日推荐 — 杂志式卡片 */}
@@ -120,7 +154,6 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
               : undefined
           }
           onKeyDown={(e) => {
-            // F4: a11y — role=button 需支持 Enter/Space 键盘激活
             if ((e.key === "Enter" || e.key === " ") && onJumpToDoc && daily.doc_id) {
               e.preventDefault();
               onJumpToDoc(daily.doc_id, daily.chunk_rowid || undefined);
@@ -310,6 +343,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
             emptyHint="无完整匹配，再选一些材料试试"
             variant="full"
             onJumpToDoc={onJumpToDoc}
+            onApplySubstitute={applySubstitute}
           />
           <MatchGroup
             title="差一种就能做"
@@ -317,8 +351,20 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
             emptyHint="无差一种匹配"
             variant="partial"
             onJumpToDoc={onJumpToDoc}
+            onApplySubstitute={applySubstitute}
           />
         </div>
+      )}
+
+      {/* B6: IMA 同步 Modal */}
+      {showImaModal && (
+        <ImaSyncDialog
+          onClose={() => setShowImaModal(false)}
+          onSynced={() => {
+            // 同步后清空结果，让用户重新匹配
+            setResult(null);
+          }}
+        />
       )}
     </div>
   );
@@ -330,9 +376,17 @@ interface MatchGroupProps {
   emptyHint: string;
   variant: "full" | "partial";
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
+  onApplySubstitute?: (canonical: string, sub: string) => void;
 }
 
-function MatchGroup({ title, items, emptyHint, variant, onJumpToDoc }: MatchGroupProps) {
+function MatchGroup({
+  title,
+  items,
+  emptyHint,
+  variant,
+  onJumpToDoc,
+  onApplySubstitute,
+}: MatchGroupProps) {
   if (items.length === 0) {
     return (
       <div
@@ -354,7 +408,13 @@ function MatchGroup({ title, items, emptyHint, variant, onJumpToDoc }: MatchGrou
       </div>
       <div className="space-y-4">
         {items.map((r) => (
-          <RecipeMatchCard key={r.doc_id} item={r} variant={variant} onJumpToDoc={onJumpToDoc} />
+          <RecipeMatchCard
+            key={r.doc_id}
+            item={r}
+            variant={variant}
+            onJumpToDoc={onJumpToDoc}
+            onApplySubstitute={onApplySubstitute}
+          />
         ))}
       </div>
     </div>
@@ -365,10 +425,21 @@ interface RecipeMatchCardProps {
   item: LabMatchItem;
   variant: "full" | "partial";
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
+  onApplySubstitute?: (canonical: string, sub: string) => void;
 }
 
-function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
+function RecipeMatchCard({
+  item,
+  variant,
+  onJumpToDoc,
+  onApplySubstitute,
+}: RecipeMatchCardProps) {
   const isPartial = variant === "partial";
+  const [expanded, setExpanded] = useState(false);
+  const hasSteps = !!item.steps && item.steps.length > 0;
+  const missingItems = item.ingredients.filter((ing) => !ing.have);
+  const hasSubstitutes = missingItems.some((ing) => ing.substitutes && ing.substitutes.length > 0);
+
   return (
     <div
       className="card p-5"
@@ -400,6 +471,8 @@ function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
             : "材料齐全"}
         </span>
       </div>
+
+      {/* 材料清单：have 绿色对勾 / missing 灰色删除线 */}
       <div className="flex flex-wrap gap-1.5 mb-3">
         {(item.ingredients || []).map((ing) => (
           <span
@@ -420,11 +493,134 @@ function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
           </span>
         ))}
       </div>
-      {isPartial && item.missing && item.missing.length > 0 && (
+
+      {/* 替代原料推荐：缺失材料下方显示虚线 chip，点击加入已选 */}
+      {hasSubstitutes && (
+        <div
+          className="mb-3 p-3 rounded"
+          style={{
+            background: "var(--gold-100)",
+            borderLeft: "2px dashed var(--gold-500)",
+          }}
+        >
+          <p
+            className="eyebrow mb-2"
+            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          >
+            替代原料推荐
+          </p>
+          {missingItems
+            .filter((ing) => ing.substitutes && ing.substitutes.length > 0)
+            .map((ing) => (
+              <div
+                key={ing.name}
+                className="flex items-center gap-2 flex-wrap mb-1.5 last:mb-0"
+              >
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
+                >
+                  {ing.name} →
+                </span>
+                {(ing.substitutes || []).map((sub) => (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => onApplySubstitute?.(ing.name, sub)}
+                    className="sub-chip"
+                    aria-label={`使用 ${sub} 替代 ${ing.name}`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* 缺失摘要（partial 时仍保留简短列表，便于无替代时也可视） */}
+      {isPartial && item.missing && item.missing.length > 0 && !hasSubstitutes && (
         <div className="text-xs mb-3" style={{ color: "var(--gold-700)" }}>
           缺：{item.missing.join("、")}
         </div>
       )}
+
+      {/* 制作方法推荐：可折叠的步骤区，杂志式编号 */}
+      {hasSteps && (
+        <div
+          className="mb-3 rounded"
+          style={{
+            background: "var(--ink-50)",
+            border: "1px solid var(--ink-100)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="w-full flex items-center justify-between px-3 py-2 text-left"
+            aria-expanded={expanded}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: "var(--font-sans)",
+            }}
+          >
+            <span
+              className="eyebrow"
+              style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+            >
+              制作方法 · {item.steps!.length} 步
+            </span>
+            <span
+              className="text-xs"
+              style={{ color: "var(--ink-400)" }}
+              aria-hidden="true"
+            >
+              {expanded ? "收起 ▲" : "展开 ▼"}
+            </span>
+          </button>
+          {expanded && (
+            <ol
+              className="px-4 pb-3 m-0"
+              style={{ listStyle: "none", counterReset: "step" }}
+            >
+              {item.steps!.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex gap-3 mb-2 last:mb-0"
+                  style={{ counterIncrement: "step" }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "var(--fs-sm)",
+                      fontWeight: 700,
+                      color: "var(--brand-700)",
+                      minWidth: "1.5rem",
+                      textAlign: "right",
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span
+                    className="flex-1"
+                    style={{
+                      fontFamily: "var(--font-sans)",
+                      fontSize: "var(--fs-sm)",
+                      color: "var(--ink-900)",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {step}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+
       <div
         className="flex items-center justify-between pt-3 border-t border-dashed"
         style={{ borderColor: "var(--ink-200)" }}
@@ -454,6 +650,288 @@ function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
         )}
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// B6: IMA 知识库同步弹窗
+// ---------------------------------------------------------------------------
+interface ImaSyncDialogProps {
+  onClose: () => void;
+  onSynced?: () => void;
+}
+
+function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
+  const [query, setQuery] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [searchHits, setSearchHits] = useState<IMASearchItem[] | null>(null);
+  const [lastResult, setLastResult] = useState<IMASyncResult | null>(null);
+  const [error, setError] = useState("");
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setSearching(true);
+    setError("");
+    try {
+      const r = await api.labImaSearch(query.trim(), undefined, 5);
+      setSearchHits(r.info_list || []);
+      if ((r.info_list || []).length === 0) {
+        showToast("未找到相关内容", "warning");
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      showToast(`检索失败：${msg}`, "danger");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setError("");
+    try {
+      const r = await api.labImaSync({
+        query: query.trim(),
+        limit: 50,
+        category: "资料",
+      });
+      setLastResult(r);
+      const msg = `同步完成：新增 ${r.imported}，跳过 ${r.skipped}，失败 ${r.failed}`;
+      showToast(msg, r.failed > 0 ? "warning" : "success");
+      onSynced?.();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      showToast(`同步失败：${msg}`, "danger");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="从 IMA 知识库同步"
+      maxWidth={560}
+      footer={
+        <>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={onClose}
+            disabled={syncing}
+          >
+            关闭
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleSync}
+            disabled={syncing}
+          >
+            {syncing ? "同步中..." : "同步到本地"}
+          </button>
+        </>
+      }
+    >
+      <p
+        className="text-sm mb-4"
+        style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
+      >
+        通过 IMA OpenAPI 把知识库中的内容检索并导入到本地知识库。需在服务端配置
+        <code
+          style={{
+            background: "var(--ink-100)",
+            padding: "1px 4px",
+            borderRadius: "var(--r-sm)",
+            margin: "0 2px",
+            fontSize: "0.85em",
+          }}
+        >
+          KB_IMA_CLIENT_ID
+        </code>
+        与
+        <code
+          style={{
+            background: "var(--ink-100)",
+            padding: "1px 4px",
+            borderRadius: "var(--r-sm)",
+            margin: "0 2px",
+            fontSize: "0.85em",
+          }}
+        >
+          KB_IMA_API_KEY
+        </code>
+        。
+      </p>
+
+      <div className="flex gap-2 mb-4">
+        <input
+          className="input flex-1"
+          placeholder="检索关键词，如 鸡尾酒 历史 / 调酒技法"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSearch();
+          }}
+          aria-label="IMA 检索关键词"
+        />
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleSearch}
+          disabled={searching || !query.trim()}
+        >
+          {searching ? "检索中..." : "预览"}
+        </button>
+      </div>
+
+      {error && (
+        <div
+          className="text-xs mb-3 p-2 rounded"
+          style={{
+            background: "rgba(179, 38, 30, 0.08)",
+            color: "var(--danger)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {searchHits && (
+        <div className="mb-4">
+          <p
+            className="eyebrow mb-2"
+            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          >
+            检索预览 · {searchHits.length} 条
+          </p>
+          <div
+            style={{
+              maxHeight: "240px",
+              overflowY: "auto",
+              border: "1px solid var(--ink-200)",
+              borderRadius: "var(--r-md)",
+              background: "var(--ink-50)",
+            }}
+          >
+            {searchHits.length === 0 ? (
+              <p
+                className="text-sm text-center py-6"
+                style={{ color: "var(--ink-400)" }}
+              >
+                未找到相关内容
+              </p>
+            ) : (
+              searchHits.map((hit, i) => (
+                <div
+                  key={i}
+                  className="px-3 py-2 border-b last:border-b-0"
+                  style={{ borderColor: "var(--ink-100)" }}
+                >
+                  <p
+                    className="text-sm font-semibold mb-1"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      color: "var(--ink-900)",
+                    }}
+                  >
+                    {hit.title || "未命名"}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{
+                      color: "var(--ink-600)",
+                      fontFamily: "var(--font-sans)",
+                      lineHeight: 1.5,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {hit.content || "（无正文预览）"}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {lastResult && (
+        <div
+          className="p-3 rounded"
+          style={{
+            background: "var(--gold-100)",
+            borderLeft: "3px solid var(--gold-500)",
+          }}
+        >
+          <p
+            className="eyebrow mb-2"
+            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          >
+            上次同步结果
+          </p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: "var(--success)",
+                }}
+              >
+                {lastResult.imported}
+              </div>
+              <div
+                className="text-xs"
+                style={{ color: "var(--ink-400)" }}
+              >
+                新增
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: "var(--ink-400)",
+                }}
+              >
+                {lastResult.skipped}
+              </div>
+              <div
+                className="text-xs"
+                style={{ color: "var(--ink-400)" }}
+              >
+                跳过
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: lastResult.failed > 0 ? "var(--danger)" : "var(--ink-400)",
+                }}
+              >
+                {lastResult.failed}
+              </div>
+              <div
+                className="text-xs"
+                style={{ color: "var(--ink-400)" }}
+              >
+                失败
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Modal>
   );
 }
 

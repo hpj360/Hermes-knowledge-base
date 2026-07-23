@@ -140,6 +140,7 @@ export interface LabMatchItem {
   match_count?: number;       // full_match 携带
   missing?: string[];         // partial_match 携带
   missing_count?: number;     // partial_match 携带
+  steps?: string[];           // 制作步骤（B6+：卡片内联展开）
 }
 
 /** /api/lab/match 响应 */
@@ -224,4 +225,38 @@ export interface LabSyncResult {
   failed?: number;
   unknown_ingredients?: string[];
   [key: string]: any;
+}
+
+// ---------------------------------------------------------------------------
+// IMA 知识库同步（B6: 项目链接读取知识库）
+// ---------------------------------------------------------------------------
+
+/** /api/lab/ima/knowledge-bases 单条 */
+export interface IMAKnowledgeBase {
+  kb_id: string;
+  kb_name?: string;
+  content_count?: number;
+  [key: string]: any;
+}
+
+/** /api/lab/ima/search 单条检索片段 */
+export interface IMASearchItem {
+  title?: string;
+  content?: string;
+  url?: string;
+  [key: string]: any;
+}
+
+/** /api/lab/ima/sync 同步结果 */
+export interface IMASyncResult {
+  source: "ima";
+  kb_id: string;
+  imported: number;
+  skipped: number;
+  failed: number;
+  items: Array<{
+    title: string;
+    doc_id: string;
+    status: "imported" | "skipped";
+  }>;
 }

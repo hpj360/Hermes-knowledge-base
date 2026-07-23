@@ -1,6 +1,7 @@
 /* C1 重构：引入 mockup 设计令牌，确保 web 与 mockup 视觉完全一致 */
 /* @import 必须置于文件顶部（CSS 规范：@import 仅可先于 @charset/@layer） */
 @import "../../design/mockup/_tokens.css";
+@import "../../design/mockup/_components.css";
 
 @tailwind base;
 @tailwind components;
