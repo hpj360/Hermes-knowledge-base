@@ -1,14 +1,15 @@
-"""混合检索：BM25（FTS5）+ 向量（Python 余弦）+ RRF 融合。
+"""混合检索：BM25（FTS5）+ 向量（sqlite-vec ANN，降级 Python 余弦）+ RRF 融合。
 
 中文 BM25 分词策略（P0 修复关键）：
-- 标点切断
+- 标点切段
 - 中文片段 bigram + 单字
 - 英文保留原词
 - 用 OR 查询，FTS5 unicode61 分词器对中文按字索引，bigram 能命中
 
-性能优化（P0 修复）：
-- BM25/向量命中后批量预取 doc_title / chunk_text，消除 N+1
-- _cosine 使用 math 模块向量化循环，避免逐元素 append
+向量检索（E3）：
+- 优先 sqlite-vec vec0 ANN 索引（chunk_vec_ann），O(log n) 近似检索
+- 降级条件：sqlite-vec 不可用 / 扩展加载失败 / 维度不匹配 / ANN 查询异常
+- 降级路径：Python 余弦相似度全表扫描（chunk_vec，受 vector_scan_limit 约束）
 """
 
 from __future__ import annotations
@@ -20,10 +21,11 @@ import re
 from dataclasses import dataclass
 
 from sqlalchemy import text as sa_text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
 
 from hermes_kb.config import get_settings
-from hermes_kb.database import get_engine, get_session
+from hermes_kb.database import _SQLITE_VEC_AVAILABLE, get_engine, get_session
 from hermes_kb.embedding import EmbeddingService
 from hermes_kb.models import Chunk, Document
 
@@ -160,12 +162,9 @@ class HybridRetriever:
                     ),
                     {"q": fts_query, "k": k},
                 ).fetchall()
-        except Exception as e:
-            logger.warning("BM25 检索失败: %s", e)
+        except SQLAlchemyError as exc:
+            logger.warning("BM25 FTS5 query failed (query=%r): %s", fts_query, exc)
             return []
-        # 批量预取 doc_title，消除 N+1
-        doc_ids = {row[1] for row in rows}
-        title_map = self._batch_doc_titles(doc_ids)
         hits: list[RetrievalHit] = []
         # FTS5 bm25() 越小越好（距离），取负值转为"越大越好"
         for row in rows:
@@ -174,11 +173,12 @@ class HybridRetriever:
             text = row[2] or ""
             raw_score = float(row[3]) if row[3] is not None else 0.0
             score = -raw_score  # 转换为越大越好
+            title = self._doc_title(doc_id)
             hits.append(
                 RetrievalHit(
                     chunk_rowid=rowid,
                     doc_id=doc_id,
-                    title=title_map.get(doc_id, doc_id),
+                    title=title,
                     text=text,
                     score=score,
                     source="bm25",
@@ -187,20 +187,102 @@ class HybridRetriever:
         return hits
 
     def _vector(self, query: str, k: int) -> list[RetrievalHit]:
-        """向量检索（Python 余弦相似度）。"""
+        """向量检索（优先 sqlite-vec ANN，降级 Python 余弦扫描）。"""
         qvec = self.embedding.embed_one(query)
         if not qvec or all(v == 0.0 for v in qvec):
             return []
+        # 优先 ANN 索引（sqlite-vec vec0）
+        if _SQLITE_VEC_AVAILABLE:
+            try:
+                hits = self._vector_ann(qvec, k)
+                if hits:
+                    return hits
+                # ANN 返回空：索引可能未填充，降级到全表扫描兜底
+            except Exception as exc:
+                logger.warning(
+                    "ANN query failed, falling back to Python cosine scan: %s", exc
+                )
+        # 降级：Python 余弦相似度全表扫描
+        return self._vector_scan(qvec, k)
+
+    def _vector_ann(self, qvec: list[float], k: int) -> list[RetrievalHit]:
+        """sqlite-vec vec0 ANN 检索。
+
+        查询返回 (rowid, distance)，distance 越小越相似（欧氏距离）。
+        维度不匹配（query 维度 != 表定义维度）会抛 OperationalError，
+        由调用方捕获后降级到 Python 余弦扫描。
+        """
+        import sqlite_vec
+
+        qbytes = sqlite_vec.serialize_float32(qvec)
         eng = get_engine()
+        with eng.connect() as conn:
+            rows = conn.execute(
+                sa_text(
+                    "SELECT rowid, distance FROM chunk_vec_ann "
+                    "WHERE embedding MATCH :q ORDER BY distance LIMIT :k"
+                ),
+                {"q": qbytes, "k": k},
+            ).fetchall()
+        if not rows:
+            return []
+        rowids = [int(r[0]) for r in rows]
+        dist_map = {int(r[0]): float(r[1]) for r in rows}
+        # 批量查元数据（消除 N+1）；跳过已删除 chunk（ANN 索引残留 rowid）
+        chunk_meta: dict[int, tuple[str, str]] = {}  # rowid -> (doc_id, text)
+        title_map: dict[str, str] = {}
+        try:
+            with get_session() as session:
+                chunks = session.exec(
+                    select(Chunk).where(Chunk.id.in_(rowids))
+                ).all()
+                chunk_meta = {c.id: (c.doc_id, c.text) for c in chunks}
+                doc_ids = list({d_id for d_id, _ in chunk_meta.values()})
+                if doc_ids:
+                    docs = session.exec(
+                        select(Document).where(Document.doc_id.in_(doc_ids))
+                    ).all()
+                    title_map = {d.doc_id: d.title for d in docs}
+        except SQLAlchemyError as exc:
+            logger.warning(
+                "vector ANN metadata fetch failed (rowids=%s): %s", rowids, exc
+            )
+        hits: list[RetrievalHit] = []
+        for rowid in rowids:
+            meta = chunk_meta.get(rowid)
+            if meta is None:
+                # chunk 已删除（ANN 索引残留），跳过
+                continue
+            doc_id, text = meta
+            dist = dist_map.get(rowid, 0.0)
+            # distance 越小越相似；转为 similarity-like score（越大越好）
+            score = 1.0 / (1.0 + max(dist, 0.0))
+            hits.append(
+                RetrievalHit(
+                    chunk_rowid=rowid,
+                    doc_id=doc_id,
+                    title=title_map.get(doc_id, doc_id),
+                    text=text,
+                    score=score,
+                    source="vector",
+                )
+            )
+        return hits
+
+    def _vector_scan(self, qvec: list[float], k: int) -> list[RetrievalHit]:
+        """Python 余弦相似度全表扫描（fallback，受 vector_scan_limit 约束）。"""
+        eng = get_engine()
+        scan_limit = get_settings().vector_scan_limit
         try:
             with eng.connect() as conn:
                 rows = conn.execute(
                     sa_text(
-                        "SELECT chunk_rowid, doc_id, vec FROM chunk_vec LIMIT 10000"
-                    )
+                        "SELECT chunk_rowid, doc_id, vec FROM chunk_vec LIMIT :lim"
+                    ),
+                    {"lim": scan_limit},
                 ).fetchall()
-        except Exception as e:
-            logger.warning("向量检索失败: %s", e)
+        except SQLAlchemyError as exc:
+            logger.warning("vector scan failed: %s", exc)
             return []
         scored: list[tuple[float, int, str]] = []
         for row in rows:
@@ -208,17 +290,33 @@ class HybridRetriever:
             doc_id = row[1]
             try:
                 vec = json.loads(row[2])
-            except Exception:
+            except (json.JSONDecodeError, TypeError):
                 continue
             sim = _cosine(qvec, vec)
             scored.append((sim, rowid, doc_id))
         scored.sort(key=lambda x: x[0], reverse=True)
         top = scored[:k]
-        # 批量预取 chunk_text + doc_title，消除 N+1
-        chunk_rowids = [rowid for _, rowid, _ in top]
-        doc_ids = {doc_id for _, _, doc_id in top}
-        chunk_text_map = self._batch_chunk_texts(chunk_rowids)
-        title_map = self._batch_doc_titles(doc_ids)
+        if not top:
+            return []
+
+        # 批量查元数据（消除 N+1，A3-1）
+        rowids = [t[1] for t in top]
+        doc_ids = list({t[2] for t in top})
+        chunk_map: dict[int, str] = {}
+        title_map: dict[str, str] = {}
+        try:
+            with get_session() as session:
+                chunks = session.exec(
+                    select(Chunk).where(Chunk.id.in_(rowids))
+                ).all()
+                chunk_map = {c.id: c.text for c in chunks}
+                docs = session.exec(
+                    select(Document).where(Document.doc_id.in_(doc_ids))
+                ).all()
+                title_map = {d.doc_id: d.title for d in docs}
+        except SQLAlchemyError as exc:
+            logger.warning("vector metadata fetch failed (rowids=%s): %s", rowids, exc)
+
         hits: list[RetrievalHit] = []
         for sim, rowid, doc_id in top:
             hits.append(
@@ -226,39 +324,30 @@ class HybridRetriever:
                     chunk_rowid=rowid,
                     doc_id=doc_id,
                     title=title_map.get(doc_id, doc_id),
-                    text=chunk_text_map.get(rowid, ""),
+                    text=chunk_map.get(rowid, ""),
                     score=sim,
                     source="vector",
                 )
             )
         return hits
 
-    def _batch_doc_titles(self, doc_ids: set[str]) -> dict[str, str]:
-        """批量预取文档标题，消除 N+1 查询。"""
-        if not doc_ids:
-            return {}
+    def _doc_title(self, doc_id: str) -> str:
         try:
             with get_session() as session:
-                rows = session.exec(
-                    select(Document.doc_id, Document.title).where(
-                        Document.doc_id.in_(list(doc_ids))
-                    )
-                ).all()
-                return {row[0]: row[1] for row in rows}
-        except Exception as e:
-            logger.warning("批量预取文档标题失败: %s", e)
-            return {}
+                d = session.get(Document, doc_id)
+                return d.title if d else doc_id
+        except SQLAlchemyError as exc:
+            logger.warning("doc title fetch failed (doc_id=%s): %s", doc_id, exc)
+            return doc_id
 
-    def _batch_chunk_texts(self, rowids: list[int]) -> dict[int, str]:
-        """批量预取分片文本，消除 N+1 查询。"""
-        if not rowids:
-            return {}
+    def _chunk_meta(self, rowid: int, doc_id: str) -> tuple[str, str]:
         try:
             with get_session() as session:
-                rows = session.exec(
-                    select(Chunk.id, Chunk.text).where(Chunk.id.in_(rowids))
-                ).all()
-                return {row[0]: row[1] or "" for row in rows}
-        except Exception as e:
-            logger.warning("批量预取分片文本失败: %s", e)
-            return {}
+                c = session.get(Chunk, rowid)
+                text = c.text if c else ""
+                d = session.get(Document, doc_id)
+                title = d.title if d else doc_id
+                return text, title
+        except SQLAlchemyError as exc:
+            logger.warning("chunk meta fetch failed (rowid=%s, doc_id=%s): %s", rowid, doc_id, exc)
+            return "", doc_id
