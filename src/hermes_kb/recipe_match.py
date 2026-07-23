@@ -33,6 +33,14 @@ from hermes_kb.substitutes import get_substitutes
 # A4-2: frontmatter 注释格式 `<!-- ingredients: a|b|c -->`
 _FRONTMATTER_PATTERN = re.compile(r"<!--\s*ingredients:\s*([^>]+?)\s*-->")
 
+# 步骤段落标题（## 步骤 / ## 做法 / ## 制作方法），大小写不敏感
+_STEPS_HEADING_RE = re.compile(
+    r"^##\s+(?:步骤|做法|制作方法|Instructions|Steps)\s*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+# 有序/无序列表项：`1. xxx` / `- xxx` / `* xxx`
+_LIST_ITEM_RE = re.compile(r"^\s*(?:\d+[.)]\s+|[-*]\s+)(.+)$")
+
 
 def batch_first_chunks(
     doc_ids: list[str], session: Session | None = None
@@ -167,6 +175,37 @@ def _get_recipe_ingredients(recipe: dict[str, Any]) -> set[str]:
     return _parse_ingredients_from_content(recipe.get("content", ""))
 
 
+def _parse_steps_from_content(content: str) -> list[str]:
+    """从配方 content 解析制作步骤。
+
+    定位 `## 步骤`（或 做法/制作方法/Instructions/Steps）段落，
+    读取到下一个 `## ` 标题或文件末尾，提取有序/无序列表项文本。
+
+    返回步骤文本列表（已 strip）；无步骤段落返回空列表。
+    """
+    if not content:
+        return []
+    m = _STEPS_HEADING_RE.search(content)
+    if not m:
+        return []
+    # 段落起点 = 标题行结束后
+    body = content[m.end():]
+    steps: list[str] = []
+    for line in body.splitlines():
+        # 遇到下一个二级标题，结束本段落
+        if line.startswith("## "):
+            break
+        if not line.strip():
+            continue
+        item = _LIST_ITEM_RE.match(line)
+        if item:
+            steps.append(item.group(1).strip())
+        elif steps:
+            # 列表项的续行（多行步骤），拼接到上一条
+            steps[-1] = f"{steps[-1]} {line.strip()}"
+    return steps
+
+
 def _is_required(ingredient: str) -> bool:
     """装饰类材料（garnish）视为可选，不参与缺少数判定。"""
     return get_category(ingredient) != "garnish"
@@ -242,6 +281,7 @@ def match_recipes(
             "ingredients": ingredient_details,
             "base_spirit": meta.get("base_spirit", ""),
             "difficulty": meta.get("difficulty", ""),
+            "steps": _parse_steps_from_content(recipe.get("content", "")),
         }
 
         if len(truly_missing) == 0:

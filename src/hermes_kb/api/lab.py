@@ -115,6 +115,19 @@ async def lab_save_substitute(req: dict[str, Any]) -> dict[str, Any]:
     return {"canonical": canonical, "substitute": substitute, "status": "ok"}
 
 
+@router.get("/substitutes", dependencies=[Depends(require_age_gate)])
+async def lab_list_substitutes(canonical: str = "") -> dict[str, Any]:
+    """查询替代关系。传 canonical 返回单个材料的替代列表；不传返回全部。"""
+    from hermes_kb.substitutes import get_substitutes, list_all_substitutes
+
+    if canonical:
+        canonical = canonical.strip()
+        subs = get_substitutes(canonical)
+        return {"canonical": canonical, "substitutes": subs}
+    all_subs = list_all_substitutes()
+    return {"total": len(all_subs), "items": all_subs}
+
+
 @router.get("/dashboard", dependencies=[Depends(require_age_gate)])
 async def lab_dashboard_endpoint() -> dict[str, Any]:
     """实验室运营看板聚合指标。"""
