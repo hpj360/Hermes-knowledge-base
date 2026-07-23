@@ -154,6 +154,16 @@ class Settings:
     # HyDE（M2-02 可选，默认关闭，W1 末评估后决定）
     hyde_enabled: bool = field(default_factory=lambda: _env_bool("KB_HYDE", False))
 
+    # IMA 知识库 OpenAPI（B6: 外部知识库同步）
+    # 文档：https://ima.qq.com/agent-interface
+    # 鉴权头非标准 Authorization，而是两个自定义头 ima-openapi-clientid / ima-openapi-apikey
+    ima_client_id: str = field(default_factory=lambda: _env_str("KB_IMA_CLIENT_ID", ""))
+    ima_api_key: str = field(default_factory=lambda: _env_str("KB_IMA_API_KEY", ""))
+    # 默认知识库 ID（可留空，运行时通过 list_knowledge_bases 选择）
+    ima_kb_id: str = field(default_factory=lambda: _env_str("KB_IMA_KB_ID", ""))
+    # 同步时每页拉取条数（IMA OpenAPI 默认上限 50）
+    ima_page_size: int = field(default_factory=lambda: _env_int("KB_IMA_PAGE_SIZE", 50))
+
     @property
     def llm_available(self) -> bool:
         """是否启用真实 LLM。"""
@@ -180,6 +190,11 @@ class Settings:
     def is_prod(self) -> bool:
         """是否生产环境。"""
         return self.env == "prod"
+
+    @property
+    def ima_enabled(self) -> bool:
+        """是否启用 IMA 知识库同步（client_id + api_key 都配置）。"""
+        return bool(self.ima_client_id and self.ima_api_key)
 
     @property
     def cors_credentials_allowed(self) -> bool:

@@ -213,6 +213,108 @@ async def lab_sync_all(
     return {"status": "ok", "results": results}
 
 
+# B6: IMA 知识库同步
+class IMASyncRequest(BaseModel):
+    """IMA 同步请求。
+
+    - query: 检索关键词（空串拉取热门/全部）
+    - kb_id: 目标知识库 ID（留空走配置或自动检测）
+    - limit: 最多同步条数
+    - category: 本地文档分类，默认 "资料"
+    """
+    query: str = ""
+    kb_id: str = ""
+    limit: int = Field(default=50, ge=1, le=500)
+    category: str = "资料"
+
+
+@router.get("/ima/knowledge-bases", dependencies=[Depends(require_age_gate)])
+async def lab_ima_list_kbs(query: str = "", limit: int = 50) -> dict[str, Any]:
+    """列出 IMA 账号下的知识库。未配置凭证时返回 400。"""
+    from hermes_kb.config import get_settings
+    from hermes_kb.ima_sync import IMAConfigError, list_knowledge_bases
+
+    if not get_settings().ima_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="IMA 未配置：请设置 KB_IMA_CLIENT_ID 与 KB_IMA_API_KEY",
+        )
+    try:
+        kbs = list_knowledge_bases(query=query, limit=limit)
+    except IMAConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"IMA API 调用失败: {e}")
+    return {"items": kbs, "total": len(kbs)}
+
+
+@router.post("/ima/sync", dependencies=[Depends(require_age_gate)])
+async def lab_ima_sync(
+    req: IMASyncRequest,
+    importer: ImportService = Depends(get_importer),
+) -> dict[str, Any]:
+    """同步 IMA 知识库内容到本地。
+
+    需预先在环境变量中配置 KB_IMA_CLIENT_ID / KB_IMA_API_KEY，
+    可选 KB_IMA_KB_ID 指定默认知识库。
+    """
+    from hermes_kb.config import get_settings
+    from hermes_kb.ima_sync import (
+        IMAAPIError,
+        IMAConfigError,
+        sync_knowledge_base,
+    )
+
+    if not get_settings().ima_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="IMA 未配置：请设置 KB_IMA_CLIENT_ID 与 KB_IMA_API_KEY",
+        )
+    try:
+        result = sync_knowledge_base(
+            query=req.query,
+            kb_id=req.kb_id or None,
+            limit=req.limit,
+            category=req.category or "资料",
+            importer=importer,
+        )
+    except IMAConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IMAAPIError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"source": "ima", **result}
+
+
+@router.get("/ima/search", dependencies=[Depends(require_age_gate)])
+async def lab_ima_search(
+    query: str,
+    kb_id: str = "",
+    limit: int = 10,
+) -> dict[str, Any]:
+    """在 IMA 知识库中实时检索（不同步到本地，仅预览）。"""
+    from hermes_kb.config import get_settings
+    from hermes_kb.ima_sync import IMAAPIError, IMAConfigError, search_knowledge
+
+    if not get_settings().ima_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="IMA 未配置：请设置 KB_IMA_CLIENT_ID 与 KB_IMA_API_KEY",
+        )
+    if not query.strip():
+        raise HTTPException(status_code=400, detail="query 必填")
+    try:
+        result = search_knowledge(
+            query=query.strip(),
+            kb_id=kb_id or None,
+            limit=limit,
+        )
+    except IMAConfigError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except IMAAPIError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return result
+
+
 @router.get("/sync-status", dependencies=[Depends(require_age_gate)])
 async def lab_sync_status() -> dict[str, Any]:
     """查询各数据源同步状态。"""
