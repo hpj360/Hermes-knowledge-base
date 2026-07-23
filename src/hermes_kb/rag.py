@@ -120,7 +120,7 @@ def _is_low_confidence(hits: list[RetrievalHit]) -> bool:
     if not hits:
         return True
     threshold = get_settings().min_score_threshold
-    # RRF score 通常在 0.005~0.05 之间，threshold 默认 0.005
+    # RRF score 通常在 0.015~0.05 之间，threshold 默认 0.015
     return all(h.score < threshold for h in hits)
 
 

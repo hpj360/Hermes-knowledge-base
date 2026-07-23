@@ -80,8 +80,13 @@ def _seasonal_pool(season: str) -> list[dict[str, Any]]:
     return recipes
 
 
-def daily_recipe() -> dict[str, Any] | None:
+def daily_recipe(
+    hot_recipes: list[dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
     """每日推荐：季节 60% + 热门 30% + 随机 10%。
+
+    Args:
+        hot_recipes: 可选的预取热门池（由调用方复用，避免重复查询）。
 
     Returns:
         {title, doc_id, chunk_rowid, reason, base_spirit, difficulty}
@@ -104,7 +109,11 @@ def daily_recipe() -> dict[str, Any] | None:
 
     # 30% 热门池
     if roll < _SEASON_WEIGHT + _HOT_WEIGHT:
-        hot = get_hot_recipes(limit=10, days=30)
+        hot = (
+            hot_recipes
+            if hot_recipes is not None
+            else get_hot_recipes(limit=10, days=30)
+        )
         if hot:
             choice = rng.choice(hot)
             return {

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import anyio
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -32,7 +33,8 @@ class FeedbackReq(BaseModel):
 async def ask(req: AskReq, rag: RAGEngine = Depends(get_rag)) -> dict[str, Any]:
     if not req.query or not req.query.strip():
         raise HTTPException(status_code=400, detail="query 不能为空")
-    result = rag.answer(req.query, top_k=req.top_k)
+    # P2-6：将同步 RAG 调用卸载到线程池，避免阻塞事件循环
+    result = await anyio.to_thread.run_sync(rag.answer, req.query, req.top_k)
     return result.to_dict()
 
 

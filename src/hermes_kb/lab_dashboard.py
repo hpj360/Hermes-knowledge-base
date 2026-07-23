@@ -20,7 +20,19 @@ from hermes_kb.substitutes import SUBSTITUTES_PRESET
 
 def get_lab_dashboard() -> dict[str, Any]:
     """聚合实验室运营指标。"""
-    # 配方总数
+    # Top 配方（取 10 条，供 daily_recipe 复用，避免重复查询）
+    hot_recipes = get_hot_recipes(limit=10, days=30)
+    top_recipe = hot_recipes[0]["title"] if hot_recipes else None
+
+    # 高频缺失
+    top_missing_list = get_top_missing(limit=1)
+    top_missing = top_missing_list[0] if top_missing_list else None
+
+    # 替代表覆盖率
+    all_ings = set(all_canonical())
+    covered = set(SUBSTITUTES_PRESET.keys())
+
+    # 单 session 聚合所有 DB 指标（合并原 2 个 session，减少连接开销）
     with get_session() as session:
         recipe_count = session.exec(
             select(func.count(Document.doc_id)).where(
@@ -47,26 +59,15 @@ def get_lab_dashboard() -> dict[str, Any]:
             )
         ).one()
 
-    # Top 配方
-    hot = get_hot_recipes(limit=1, days=30)
-    top_recipe = hot[0]["title"] if hot else None
-
-    # 高频缺失
-    top_missing_list = get_top_missing(limit=1)
-    top_missing = top_missing_list[0] if top_missing_list else None
-
-    # 替代表覆盖率
-    all_ings = set(all_canonical())
-    covered = set(SUBSTITUTES_PRESET.keys())
-    with get_session() as session:
         rows = session.exec(
             select(IngredientSubstitute.canonical).distinct()
         ).all()
         covered.update(rows)
+
     substitute_coverage = len(covered & all_ings) / len(all_ings) if all_ings else 0
 
-    # 今日推荐
-    daily = daily_recipe()
+    # 今日推荐（复用已取的热门池，避免 daily_recipe 内部重复查询）
+    daily = daily_recipe(hot_recipes=hot_recipes)
 
     # 季节标签覆盖
     seasonal_recipes = sum(1 for r in SEED_RECIPES if r.get("season"))

@@ -227,9 +227,9 @@ def test_citation_chunk_rowid_in_api(client):
 # M1-06 低置信度检测
 # ---------------------------------------------------------------------------
 def test_low_confidence_threshold_default(tmp_db):
-    """默认阈值应为 0.005。"""
+    """默认阈值应为 0.015。"""
     settings = get_settings()
-    assert settings.min_score_threshold == 0.005
+    assert settings.min_score_threshold == 0.015
 
 
 def test_low_confidence_empty_db(tmp_db):

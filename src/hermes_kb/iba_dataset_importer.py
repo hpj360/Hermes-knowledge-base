@@ -10,6 +10,7 @@ IBA 金标准配方 verified=True，直接进实验室匹配。
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import httpx
@@ -49,7 +50,10 @@ def _normalize_ingredient(en_name: str) -> tuple[str, bool]:
     return (stripped, True)
 
 
-def parse_iba_recipe(raw: dict[str, Any]) -> dict[str, Any]:
+def parse_iba_recipe(
+    raw: dict[str, Any],
+    strength_data: dict[str, float] | None = None,
+) -> dict[str, Any]:
     """解析 IBA dataset 单条配方。
 
     IBA dataset 格式：
@@ -59,6 +63,9 @@ def parse_iba_recipe(raw: dict[str, Any]) -> dict[str, Any]:
         "type": "Contemporary Classics"
     }
     quantity 单位为 cl，需转 ml。
+
+    M2: 当 ingredients 含 volume 信息时，计算配方整体 ABV 与卡路里
+    并写入 content frontmatter（<!-- abv --> / <!-- calories -->）。
     """
     title = raw.get("name", "").strip()
     category_official = raw.get("type", "")
@@ -82,9 +89,45 @@ def parse_iba_recipe(raw: dict[str, Any]) -> dict[str, Any]:
         else:
             measures.append("适量")
 
+    # M2: ABV/卡路里计算（quantity 非 None 时收集 volume，cl → ml）
+    abv: float | None = None
+    calories: float | None = None
+    volume_pairs: list[tuple[str, float]] = []
+    for ing in raw_ingredients:
+        en_name = ing.get("name", "").strip()
+        quantity = ing.get("quantity")
+        if quantity is not None and en_name:
+            try:
+                volume_ml = float(quantity) * 10  # cl → ml
+                volume_pairs.append((en_name, volume_ml))
+            except (ValueError, TypeError):
+                pass
+
+    if volume_pairs:
+        try:
+            from hermes_kb.ingredient_strength import (
+                calculate_alcohol_calories,
+                calculate_cocktail_abv,
+                get_ingredient_abv,
+            )
+
+            abv = calculate_cocktail_abv(volume_pairs)
+            total_calories = sum(
+                calculate_alcohol_calories(vol, get_ingredient_abv(name))
+                for name, vol in volume_pairs
+            )
+            calories = round(total_calories, 1)
+        except Exception:
+            pass
+
     # 构建 content（含 frontmatter，供 recipe_match 优先解析）
     ing_str = "|".join(ingredients)
-    content_lines = [f"<!-- ingredients: {ing_str} -->", f"# {title}\n\n## 配方"]
+    content_lines = [f"<!-- ingredients: {ing_str} -->"]
+    if abv is not None and abv > 0:
+        content_lines.append(f"<!-- abv: {abv:.3f} -->")
+    if calories is not None and calories > 0:
+        content_lines.append(f"<!-- calories: {calories:.0f} -->")
+    content_lines.append(f"# {title}\n\n## 配方")
     for ing, measure in zip(ingredients, measures):
         content_lines.append(f"- {ing} {measure}")
     content_lines.append(f"\n## 分类\n{category_official}")
@@ -100,39 +143,71 @@ def parse_iba_recipe(raw: dict[str, Any]) -> dict[str, Any]:
         "verified": True,
         "category_official": category_official,
         "unknown_ingredients": unknown,
+        "abv": abv,
+        "calories": calories,
     }
 
 
-def _is_duplicate(title: str) -> bool:
-    """检查是否与已有配方重复（含模糊匹配）。
-
-    匹配逻辑：
-    1. 精确匹配 source="iba" 的 title（幂等去重）
-    2. 模糊匹配已有 recipe（title 互相包含，用于与种子配方去重）
-    """
+def _normalize_title(title: str) -> str:
     if not title:
-        return False
-    title_lower = title.lower()
+        return ""
+    return re.sub(r"[\s\-_/\\,.!?;:'\"()]+", "", title.lower())
+
+
+def _tokenize_title(title: str) -> frozenset[str]:
+    if not title:
+        return frozenset()
+    tokens = re.findall(r"[a-z0-9\u4e00-\u9fff]+", title.lower())
+    return frozenset(t for t in tokens if t)
+
+
+def _preload_dedup_index() -> tuple[set[str], set[str], list[frozenset[str]]]:
+    iba_exact: set[str] = set()
+    recipe_exact: set[str] = set()
+    recipe_tokens: list[frozenset[str]] = []
     with get_session() as session:
-        # 精确匹配 IBA 配方
-        existing = session.exec(
-            select(Document).where(
-                Document.source == "iba",
-                Document.title == title,
+        rows = session.exec(
+            select(Document.title, Document.source).where(
+                Document.category == "recipe"
             )
-        ).first()
-        if existing:
-            return True
-        # 模糊匹配已有配方（title 互相包含）
-        docs = session.exec(
-            select(Document).where(Document.category == "recipe")
         ).all()
-        for doc in docs:
-            doc_title_lower = doc.title.lower()
-            if not doc_title_lower:
-                continue
-            if title_lower in doc_title_lower or doc_title_lower in title_lower:
-                return True
+    for title, source in rows:
+        if not title:
+            continue
+        norm = _normalize_title(title)
+        if source == "iba" and norm:
+            iba_exact.add(norm)
+        if norm:
+            recipe_exact.add(norm)
+        toks = _tokenize_title(title)
+        if toks:
+            recipe_tokens.append(toks)
+    return iba_exact, recipe_exact, recipe_tokens
+
+
+def _is_duplicate_fuzzy(
+    candidate_title: str,
+    iba_exact: set[str],
+    recipe_exact: set[str],
+    recipe_token_list: list[frozenset[str]],
+) -> bool:
+    if not candidate_title:
+        return False
+    norm = _normalize_title(candidate_title)
+    if not norm:
+        return False
+    if norm in iba_exact or norm in recipe_exact:
+        return True
+    if len(norm) < 4:
+        return False
+    cand_tokens = _tokenize_title(candidate_title)
+    if not cand_tokens:
+        return False
+    for existing_tokens in recipe_token_list:
+        if not existing_tokens:
+            continue
+        if cand_tokens <= existing_tokens or existing_tokens <= cand_tokens:
+            return True
     return False
 
 
@@ -151,6 +226,15 @@ def sync_iba_dataset(
     """
     if data is None:
         data = _fetch_remote_data()
+        strength_data: dict[str, float] | None = None
+        try:
+            from hermes_kb.ingredient_strength import fetch_iba_strength_data
+
+            strength_data = fetch_iba_strength_data()
+        except Exception as e:
+            _logger.warning("IBA strength data fetch failed: %s", e)
+    else:
+        strength_data = None
 
     if not data:
         return {"imported": 0, "skipped": 0, "failed": 0, "unknown_ingredients": []}
@@ -160,14 +244,15 @@ def sync_iba_dataset(
     failed = 0
     all_unknown: list[str] = []
     importer = importer or ImportService()
+    iba_exact, recipe_exact, recipe_tokens = _preload_dedup_index()
 
     for raw in data:
         try:
-            recipe = parse_iba_recipe(raw)
+            recipe = parse_iba_recipe(raw, strength_data=strength_data)
             all_unknown.extend(recipe.pop("unknown_ingredients", []))
 
             # 去重
-            if _is_duplicate(recipe["title"]):
+            if _is_duplicate_fuzzy(recipe["title"], iba_exact, recipe_exact, recipe_tokens):
                 skipped += 1
                 continue
 
@@ -184,6 +269,14 @@ def sync_iba_dataset(
             doc_id = result.get("doc_id") if isinstance(result, dict) else result
             if doc_id:
                 imported += 1
+                # 同批次去重更新
+                norm = _normalize_title(recipe["title"])
+                if norm:
+                    iba_exact.add(norm)
+                    recipe_exact.add(norm)
+                toks = _tokenize_title(recipe["title"])
+                if toks:
+                    recipe_tokens.append(toks)
             else:
                 failed += 1
         except Exception as e:
@@ -199,18 +292,20 @@ def sync_iba_dataset(
 
 
 def _fetch_remote_data() -> list[dict[str, Any]]:
-    """从 GitHub 拉取 IBA dataset。
-
-    若网络不可用，返回空列表。
-    """
-    try:
-        url = f"{IBA_RAW_BASE}/recipes.json"
-        resp = httpx.get(url, timeout=15)
-        resp.raise_for_status()
-        return resp.json()
-    except (httpx.HTTPError, ValueError, OSError) as e:
-        _logger.warning("IBA dataset remote fetch failed: %s", e)
-        return []
+    """从 GitHub 拉取 IBA dataset。master 404 时自动 fallback 到 main。"""
+    for branch in ("master", "main"):
+        try:
+            url = f"https://raw.githubusercontent.com/lmc2179/iba_dataset_json/{branch}/recipes.json"
+            resp = httpx.get(url, timeout=15)
+            resp.raise_for_status()
+            return resp.json()
+        except (httpx.HTTPError, ValueError, OSError) as e:
+            if branch == "master":
+                _logger.info("IBA dataset master branch failed, trying main: %s", e)
+                continue
+            _logger.warning("IBA dataset remote fetch failed (master+main): %s", e)
+            return []
+    return []
 
 
 def diff_iba_official(

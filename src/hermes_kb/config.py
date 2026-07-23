@@ -112,7 +112,7 @@ class Settings:
     top_k: int = field(default_factory=lambda: _env_int("KB_TOP_K", 5))
     rrf_k: int = field(default_factory=lambda: _env_int("KB_RRF_K", 60))
     # 低置信度阈值：RRF score < 此值时返回"未找到"反馈（M1-06）
-    min_score_threshold: float = field(default_factory=lambda: _env_float("KB_MIN_SCORE", 0.005))
+    min_score_threshold: float = field(default_factory=lambda: _env_float("KB_MIN_SCORE", 0.015))
 
     # 向量检索扫描上限（A3-1：替代硬编码 LIMIT 10000）
     vector_scan_limit: int = field(default_factory=lambda: _env_int("KB_VECTOR_SCAN_LIMIT", 50000))

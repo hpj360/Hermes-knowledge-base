@@ -231,6 +231,7 @@ interface RecipeCardProps {
 }
 
 function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCardProps) {
+  const [imgError, setImgError] = useState(false);
   const statusText = (() => {
     switch (recipe.status) {
       case "draft": return "草稿";
@@ -256,6 +257,19 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       }`}
       data-doc-id={recipe.doc_id}
     >
+      {recipe.image_url && !imgError ? (
+        <img
+          src={recipe.image_url}
+          alt={recipe.title || "配方"}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="w-full h-40 object-cover rounded-md mb-1"
+        />
+      ) : (
+        <div className="w-full h-40 rounded-md mb-1 flex items-center justify-center bg-gradient-to-br from-ink-100 to-ink-200">
+          <span className="text-3xl text-gold-500">◆</span>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2">
         <h3
           className="text-base font-semibold text-ink-900 truncate flex-1"

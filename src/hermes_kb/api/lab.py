@@ -7,6 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from hermes_kb.api.deps import get_importer, require_age_gate
+from hermes_kb.database import get_session
 from hermes_kb.rag import ImportService
 from hermes_kb.daily_recipe import daily_recipe
 from hermes_kb.ingredients import canonicalize
@@ -154,6 +155,135 @@ async def lab_sync(
             detail=f"Unsupported source: {req.source}. Supported: thecocktaildb / iba_dataset / bar_assistant",
         )
     return {"source": req.source, **result}
+
+
+# M2: 一键同步全部 P0 数据源 + 状态查询 + 配方统计
+@router.post("/sync-all", dependencies=[Depends(require_age_gate)])
+async def lab_sync_all(
+    importer: ImportService = Depends(get_importer),
+) -> dict[str, Any]:
+    """一键同步全部 P0 外部数据源。"""
+    results: dict[str, Any] = {}
+    try:
+        from hermes_kb.iba_dataset_importer import sync_iba_dataset
+
+        results["iba_dataset"] = sync_iba_dataset(importer=importer)
+    except Exception as e:
+        results["iba_dataset"] = {
+            "error": str(e),
+            "imported": 0,
+            "skipped": 0,
+            "failed": 0,
+        }
+    try:
+        from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
+
+        results["thecocktaildb"] = sync_thecocktaildb(importer=importer)
+    except Exception as e:
+        results["thecocktaildb"] = {
+            "error": str(e),
+            "imported": 0,
+            "skipped": 0,
+            "failed": 0,
+        }
+    try:
+        from hermes_kb.bar_assistant_sync import sync_bar_assistant_substitutes
+
+        results["bar_assistant"] = sync_bar_assistant_substitutes()
+    except Exception as e:
+        results["bar_assistant"] = {
+            "error": str(e),
+            "imported": 0,
+            "skipped": 0,
+            "failed": 0,
+        }
+    return {"status": "ok", "results": results}
+
+
+@router.get("/sync-status", dependencies=[Depends(require_age_gate)])
+async def lab_sync_status() -> dict[str, Any]:
+    """查询各数据源同步状态。"""
+    from sqlmodel import func, select
+
+    from hermes_kb.models import Document, IngredientSubstitute
+
+    with get_session() as session:
+        source_counts: dict[str, int] = {}
+        rows = session.exec(
+            select(Document.source, func.count(Document.doc_id))
+            .where(Document.category == "recipe")
+            .group_by(Document.source)
+        ).all()
+        for source, count in rows:
+            source_counts[source or "unknown"] = count
+        sub_count = session.exec(
+            select(func.count()).select_from(IngredientSubstitute)
+        ).one()
+        total_recipes = session.exec(
+            select(func.count(Document.doc_id)).where(Document.category == "recipe")
+        ).one()
+
+    return {
+        "total_recipes": total_recipes,
+        "by_source": source_counts,
+        "substitutes": sub_count,
+    }
+
+
+@router.get("/recipes/{doc_id}/stats", dependencies=[Depends(require_age_gate)])
+async def lab_recipe_stats(doc_id: str) -> dict[str, Any]:
+    """查询配方 ABV/卡路里统计。"""
+    import re
+
+    from hermes_kb.models import Document
+
+    with get_session() as session:
+        doc = session.get(Document, doc_id)
+        if not doc:
+            raise HTTPException(
+                status_code=404, detail=f"Recipe not found: {doc_id}"
+            )
+        if doc.category != "recipe":
+            raise HTTPException(
+                status_code=400, detail=f"Document is not a recipe: {doc_id}"
+            )
+
+    content = doc.content or ""
+    abv: float | None = None
+    calories: float | None = None
+
+    abv_match = re.search(r"<!-- abv:\s*([\d.]+)\s*-->", content)
+    if abv_match:
+        abv = float(abv_match.group(1))
+    cal_match = re.search(r"<!-- calories:\s*([\d.]+)\s*-->", content)
+    if cal_match:
+        calories = float(cal_match.group(1))
+
+    if abv is None or calories is None:
+        try:
+            ing_match = re.search(r"<!-- ingredients:\s*(.+?)\s*-->", content)
+            if ing_match:
+                ingredients_list = [
+                    x.strip() for x in ing_match.group(1).split("|") if x.strip()
+                ]
+                if ingredients_list:
+                    from hermes_kb.ingredient_strength import estimate_recipe_stats
+
+                    stats = estimate_recipe_stats(ingredients_list)
+                    if abv is None:
+                        abv = stats["estimated_abv"]
+                    if calories is None:
+                        calories = stats["estimated_calories"]
+        except Exception:
+            pass
+
+    return {
+        "doc_id": doc_id,
+        "title": doc.title,
+        "abv": round(abv, 3) if abv is not None else None,
+        "calories": round(calories, 1) if calories is not None else None,
+        "source": "frontmatter" if (abv_match or cal_match) else "estimated",
+    }
 
 
 @router.get("/recipes", dependencies=[Depends(require_age_gate)])

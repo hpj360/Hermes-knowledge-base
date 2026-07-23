@@ -465,4 +465,36 @@ export const api = {
       body: JSON.stringify(data),
     });
   },
+
+  // M2: POST /api/lab/sync-all
+  async labSyncAll(): Promise<{
+    status: string;
+    results: {
+      iba_dataset?: { imported: number; skipped: number; failed: number; error?: string };
+      thecocktaildb?: { imported: number; skipped: number; failed: number; error?: string };
+      bar_assistant?: { imported: number; skipped: number; failed: number; error?: string };
+    };
+  }> {
+    return request("/api/lab/sync-all", { method: "POST" });
+  },
+
+  // M2: GET /api/lab/sync-status
+  async labSyncStatus(): Promise<{
+    total_recipes: number;
+    by_source: Record<string, number>;
+    substitutes: number;
+  }> {
+    return request("/api/lab/sync-status");
+  },
+
+  // M2: GET /api/lab/recipes/{doc_id}/stats
+  async labRecipeStats(docId: string): Promise<{
+    doc_id: string;
+    title: string;
+    abv: number | null;
+    calories: number | null;
+    source: "frontmatter" | "estimated";
+  }> {
+    return request(`/api/lab/recipes/${encodeURIComponent(docId)}/stats`);
+  },
 };
