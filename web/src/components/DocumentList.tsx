@@ -69,10 +69,11 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   return (
     <div className="flex flex-col h-full">
       {/* 筛选栏 */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b bg-gray-50 flex-wrap">
-        <span className="text-xs text-gray-500">筛选：</span>
+      <div className="flex items-center gap-3 px-6 py-3 border-b bg-white flex-wrap" style={{ borderColor: "var(--ink-200)" }}>
+        <span className="eyebrow">筛选</span>
         <select
-          className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          className="text-sm border rounded px-2 py-1 bg-white"
+          style={{ borderColor: "var(--ink-200)", fontFamily: "var(--font-sans)" }}
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
         >
@@ -84,7 +85,8 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           ))}
         </select>
         <select
-          className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+          className="text-sm border rounded px-2 py-1 bg-white"
+          style={{ borderColor: "var(--ink-200)", fontFamily: "var(--font-sans)" }}
           value={filterTagId ?? ""}
           onChange={(e) => setFilterTagId(e.target.value ? Number(e.target.value) : undefined)}
         >
@@ -98,110 +100,77 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
         {(filterCategory || filterTagId) && (
           <button
             onClick={clearFilters}
-            className="text-xs text-gray-500 hover:text-gray-700"
+            className="btn-ghost text-xs"
           >
             清除
           </button>
         )}
-        <span className="ml-auto text-xs text-gray-500">共 {docs.length} 篇</span>
+        <span className="ml-auto text-xs" style={{ color: "var(--ink-400)" }}>共 {docs.length} 篇</span>
       </div>
 
       {/* 列表 */}
       {docs.length === 0 ? (
-        <div className="p-8 text-center text-gray-400">
-          <div className="text-3xl mb-2">📄</div>
-          <p className="text-sm">
-            {filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}
-          </p>
-          <p className="text-xs mt-1">
-            {filterCategory || filterTagId
-              ? "尝试更换筛选条件"
-              : "点击右上角导入或种子知识"}
+        <div className="p-16 text-center">
+          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>◆</div>
+          <p className="eyebrow mb-2">EMPTY</p>
+          <p className="section-title mb-2">{filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}</p>
+          <p className="text-sm" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+            {filterCategory || filterTagId ? "尝试更换筛选条件" : "点击右上角导入或种子知识"}
           </p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-500 sticky top-0">
-              <tr>
-                <th className="text-left px-4 py-2">标题</th>
-                <th className="text-left px-3 py-2">分类</th>
-                <th className="text-left px-3 py-2">标签</th>
-                <th className="text-left px-3 py-2">来源</th>
-                <th className="text-right px-3 py-2">分片</th>
-                <th className="text-left px-3 py-2">创建时间</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {docs.map((d) => (
-                <tr key={d.doc_id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2">
-                    {onSelectDoc ? (
-                      <button
-                        onClick={() => onSelectDoc(d.doc_id)}
-                        className="text-brand-700 hover:underline text-left"
-                      >
-                        {d.title}
-                      </button>
-                    ) : (
-                      <span className="text-gray-900">{d.title}</span>
+          <div className="divide-y" style={{ borderColor: "var(--ink-200)" }}>
+            {docs.map((d, i) => (
+              <div key={d.doc_id} className="flex items-center gap-4 px-6 py-4 hover:bg-ink-50 transition-colors group">
+                {/* 编号 */}
+                <span className="numeral flex-shrink-0 w-8">{String(i + 1).padStart(2, "0")}</span>
+
+                {/* 主信息 */}
+                <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => onSelectDoc?.(d.doc_id)}
+                    className="text-left block"
+                    style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", color: "var(--ink-900)", fontWeight: 600 }}
+                  >
+                    {d.title}
+                  </button>
+                  <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+                    {d.category && <span>{d.category}</span>}
+                    <span>·</span>
+                    <span>{d.chunk_count} 片段</span>
+                    <span>·</span>
+                    <span>{d.source_type}</span>
+                    {d.created_at && (
+                      <>
+                        <span>·</span>
+                        <span>{new Date(d.created_at).toLocaleDateString()}</span>
+                      </>
                     )}
-                  </td>
-                  <td className="px-3 py-2">
-                    {d.category ? (
-                      <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700">
-                        {d.category}
+                  </div>
+                </div>
+
+                {/* 标签 */}
+                {(d.tags || []).length > 0 && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    {d.tags.map((t) => (
+                      <span key={t.id} className="text-xs px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: t.color }}>
+                        {t.name}
                       </span>
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-1">
-                      {(d.tags || []).map((t) => (
-                        <span
-                          key={t.id}
-                          className="text-xs px-1.5 py-0.5 rounded text-white"
-                          style={{ backgroundColor: t.color }}
-                        >
-                          {t.name}
-                        </span>
-                      ))}
-                      {(!d.tags || d.tags.length === 0) && (
-                        <span className="text-xs text-gray-400">-</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className="text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700">
-                      {d.source_type}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-right text-gray-600">{d.chunk_count}</td>
-                  <td className="px-3 py-2 text-gray-400 text-xs">
-                    {d.created_at ? new Date(d.created_at).toLocaleString() : "-"}
-                  </td>
-                  <td className="px-3 py-2 text-right whitespace-nowrap">
-                    {onSelectDoc && (
-                      <button
-                        onClick={() => onSelectDoc(d.doc_id)}
-                        className="text-xs text-brand-700 hover:underline mr-2"
-                      >
-                        详情
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(d.doc_id, d.title)}
-                      className="text-xs text-red-500 hover:text-red-700"
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    ))}
+                  </div>
+                )}
+
+                {/* 操作 */}
+                <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onSelectDoc && (
+                    <button onClick={() => onSelectDoc(d.doc_id)} className="btn-ghost text-xs">详情</button>
+                  )}
+                  <button onClick={() => handleDelete(d.doc_id, d.title)} className="btn-ghost text-xs" style={{ color: "var(--danger)" }}>删除</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -96,16 +96,24 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
   }, [search]);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold text-brand-700 mb-1">🧪 鸡尾酒实验室</h2>
-        <p className="text-sm text-gray-500">选择手头的材料，发现你能调的鸡尾酒</p>
+    <div className="p-8 max-w-4xl mx-auto">
+      {/* 页面头部：杂志式 eyebrow + display-title + 金线 */}
+      <div className="text-center mb-8">
+        <p className="eyebrow mb-2">LABORATORY</p>
+        <h2 className="display-title">🧪 鸡尾酒实验室</h2>
+        <hr className="divider-gold w-24 mx-auto mt-4" />
+        <p
+          className="text-sm mt-4"
+          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+        >
+          选择手头的材料，发现你能调的鸡尾酒
+        </p>
       </div>
 
-      {/* 今日推荐 */}
+      {/* 今日推荐 — 杂志式卡片 */}
       {daily && daily.title && (
         <div
-          className="card mb-6 p-4 cursor-pointer hover:shadow-md transition-shadow"
+          className="card-elevated mb-8 p-6 cursor-pointer transition-shadow hover:shadow-lg"
           onClick={() =>
             onJumpToDoc && daily.doc_id
               ? onJumpToDoc(daily.doc_id, daily.chunk_rowid || undefined)
@@ -121,24 +129,32 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           role="button"
           tabIndex={0}
         >
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gold-100 text-gold-700 font-medium">
+          <div className="flex items-center gap-3 mb-2">
+            <p className="eyebrow">今日推荐</p>
+            <span
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{ background: "var(--gold-100)", color: "var(--gold-700)" }}
+            >
               {reasonText(daily.reason)}
             </span>
-            <span className="text-lg font-semibold text-ink-900">{daily.title}</span>
-            {daily.base_spirit && (
-              <span className="text-xs px-2 py-0.5 rounded bg-brand-50 text-brand-700">
-                {daily.base_spirit}
-              </span>
-            )}
           </div>
+          <h3 className="section-title mb-2">{daily.title}</h3>
+          {daily.base_spirit && (
+            <span
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
+            >
+              {daily.base_spirit}
+            </span>
+          )}
         </div>
       )}
 
-      {/* 材料选择器 */}
-      <div className="card p-5 mb-4">
+      {/* 材料选择器 — 分类用 eyebrow 区隔，chip 选中态用金/酒红边框 */}
+      <div className="card p-6 mb-6">
+        <p className="eyebrow mb-4">选择材料</p>
         <input
-          className="input mb-4"
+          className="input mb-5"
           placeholder="搜索材料... 如 金酒"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -146,10 +162,14 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         />
 
         {filteredCategories.map((cat) => (
-          <div key={cat.id} className="mb-3 last:mb-0 border-b border-ink-100 pb-3 last:border-b-0 last:pb-0">
-            <div className="text-sm font-medium text-brand-700 mb-2">
-              {cat.label}
-              <span className="ml-2 text-xs text-gray-400">{cat.items.length}</span>
+          <div
+            key={cat.id}
+            className="mb-5 last:mb-0 pb-5 last:pb-0 border-b last:border-b-0"
+            style={{ borderColor: "var(--ink-100)" }}
+          >
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="eyebrow">{cat.label}</span>
+              <span className="numeral">{cat.items.length}</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {cat.items.map((name) => {
@@ -159,11 +179,20 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
                     key={name}
                     type="button"
                     onClick={() => toggleMaterial(name, cat.id)}
-                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    className="text-xs px-3 py-1.5 rounded-full border transition-all"
+                    style={
                       isSelected
-                        ? "bg-brand-700 text-white border-brand-700"
-                        : "bg-ink-100 text-ink-600 border-ink-200 hover:border-brand-700"
-                    }`}
+                        ? {
+                            background: "var(--brand-700)",
+                            color: "#fff",
+                            borderColor: "var(--brand-700)",
+                          }
+                        : {
+                            background: "transparent",
+                            color: "var(--ink-600)",
+                            borderColor: "var(--ink-200)",
+                          }
+                    }
                     aria-pressed={isSelected}
                   >
                     {name}
@@ -176,32 +205,42 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
         {/* 已选材料条 */}
         {selectedNames.length > 0 && (
-          <div className="mt-4 p-3 rounded bg-gold-100 border-l-4 border-gold-500 flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-ink-600">已选：</span>
-            {selectedNames.map((name) => (
+          <div
+            className="mt-5 p-4 rounded"
+            style={{
+              background: "var(--gold-100)",
+              borderLeft: "3px solid var(--gold-500)",
+            }}
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="eyebrow">已选</span>
+              {selectedNames.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => toggleMaterial(name, selected[name])}
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: "var(--gold-500)", color: "var(--ink-900)" }}
+                >
+                  {name} ×
+                </button>
+              ))}
               <button
-                key={name}
                 type="button"
-                onClick={() => toggleMaterial(name, selected[name])}
-                className="text-xs px-2 py-0.5 rounded-full bg-gold-500 text-ink-900 hover:bg-gold-700 hover:text-white"
+                onClick={clearAll}
+                className="ml-auto text-xs"
+                style={{ color: "var(--ink-400)" }}
               >
-                {name} ×
+                清空
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={clearAll}
-              className="ml-auto text-xs text-gray-500 hover:text-gray-700"
-            >
-              清空
-            </button>
+            </div>
           </div>
         )}
 
         <button
           type="button"
           onClick={doMatch}
-          className="btn-primary w-full mt-4"
+          className="btn-primary w-full mt-5"
           disabled={matching || selectedNames.length === 0}
         >
           {matching
@@ -214,36 +253,47 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
       {/* 错误 */}
       {error && (
-        <div className="card p-4 mb-4 text-center text-red-600 text-sm">
+        <div
+          className="card p-6 mb-6 text-center text-sm"
+          style={{ color: "var(--danger)" }}
+        >
           匹配失败：{error}
         </div>
       )}
 
-      {/* 空状态 */}
+      {/* 空状态 — 杂志化 */}
       {!result && !error && (
-        <div className="text-center py-10 text-gray-400">
-          <div className="text-3xl mb-2">🍸</div>
-          <p className="text-sm font-medium text-gray-600">选择材料开始</p>
-          <p className="text-xs mt-1">点击上方材料 chip，或试试这些：</p>
-          <div className="flex gap-2 justify-center mt-3 flex-wrap">
+        <div className="text-center py-16">
+          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>
+            ◆
+          </div>
+          <p className="eyebrow mb-2">START</p>
+          <p className="section-title mb-2">选择材料开始</p>
+          <p
+            className="text-sm mb-6"
+            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+          >
+            点击上方材料 chip，或试试这些：
+          </p>
+          <div className="flex gap-2 justify-center flex-wrap">
             <button
               type="button"
               onClick={() => quickSelect(["金酒", "味美思", "橄榄"])}
-              className="text-xs px-3 py-1 rounded border border-ink-200 hover:border-brand-700"
+              className="btn-secondary text-xs"
             >
               马天尼套餐
             </button>
             <button
               type="button"
               onClick={() => quickSelect(["朗姆酒", "青柠汁", "糖浆", "薄荷叶", "苏打水"])}
-              className="text-xs px-3 py-1 rounded border border-ink-200 hover:border-brand-700"
+              className="btn-secondary text-xs"
             >
               莫吉托套餐
             </button>
             <button
               type="button"
               onClick={() => quickSelect(["龙舌兰", "橙汁", "糖浆"])}
-              className="text-xs px-3 py-1 rounded border border-ink-200 hover:border-brand-700"
+              className="btn-secondary text-xs"
             >
               龙舌兰日出套餐
             </button>
@@ -251,7 +301,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         </div>
       )}
 
-      {/* 匹配结果 */}
+      {/* 匹配结果 — 分组用 section-title + 编号 */}
       {result && (
         <div>
           <MatchGroup
@@ -285,17 +335,24 @@ interface MatchGroupProps {
 function MatchGroup({ title, items, emptyHint, variant, onJumpToDoc }: MatchGroupProps) {
   if (items.length === 0) {
     return (
-      <div className="text-center py-4 text-sm text-gray-400">{emptyHint}</div>
+      <div
+        className="text-center py-6 text-sm"
+        style={{ color: "var(--ink-400)" }}
+      >
+        {emptyHint}
+      </div>
     );
   }
-  const titleColor = variant === "full" ? "text-brand-700" : "text-gold-700";
   return (
-    <div className="mb-6">
-      <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${titleColor}`}>
-        {title}
-        <span className="text-xs text-gray-400">({items.length})</span>
-      </h3>
-      <div className="space-y-3">
+    <div className="mb-8">
+      <div className="flex items-baseline gap-3 mb-4">
+        <span className="numeral">{String(items.length).padStart(2, "0")}</span>
+        <h3 className="section-title" style={{ fontSize: "1.25rem" }}>
+          {title}
+        </h3>
+        <hr className="divider-gold flex-1" />
+      </div>
+      <div className="space-y-4">
         {items.map((r) => (
           <RecipeMatchCard key={r.doc_id} item={r} variant={variant} onJumpToDoc={onJumpToDoc} />
         ))}
@@ -312,29 +369,51 @@ interface RecipeMatchCardProps {
 
 function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
   const isPartial = variant === "partial";
-  const cardBorder = isPartial ? "border-l-4 border-l-gold-500" : "border-l-4 border-l-brand-700";
-  const badgeClass = isPartial
-    ? "bg-gold-100 text-gold-700"
-    : "bg-brand-100 text-brand-700";
-  const badgeText = isPartial
-    ? `缺 ${item.missing_count ?? (item.missing?.length || 0)} 种`
-    : "材料齐全";
-
   return (
-    <div className={`card p-4 ${cardBorder}`}>
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-base font-semibold text-ink-900">{item.title}</h4>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${badgeClass}`}>{badgeText}</span>
+    <div
+      className="card p-5"
+      style={{
+        borderLeft: `3px solid ${isPartial ? "var(--gold-500)" : "var(--brand-700)"}`,
+      }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h4
+          className="font-semibold"
+          style={{
+            fontFamily: "var(--font-serif)",
+            color: "var(--ink-900)",
+            fontSize: "1.05rem",
+          }}
+        >
+          {item.title}
+        </h4>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full"
+          style={
+            isPartial
+              ? { background: "var(--gold-100)", color: "var(--gold-700)" }
+              : { background: "var(--brand-50)", color: "var(--brand-700)" }
+          }
+        >
+          {isPartial
+            ? `缺 ${item.missing_count ?? (item.missing?.length || 0)} 种`
+            : "材料齐全"}
+        </span>
       </div>
-      <div className="flex flex-wrap gap-1.5 mb-2">
+      <div className="flex flex-wrap gap-1.5 mb-3">
         {(item.ingredients || []).map((ing) => (
           <span
             key={ing.name}
-            className={`text-xs px-2 py-0.5 rounded ${
+            className="text-xs px-2 py-0.5 rounded"
+            style={
               ing.have
-                ? "bg-brand-50 text-brand-700"
-                : "bg-ink-100 text-ink-400 line-through"
-            }`}
+                ? { background: "var(--brand-50)", color: "var(--brand-700)" }
+                : {
+                    background: "var(--ink-100)",
+                    color: "var(--ink-400)",
+                    textDecoration: "line-through",
+                  }
+            }
           >
             {ing.have ? "✓ " : "✗ "}
             {ing.name}
@@ -342,9 +421,14 @@ function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
         ))}
       </div>
       {isPartial && item.missing && item.missing.length > 0 && (
-        <div className="text-xs text-gold-700 mb-2">缺：{item.missing.join("、")}</div>
+        <div className="text-xs mb-3" style={{ color: "var(--gold-700)" }}>
+          缺：{item.missing.join("、")}
+        </div>
       )}
-      <div className="flex items-center justify-between pt-2 border-t border-dashed border-ink-200">
+      <div
+        className="flex items-center justify-between pt-3 border-t border-dashed"
+        style={{ borderColor: "var(--ink-200)" }}
+      >
         {item.chunk_rowid ? (
           <button
             type="button"
@@ -353,15 +437,20 @@ function RecipeMatchCard({ item, variant, onJumpToDoc }: RecipeMatchCardProps) {
                 ? onJumpToDoc(item.doc_id, item.chunk_rowid || undefined)
                 : undefined
             }
-            className="text-xs text-brand-700 hover:underline"
+            className="text-xs"
+            style={{ color: "var(--brand-700)" }}
           >
             [{item.chunk_rowid}] 查看引用
           </button>
         ) : (
-          <span className="text-xs text-gray-400">无引用</span>
+          <span className="text-xs" style={{ color: "var(--ink-400)" }}>
+            无引用
+          </span>
         )}
         {item.base_spirit && (
-          <span className="text-xs text-gray-500">基酒：{item.base_spirit}</span>
+          <span className="text-xs" style={{ color: "var(--ink-400)" }}>
+            基酒：{item.base_spirit}
+          </span>
         )}
       </div>
     </div>

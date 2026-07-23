@@ -43,16 +43,16 @@ describe("App", () => {
   it("侧边导航包含实验室与配方入口", async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText("🧪 实验室")).toBeInTheDocument();
-      expect(screen.getByText("📝 配方")).toBeInTheDocument();
+      expect(screen.getByText("实验室")).toBeInTheDocument();
+      expect(screen.getByText("配方")).toBeInTheDocument();
     });
   });
 
-  it("点击「🧪 实验室」切换到 LabPanel", async () => {
+  it("点击「实验室」切换到 LabPanel", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await waitFor(() => expect(screen.getByText("🧪 实验室")).toBeInTheDocument());
-    await user.click(screen.getByText("🧪 实验室"));
+    await waitFor(() => expect(screen.getByText("实验室")).toBeInTheDocument());
+    await user.click(screen.getByText("实验室"));
     await waitFor(() => {
       expect(screen.getByText("🧪 鸡尾酒实验室")).toBeInTheDocument();
     });
@@ -61,8 +61,8 @@ describe("App", () => {
   it("点击「📝 配方」切换到 RecipePanel", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await waitFor(() => expect(screen.getByText("📝 配方")).toBeInTheDocument());
-    await user.click(screen.getByText("📝 配方"));
+    await waitFor(() => expect(screen.getByText("配方")).toBeInTheDocument());
+    await user.click(screen.getByText("配方"));
     await waitFor(() => {
       expect(screen.getByText("📝 配方治理")).toBeInTheDocument();
     });

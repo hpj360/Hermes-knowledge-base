@@ -104,9 +104,21 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-baseline justify-between mb-4 border-b border-ink-200 pb-3">
-        <h2 className="text-2xl font-bold text-brand-700">📝 配方治理</h2>
-        <span className="text-xs text-gray-400">外部数据源 / 审核 / 隐藏</span>
+      {/* 页面头部：杂志式 eyebrow + display-title + 细线分隔 */}
+      <div
+        className="flex items-baseline justify-between mb-6 pb-4 border-b"
+        style={{ borderColor: "var(--ink-200)" }}
+      >
+        <div>
+          <p className="eyebrow mb-1">RECIPES</p>
+          <h2 className="display-title">📝 配方治理</h2>
+        </div>
+        <span
+          className="text-xs"
+          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+        >
+          外部数据源 / 审核 / 隐藏
+        </span>
       </div>
 
       {/* 待审核队列（status=pending 自动加载） */}
@@ -118,11 +130,13 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
         }}
       />
 
-      {/* 筛选栏 */}
-      <div className="card p-4 mb-4">
+      {/* 筛选栏 — 杂志式：eyebrow + 细线分隔 */}
+      <div className="card p-4 mb-6">
         <div className="flex items-center gap-3 flex-wrap">
+          <span className="eyebrow">筛选</span>
           <select
-            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white min-w-[140px]"
+            className="text-sm border rounded px-2 py-1 bg-white min-w-[140px]"
+            style={{ borderColor: "var(--ink-200)" }}
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value)}
             aria-label="来源筛选"
@@ -132,7 +146,8 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             ))}
           </select>
           <select
-            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+            className="text-sm border rounded px-2 py-1 bg-white"
+            style={{ borderColor: "var(--ink-200)" }}
             value={filterVerified}
             onChange={(e) => setFilterVerified(e.target.value)}
             aria-label="审核状态筛选"
@@ -142,7 +157,8 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             ))}
           </select>
           <select
-            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+            className="text-sm border rounded px-2 py-1 bg-white"
+            style={{ borderColor: "var(--ink-200)" }}
             value={filterHidden}
             onChange={(e) => setFilterHidden(e.target.value)}
             aria-label="可见性筛选"
@@ -163,13 +179,22 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="btn-ghost text-xs"
             >
               清除
             </button>
           )}
-          <span className="ml-auto text-sm text-gold-700">
-            共 <span className="text-lg font-semibold text-gold-500">{filtered.length}</span> 款
+          <span
+            className="ml-auto text-sm flex items-baseline gap-2"
+            style={{ color: "var(--ink-600)" }}
+          >
+            <span
+              className="numeral"
+              style={{ fontSize: "1.5rem", color: "var(--gold-500)" }}
+            >
+              {filtered.length}
+            </span>
+            <span>款</span>
           </span>
           {onCreateRecipe && (
             <button
@@ -195,11 +220,20 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
         </div>
       )}
 
-      {/* 空状态 */}
+      {/* 空状态 — 杂志化 */}
       {!loading && filtered.length === 0 && !error && (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-3xl mb-2">◆</div>
-          <div className="text-sm">暂无配方，请先同步外部数据源或创作新配方</div>
+        <div className="text-center py-16">
+          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>
+            ◆
+          </div>
+          <p className="eyebrow mb-2">EMPTY</p>
+          <p className="section-title mb-2">暂无配方</p>
+          <p
+            className="text-sm"
+            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+          >
+            请先同步外部数据源或创作新配方
+          </p>
         </div>
       )}
 
@@ -241,6 +275,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       default: return recipe.status;
     }
   })();
+  // 状态标签：保持现有 statusClass 逻辑不变（测试可能依赖）
   const statusClass = (() => {
     switch (recipe.status) {
       case "published": return "bg-brand-50 text-brand-700";
@@ -263,16 +298,34 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           alt={recipe.title || "配方"}
           loading="lazy"
           onError={() => setImgError(true)}
-          className="w-full h-40 object-cover rounded-md mb-1"
+          className="w-full h-40 object-cover rounded mb-2"
+          style={{ borderRadius: "var(--r-sm)" }}
         />
       ) : (
-        <div className="w-full h-40 rounded-md mb-1 flex items-center justify-center bg-gradient-to-br from-ink-100 to-ink-200">
-          <span className="text-3xl text-gold-500">◆</span>
+        <div
+          className="w-full h-40 rounded mb-2 flex flex-col items-center justify-center"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--ink-100) 0%, var(--ink-50) 100%)",
+            borderRadius: "var(--r-sm)",
+          }}
+        >
+          <span className="text-2xl mb-1" style={{ color: "var(--gold-500)" }}>
+            ◆
+          </span>
+          <span className="eyebrow" style={{ fontSize: "0.6rem" }}>
+            NO IMAGE
+          </span>
         </div>
       )}
       <div className="flex items-start justify-between gap-2">
         <h3
-          className="text-base font-semibold text-ink-900 truncate flex-1"
+          className="font-semibold truncate flex-1"
+          style={{
+            fontFamily: "var(--font-serif)",
+            color: "var(--ink-900)",
+            fontSize: "1.05rem",
+          }}
           title={recipe.title}
         >
           {recipe.title || "(未命名)"}
@@ -306,7 +359,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
             type="button"
             onClick={onVerify}
             disabled={busy}
-            className="text-xs px-2 py-1 rounded border border-ink-200 hover:border-brand-700 hover:text-brand-700 disabled:opacity-50"
+            className="btn-ghost text-xs"
           >
             审核通过
           </button>
@@ -315,7 +368,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           type="button"
           onClick={onToggleHide}
           disabled={busy}
-          className="text-xs px-2 py-1 rounded border border-ink-200 hover:border-gold-700 hover:text-gold-700 disabled:opacity-50"
+          className="btn-ghost text-xs"
         >
           {recipe.hidden ? "取消隐藏" : "隐藏"}
         </button>
@@ -324,7 +377,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
             type="button"
             onClick={onEdit}
             disabled={busy}
-            className="text-xs px-2 py-1 rounded border border-ink-200 hover:border-brand-700 hover:text-brand-700 disabled:opacity-50 ml-auto"
+            className="btn-ghost text-xs ml-auto"
           >
             编辑
           </button>

@@ -23,7 +23,6 @@ export default function App() {
   const [showImport, setShowImport] = useState(false);
   const [docRefreshKey, setDocRefreshKey] = useState(0);
   const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   // M2-04：跨页面跳转
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [highlightChunk, setHighlightChunk] = useState<number | undefined>(undefined);
@@ -90,7 +89,6 @@ export default function App() {
     setSelectedDocId(docId);
     setHighlightChunk(chunkRowid);
     setTab("detail");
-    setSidebarOpen(false);
   };
 
   const handleSelectDoc = (docId: string) => {
@@ -121,25 +119,15 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col relative bg-noise" style={{ background: "var(--paper-bg)" }}>
-      {/* 顶部栏 — F6: 深酒红渐变 + 金箔标题，营造高级酒类杂志感 */}
-      <header
-        className="bg-brand-gradient px-4 py-3 flex items-center justify-between flex-shrink-0 relative overflow-hidden"
-        style={{ boxShadow: "var(--shadow-md)" }}
-      >
+      {/* 顶部栏 — 深酒红渐变 + 金箔标题 */}
+      <header className="bg-brand-gradient px-6 py-4 flex items-center justify-between flex-shrink-0 relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <div className="text-2xl">🍷</div>
           <div>
-            <h1 className="font-bold text-gold-foil" style={{ fontFamily: "var(--font-serif)" }}>Hermes 知识库</h1>
+            <h1 className="font-bold text-gold-foil" style={{ fontFamily: "var(--font-serif)", fontSize: "1.375rem" }}>Hermes 知识库</h1>
             {health && (
-              <p className="text-xs" style={{ color: "rgba(250, 243, 220, 0.75)" }}>
-                {health.doc_count} 篇文档 ·{" "}
-                <span style={{ color: health.llm_available ? "#B8E6C9" : "#F5D49A" }}>
-                  LLM: {health.llm_provider}{health.llm_available ? "" : "（mock）"}
-                </span>{" "}
-                ·{" "}
-                <span style={{ color: health.embedding_available ? "#B8E6C9" : "#F5D49A" }}>
-                  Embed: {health.embedding_provider}{health.embedding_available ? "" : "（hash）"}
-                </span>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(250, 243, 220, 0.75)", fontFamily: "var(--font-sans)" }}>
+                {health.doc_count} 篇文档
               </p>
             )}
           </div>
@@ -174,114 +162,68 @@ export default function App() {
         </div>
       </header>
 
-      {/* 主体 */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 侧边导航（响应式） */}
-        <nav
-          className={`${
-            sidebarOpen ? "block" : "hidden"
-          } md:block w-48 bg-white border-r flex-shrink-0 reveal-stagger`}
-        >
+      {/* 水平导航 — 杂志式 tab */}
+      <nav className="flex items-center gap-1 px-6 bg-white border-b border-ink-200 flex-shrink-0 overflow-x-auto">
+        {([
+          ["chat", "问答"],
+          ["docs", "文档"],
+          ["tags", "标签"],
+          ["lab", "实验室"],
+          ["recipes", "配方"],
+        ] as const).map(([key, label]) => (
           <button
-            className={`w-full text-left px-4 py-3 text-sm border-b ${
-              tab === "chat"
-                ? "bg-brand-50 text-brand-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => { setTab("chat"); setSidebarOpen(false); }}
+            key={key}
+            className={`nav-tab ${tab === key || (key === "recipes" && tab === "recipe-editor") ? "nav-tab-active" : ""}`}
+            onClick={() => {
+              setTab(key as Tab);
+              if (key === "recipes") setEditingRecipeId(undefined);
+            }}
           >
-            💬 问答
+            {label}
           </button>
-          <button
-            className={`w-full text-left px-4 py-3 text-sm border-b ${
-              tab === "docs"
-                ? "bg-brand-50 text-brand-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => { setTab("docs"); setSidebarOpen(false); }}
-          >
-            📄 文档管理
-          </button>
-          <button
-            className={`w-full text-left px-4 py-3 text-sm border-b ${
-              tab === "tags"
-                ? "bg-brand-50 text-brand-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => { setTab("tags"); setSidebarOpen(false); }}
-          >
-            🏷️ 标签管理
-          </button>
-          <button
-            className={`w-full text-left px-4 py-3 text-sm border-b ${
-              tab === "lab"
-                ? "bg-brand-50 text-brand-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => { setTab("lab"); setSidebarOpen(false); }}
-          >
-            🧪 实验室
-          </button>
-          <button
-            className={`w-full text-left px-4 py-3 text-sm border-b ${
-              tab === "recipes" || tab === "recipe-editor"
-                ? "bg-brand-50 text-brand-700 font-medium"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-            onClick={() => { setTab("recipes"); setEditingRecipeId(undefined); setSidebarOpen(false); }}
-          >
-            📝 配方
-          </button>
-        </nav>
+        ))}
+      </nav>
 
-        {/* 内容区 */}
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {/* 移动端切换按钮 */}
-          <button
-            className="md:hidden px-4 py-2 text-sm bg-gray-100 border-b"
-            onClick={() => setSidebarOpen((o) => !o)}
-          >
-            切换面板
-          </button>
-          {tab === "chat" ? (
-            <ChatPanel refreshDocs={refreshDocs} onJumpToDoc={jumpToDocChunk} />
-          ) : tab === "docs" ? (
-            <DocumentList
-              refreshKey={docRefreshKey}
-              onChange={refreshHealth}
-              onSelectDoc={handleSelectDoc}
-            />
-          ) : tab === "detail" && selectedDocId ? (
-            <DocumentDetailPanel
-              docId={selectedDocId}
-              highlightChunk={highlightChunk}
-              onBack={handleBackToList}
-              onChange={refreshDocs}
-            />
-          ) : tab === "tags" ? (
-            <TagPanel onChange={refreshDocs} />
-          ) : tab === "lab" ? (
-            <LabPanel onJumpToDoc={jumpToDocChunk} />
-          ) : tab === "recipe-editor" ? (
-            <RecipeEditorPanel
-              docId={editingRecipeId}
-              onSaved={() => { setTab("recipes"); setEditingRecipeId(undefined); }}
-              onCancel={() => { setTab("recipes"); setEditingRecipeId(undefined); }}
-            />
-          ) : tab === "recipes" ? (
-            <RecipePanel
-              onCreateRecipe={() => { setEditingRecipeId(undefined); setTab("recipe-editor"); }}
-              onEditRecipe={(docId) => { setEditingRecipeId(docId); setTab("recipe-editor"); }}
-            />
-          ) : (
-            <DocumentList
-              refreshKey={docRefreshKey}
-              onChange={refreshHealth}
-              onSelectDoc={handleSelectDoc}
-            />
-          )}
-        </main>
-      </div>
+      {/* 内容区 */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {tab === "chat" ? (
+          <ChatPanel refreshDocs={refreshDocs} onJumpToDoc={jumpToDocChunk} />
+        ) : tab === "docs" ? (
+          <DocumentList
+            refreshKey={docRefreshKey}
+            onChange={refreshHealth}
+            onSelectDoc={handleSelectDoc}
+          />
+        ) : tab === "detail" && selectedDocId ? (
+          <DocumentDetailPanel
+            docId={selectedDocId}
+            highlightChunk={highlightChunk}
+            onBack={handleBackToList}
+            onChange={refreshDocs}
+          />
+        ) : tab === "tags" ? (
+          <TagPanel onChange={refreshDocs} />
+        ) : tab === "lab" ? (
+          <LabPanel onJumpToDoc={jumpToDocChunk} />
+        ) : tab === "recipe-editor" ? (
+          <RecipeEditorPanel
+            docId={editingRecipeId}
+            onSaved={() => { setTab("recipes"); setEditingRecipeId(undefined); }}
+            onCancel={() => { setTab("recipes"); setEditingRecipeId(undefined); }}
+          />
+        ) : tab === "recipes" ? (
+          <RecipePanel
+            onCreateRecipe={() => { setEditingRecipeId(undefined); setTab("recipe-editor"); }}
+            onEditRecipe={(docId) => { setEditingRecipeId(docId); setTab("recipe-editor"); }}
+          />
+        ) : (
+          <DocumentList
+            refreshKey={docRefreshKey}
+            onChange={refreshHealth}
+            onSelectDoc={handleSelectDoc}
+          />
+        )}
+      </main>
 
       {/* 导入对话框 */}
       {showImport && (

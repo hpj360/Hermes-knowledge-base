@@ -100,6 +100,32 @@
   --nav-height: 60px;
   --container: 1140px;
   --sidebar: 300px;
+
+  /* === UI 设计规范扩展：杂志式排版系统 ===
+   * 参考 Kinfolk/Cereal 杂志：大量留白、编号系统、细线分割、克制金箔点缀。
+   * 字间距 tracking：标题宽间距强化杂志感，正文紧凑保持可读。
+   */
+  --tracking-wide: 0.18em;      /* 大写小标题：来源/SOURCE */
+  --tracking-medium: 0.08em;    /* 次级标题 */
+  --tracking-tight: -0.01em;    /* 大标题微收紧 */
+
+  /* 杂志式分隔线（比 border 更精致：渐变金线） */
+  --divider-gold: linear-gradient(90deg, transparent 0%, var(--gold-500) 20%, var(--gold-300) 50%, var(--gold-500) 80%, transparent 100%);
+  --divider-hair: 1px solid var(--ink-200);
+
+  /* 编号系统（杂志页码感） */
+  --numeral-font: "Cormorant Garamond", "Noto Serif SC", serif;
+  --numeral-size: 0.7rem;
+
+  /* 留白层级（比 sp-* 更大尺度，用于章节呼吸） */
+  --space-section: 5rem;        /* 章节级留白 */
+  --space-block: 2.5rem;        /* 区块级留白 */
+  --space-element: 1.25rem;     /* 元素级留白 */
+
+  /* 杂志式卡片（更克制：无重阴影，用细线+微阴影）—— 通过 .card utility 类实现 */
+  /* 顶部导航（水平 tab，杂志感） */
+  --nav-tab-active: inset 0 -2px 0 0 var(--gold-500);
+  --nav-tab-hover: var(--ink-100);
 }
 
 /* === 全局重置 === */

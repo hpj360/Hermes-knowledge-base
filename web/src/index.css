@@ -26,25 +26,34 @@
 }
 
 @layer components {
+  /* === UI 设计规范：杂志式按钮系统 ===
+   * 三级按钮层级：primary（深酒红实心）/ secondary（金线描边）/ ghost（无框）
+   * 杂志感：去除重阴影，用细线 + tracking 强化优雅 */
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium
-      transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-4 py-2 font-medium
+      transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: var(--r-sm);
+    letter-spacing: var(--tracking-medium);
+    font-size: var(--fs-sm);
   }
-  /* C1: btn-primary 从暖金 brand-600 改为深酒红 brand-700，与 mockup 对齐 */
   .btn-primary {
-    @apply btn text-white hover:opacity-90;
+    @apply btn text-white;
     background: var(--brand-700);
+    border: 1px solid var(--brand-700);
   }
   .btn-primary:hover {
-    background: var(--brand-500);
+    background: var(--brand-900);
+    border-color: var(--brand-900);
   }
   .btn-secondary {
-    @apply btn text-ink-900;
-    background: var(--gold-500);
+    @apply btn;
+    background: transparent;
+    color: var(--brand-700);
+    border: 1px solid var(--gold-500);
   }
   .btn-secondary:hover {
-    background: var(--gold-700);
-    color: #fff;
+    background: var(--gold-100);
+    border-color: var(--gold-700);
   }
   .btn-danger {
     @apply btn;
@@ -56,26 +65,113 @@
     background: var(--danger);
     color: #fff;
   }
+  .btn-ghost {
+    @apply btn;
+    background: transparent;
+    color: var(--ink-600);
+    border: 1px solid transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--ink-100);
+    color: var(--ink-900);
+  }
+
+  /* === 杂志式输入框 === */
   .input {
-    @apply w-full rounded-md;
+    @apply w-full;
     font-family: var(--font-sans);
     font-size: var(--fs-sm);
     padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--ink-200);
+    border-radius: var(--r-sm);
     background: #fff;
     color: var(--ink-900);
-    transition: border-color var(--duration-fast);
+    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
   }
   .input:focus {
     outline: none;
-    border-color: var(--brand-700);
-    box-shadow: 0 0 0 3px var(--brand-100);
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 1px var(--gold-500);
   }
+
+  /* === 杂志式卡片（克制阴影 + 细线） === */
   .card {
     background: #fff;
     border: 1px solid var(--ink-200);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--r-md);
+    box-shadow: 0 1px 3px rgba(31, 28, 24, 0.04);
+  }
+  .card-elevated {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* === 杂志式编号系统 ===
+   * 大写小标题 + 金色 tracking，用于"来源/SOURCE"、"第 N 章"等 */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: var(--numeral-size);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--gold-700);
+  }
+  .numeral {
+    font-family: var(--numeral-font);
+    font-size: var(--numeral-size);
+    color: var(--ink-400);
+    font-feature-settings: "lnum";
+  }
+
+  /* === 杂志式分隔线 === */
+  .divider-gold {
+    height: 1px;
+    background: var(--divider-gold);
+    border: none;
+  }
+  .divider-hair {
+    border: none;
+    border-top: var(--divider-hair);
+  }
+
+  /* === 杂志式导航 tab ===
+   * 水平排列 + 金色下划线 active + 衬线标题 */
+  .nav-tab {
+    font-family: var(--font-serif);
+    font-size: var(--fs-sm);
+    color: var(--ink-600);
+    padding: var(--sp-2) var(--sp-3);
+    border-bottom: 2px solid transparent;
+    transition: color var(--duration-fast), border-color var(--duration-fast);
+    white-space: nowrap;
+  }
+  .nav-tab:hover {
+    color: var(--ink-900);
+  }
+  .nav-tab-active {
+    color: var(--brand-700);
+    border-bottom-color: var(--gold-500);
+    font-weight: 600;
+  }
+
+  /* === 杂志式大标题 ===
+   * 微收紧字距 + 衬线 + 深墨色，用于页面主标题 */
+  .display-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: var(--tracking-tight);
+    color: var(--ink-900);
+  }
+  .section-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--ink-900);
   }
 }
 

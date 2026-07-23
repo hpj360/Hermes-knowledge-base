@@ -146,15 +146,13 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
     <div className="flex flex-col h-full">
       {/* 工具栏 */}
       <div
-        className="flex items-center justify-between px-4 py-2 border-b"
+        className="flex items-center justify-between px-6 py-3 border-b"
         style={{ background: "var(--ink-50)", borderColor: "var(--ink-200)" }}
       >
-        <h2
-          className="text-sm font-semibold"
-          style={{ color: "var(--ink-900)", fontFamily: "var(--font-serif)" }}
-        >
-          问答
-        </h2>
+        <div className="flex items-baseline gap-3">
+          <p className="eyebrow">Q&amp;A</p>
+          <h2 className="section-title" style={{ fontSize: "1rem" }}>问答</h2>
+        </div>
         <button
           onClick={seed}
           className="text-xs hover:opacity-75"
@@ -168,24 +166,32 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       {/* 消息列表 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center mt-12">
-            <div className="text-4xl mb-3 reveal-item">🍷</div>
-            <p
-              className="reveal-item delay-2"
-              style={{
-                color: "var(--ink-900)",
-                fontFamily: "var(--font-serif)",
-                fontSize: "1.05rem",
-              }}
-            >
-              向 Hermes 知识库提问吧
-            </p>
-            <p
-              className="text-xs mt-1.5 reveal-item delay-3"
-              style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-            >
-              试试："金酒的核心风味是什么？"
-            </p>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+            <div className="text-center max-w-lg reveal-stagger">
+              <p className="eyebrow mb-4">HERMES · 知识库</p>
+              <h2 className="display-title mb-4">向 Hermes 知识库提问吧</h2>
+              <hr className="divider-gold w-32 mx-auto mb-8" />
+              <p className="text-sm mb-8" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+                选择下方问题，或直接输入你想了解的酒类知识
+              </p>
+              <div className="space-y-3">
+                {[
+                  "金酒的核心风味是什么？",
+                  "波本威士忌和苏格兰威士忌有何区别？",
+                  "如何调制一杯经典马天尼？",
+                ].map((q, i) => (
+                  <button
+                    key={q}
+                    onClick={() => setInput(q)}
+                    className="block w-full text-left card px-5 py-3 hover:shadow-md transition-shadow"
+                    style={{ fontFamily: "var(--font-serif)", color: "var(--ink-900)" }}
+                  >
+                    <span className="numeral mr-3">{String(i + 1).padStart(2, "0")}</span>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
         {messages.map((m, i) => (
@@ -200,13 +206,15 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   ? {
                       background: "var(--brand-700)",
                       color: "#fff",
-                      boxShadow: "var(--shadow-md)",
+                      borderRadius: "var(--r-md)",
+                      boxShadow: "none",
                     }
                   : {
                       background: "#fff",
                       border: "1px solid var(--ink-200)",
                       borderLeft: "3px solid var(--gold-500)",
-                      boxShadow: "var(--shadow-sm)",
+                      borderRadius: "var(--r-md)",
+                      boxShadow: "0 1px 3px rgba(31, 28, 24, 0.04)",
                       fontFamily: "var(--font-sans)",
                     }
               }
