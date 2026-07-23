@@ -45,28 +45,69 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return (
       <div
         role="alert"
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-900 to-brand-700 px-4"
+        className="min-h-screen flex items-center justify-center bg-brand-gradient bg-noise px-4"
       >
-        <div className="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="bg-brand-700 px-6 py-4 text-white">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl" aria-hidden="true">🍷</span>
-              <div>
-                <h1 className="text-lg font-bold">页面出错了</h1>
-                <p className="text-sm text-brand-100">Hermes 知识库遇到了一个渲染异常</p>
-              </div>
-            </div>
+        <div
+          className="max-w-md w-full overflow-hidden relative"
+          style={{
+            background: "#fff",
+            border: "1px solid var(--ink-200)",
+            borderRadius: "var(--r-lg)",
+            boxShadow: "var(--shadow-drama)",
+          }}
+        >
+          <div
+            className="px-6 py-5"
+            style={{
+              background: "var(--brand-gradient)",
+              borderBottom: "2px solid var(--gold-500)",
+            }}
+          >
+            <p
+              className="eyebrow mb-2"
+              style={{ color: "var(--gold-300)" }}
+            >
+              ERROR
+            </p>
+            <h1
+              className="text-gold-foil"
+              style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", fontWeight: 600 }}
+            >
+              页面出错了
+            </h1>
+            <p
+              className="text-sm mt-1"
+              style={{ color: "rgba(250, 243, 220, 0.75)", fontFamily: "var(--font-sans)" }}
+            >
+              Hermes 知识库遇到了一个渲染异常
+            </p>
           </div>
           <div className="p-6">
-            <p className="text-gray-700 mb-4">
+            <p
+              className="mb-4"
+              style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)", fontSize: "var(--fs-sm)" }}
+            >
               抱歉，应用在渲染时发生异常。您可以尝试重新加载页面；
               若问题持续，请联系管理员并附上下方错误信息。
             </p>
             <details className="mb-4 group">
-              <summary className="cursor-pointer text-sm text-brand-700 font-medium">
+              <summary
+                className="cursor-pointer text-sm font-medium"
+                style={{ color: "var(--brand-700)", fontFamily: "var(--font-sans)" }}
+              >
                 查看错误详情
               </summary>
-              <pre className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700 overflow-auto max-h-48 whitespace-pre-wrap break-all">
+              <pre
+                className="mt-2 p-3 overflow-auto max-h-48 whitespace-pre-wrap break-all"
+                style={{
+                  background: "var(--ink-50)",
+                  border: "1px solid var(--ink-200)",
+                  borderRadius: "var(--r-sm)",
+                  color: "var(--ink-600)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "var(--fs-xs)",
+                }}
+              >
                 {message}
               </pre>
             </details>

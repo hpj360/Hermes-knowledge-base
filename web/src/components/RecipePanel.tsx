@@ -210,7 +210,12 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
       {/* 错误 */}
       {error && (
-        <div className="card p-6 mb-4 text-center text-red-600">加载失败：{error}</div>
+        <div
+          className="card p-6 mb-4 text-center"
+          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
+        >
+          加载失败：{error}
+        </div>
       )}
 
       {/* 加载中 — F3: 骨架屏替代纯文字 */}
@@ -275,13 +280,17 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       default: return recipe.status;
     }
   })();
-  // 状态标签：保持现有 statusClass 逻辑不变（测试可能依赖）
-  const statusClass = (() => {
+  // 状态标签样式：token 化（rejected 用 danger，published 用 brand，pending 用 gold，draft 用 ink）
+  const statusStyle = (() => {
     switch (recipe.status) {
-      case "published": return "bg-brand-50 text-brand-700";
-      case "pending": return "bg-gold-100 text-gold-700";
-      case "rejected": return "bg-red-50 text-red-600";
-      default: return "bg-ink-100 text-ink-600";
+      case "published":
+        return { background: "var(--brand-50)", color: "var(--brand-700)" };
+      case "pending":
+        return { background: "var(--gold-100)", color: "var(--gold-700)" };
+      case "rejected":
+        return { background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)" };
+      default:
+        return { background: "var(--ink-100)", color: "var(--ink-600)" };
     }
   })();
 
@@ -330,27 +339,57 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         >
           {recipe.title || "(未命名)"}
         </h3>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${statusClass}`}>
+        <span
+          className="text-xs px-2 py-0.5 rounded-full"
+          style={statusStyle}
+        >
           {statusText}
         </span>
       </div>
       <div className="flex gap-2 flex-wrap items-center text-xs">
-        <span className="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700">
+        <span
+          className="px-1.5 py-0.5 rounded"
+          style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
+        >
           {recipe.source || "local"}
         </span>
         {recipe.verified ? (
-          <span className="px-1.5 py-0.5 rounded bg-green-50 text-green-700">✓ 已审核</span>
+          <span
+            className="px-1.5 py-0.5 rounded"
+            style={{ background: "rgba(46, 125, 91, 0.12)", color: "var(--success)" }}
+          >
+            ✓ 已审核
+          </span>
         ) : (
-          <span className="px-1.5 py-0.5 rounded bg-ink-100 text-ink-600">待审核</span>
+          <span
+            className="px-1.5 py-0.5 rounded"
+            style={{ background: "var(--ink-100)", color: "var(--ink-600)" }}
+          >
+            待审核
+          </span>
         )}
         {recipe.hidden && (
-          <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600">隐藏</span>
+          <span
+            className="px-1.5 py-0.5 rounded"
+            style={{ background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)" }}
+          >
+            隐藏
+          </span>
         )}
         {recipe.season && (
-          <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{recipe.season}</span>
+          <span
+            className="px-1.5 py-0.5 rounded"
+            style={{ background: "var(--gold-100)", color: "var(--gold-700)" }}
+          >
+            {recipe.season}
+          </span>
         )}
       </div>
-      <div className="text-xs text-gray-400 break-all" title={recipe.doc_id}>
+      <div
+        className="text-xs break-all"
+        style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
+        title={recipe.doc_id}
+      >
         {recipe.doc_id}
       </div>
       <div className="flex gap-2 pt-2 border-t border-dashed border-ink-100">

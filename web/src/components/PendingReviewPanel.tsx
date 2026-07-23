@@ -171,8 +171,19 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
   return (
     <div className="card p-4 mb-4">
       <div className="flex items-baseline justify-between mb-3">
-        <h3 className="text-base font-semibold text-ink-900">📨 待审核配方</h3>
-        <span className="text-xs text-gray-400">
+        <div>
+          <p className="eyebrow mb-0.5">REVIEW QUEUE</p>
+          <h3
+            className="section-title"
+            style={{ fontSize: "1.05rem" }}
+          >
+            📨 待审核配方
+          </h3>
+        </div>
+        <span
+          className="text-xs"
+          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+        >
           {loading ? "加载中…" : items.length > 0 ? `共 ${items.length} 条 UGC 投稿待审` : "当前无 UGC 投稿待审"}
         </span>
       </div>
@@ -180,7 +191,10 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       {/* 审核进度统计 */}
       {items.length > 0 && (
         <div className="mb-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+          <div
+            className="flex items-center justify-between text-xs mb-1"
+            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+          >
             <span>待审 {items.length} / 已处理 {resolvedCount}</span>
             <span>{progressPct}%</span>
           </div>
@@ -196,7 +210,10 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       {/* 批量操作工具栏 */}
       {items.length > 0 && (
         <div className="flex items-center gap-3 mb-2 pb-2 border-b border-ink-100">
-          <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+          <label
+            className="flex items-center gap-1.5 text-xs cursor-pointer"
+            style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
+          >
             <input
               type="checkbox"
               checked={allSelected}
@@ -206,12 +223,13 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
           </label>
           {selected.size > 0 && (
             <>
-              <span className="text-xs text-gray-400">已选 {selected.size}</span>
+              <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>已选 {selected.size}</span>
               <button
                 type="button"
                 onClick={handleBatchApprove}
                 disabled={busyDocId !== null}
-                className="text-xs px-2 py-1 rounded bg-brand-700 text-white hover:opacity-90 disabled:opacity-50"
+                className="btn-primary text-xs"
+                style={{ padding: "2px 8px" }}
               >
                 批量通过
               </button>
@@ -219,7 +237,8 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                 type="button"
                 onClick={handleBatchReject}
                 disabled={busyDocId !== null}
-                className="text-xs px-2 py-1 rounded border border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50"
+                className="btn-danger text-xs"
+                style={{ padding: "2px 8px" }}
               >
                 批量驳回
               </button>
@@ -229,11 +248,21 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       )}
 
       {error && (
-        <div className="text-sm text-red-600 py-2">加载失败：{error}</div>
+        <div
+          className="text-sm py-2"
+          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
+        >
+          加载失败：{error}
+        </div>
       )}
 
       {!loading && items.length === 0 && !error && (
-        <div className="text-sm text-gray-400 py-4 text-center">暂无待审核配方</div>
+        <div
+          className="text-sm py-4 text-center"
+          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
+        >
+          暂无待审核配方
+        </div>
       )}
 
       {items.length > 0 && (
@@ -259,21 +288,38 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                       type="button"
                       onClick={() => toggleExpand(r.doc_id)}
                       className="font-medium text-sm text-ink-900 truncate text-left hover:text-brand-700"
+                      style={{ fontFamily: "var(--font-serif)" }}
                       title={r.title}
                     >
                       {r.title || "(未命名)"}
                     </button>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
+                    <span
+                      className="text-xs flex-shrink-0"
+                      style={{ color: "var(--ink-400)" }}
+                    >
                       {expanded === r.doc_id ? "▼" : "▶"}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-400 truncate">
+                  <div
+                    className="text-xs truncate"
+                    style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
+                  >
                     {r.doc_id}
                     {r.source ? ` · ${r.source}` : ""}
                   </div>
                   {expanded === r.doc_id && detail && (
-                    <div className="mt-1 p-2 bg-ink-50 rounded text-xs text-gray-600 max-h-40 overflow-y-auto">
-                      <div className="flex gap-3 mb-1 text-gray-500">
+                    <div
+                      className="mt-1 p-2 rounded text-xs max-h-40 overflow-y-auto"
+                      style={{
+                        background: "var(--ink-50)",
+                        color: "var(--ink-600)",
+                        fontFamily: "var(--font-sans)",
+                      }}
+                    >
+                      <div
+                        className="flex gap-3 mb-1"
+                        style={{ color: "var(--ink-400)" }}
+                      >
                         <span>来源：{detail.doc.source_type}</span>
                         {detail.doc.created_at && (
                           <span>创建：{detail.doc.created_at}</span>
@@ -290,7 +336,8 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                     type="button"
                     onClick={() => handleApprove(r.doc_id)}
                     disabled={busyDocId === r.doc_id}
-                    className="text-xs px-3 py-1 rounded bg-brand-700 text-white hover:opacity-90 disabled:opacity-50"
+                    className="btn-primary text-xs"
+                    style={{ padding: "2px 10px" }}
                   >
                     通过
                   </button>
@@ -298,7 +345,8 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                     type="button"
                     onClick={() => handleReject(r.doc_id)}
                     disabled={busyDocId === r.doc_id}
-                    className="text-xs px-3 py-1 rounded border border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50"
+                    className="btn-danger text-xs"
+                    style={{ padding: "2px 10px" }}
                   >
                     驳回
                   </button>

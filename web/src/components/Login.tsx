@@ -5,7 +5,7 @@ interface LoginProps {
   onLogin: () => void;
 }
 
-/** 登录页（M1-07）：单用户密码认证。 */
+/** 登录页（M1-07）：单用户密码认证。杂志式氛围登录卡。 */
 export function Login({ onLogin }: LoginProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,13 +32,36 @@ export function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-gray-100">
-      <div className="card max-w-sm w-full mx-4 p-8">
-        <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🍷</div>
-          <h1 className="text-2xl font-bold text-gray-900">Hermes 知识库</h1>
-          <p className="text-sm text-gray-500 mt-1">请输入访问密码</p>
+    <div className="min-h-screen flex items-center justify-center bg-brand-gradient bg-noise">
+      <div
+        className="max-w-md w-full mx-6 p-10 relative"
+        style={{
+          background: "rgba(255, 255, 255, 0.06)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(201, 162, 39, 0.3)",
+          borderRadius: "var(--r-lg)",
+        }}
+      >
+        {/* 顶部金线 */}
+        <hr className="divider-gold mb-8" />
+
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-4">🍷</div>
+          <p className="eyebrow mb-3" style={{ color: "var(--gold-300)" }}>ACCESS</p>
+          <h2
+            className="text-gold-foil mb-3"
+            style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 600 }}
+          >
+            Hermes 知识库
+          </h2>
+          <p
+            className="text-sm"
+            style={{ color: "rgba(250, 243, 220, 0.6)", fontFamily: "var(--font-sans)" }}
+          >
+            请输入访问密码
+          </p>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="password"
@@ -48,9 +71,23 @@ export function Login({ onLogin }: LoginProps) {
             onChange={(e) => setPassword(e.target.value)}
             autoFocus
             disabled={loading}
+            style={{
+              background: "rgba(255, 255, 255, 0.08)",
+              borderColor: "rgba(201, 162, 39, 0.4)",
+              color: "#fff",
+            }}
           />
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>
+            <p
+              className="text-sm px-3 py-2 rounded"
+              style={{
+                background: "rgba(179, 38, 30, 0.2)",
+                color: "var(--danger)",
+                fontFamily: "var(--font-sans)",
+              }}
+            >
+              {error}
+            </p>
           )}
           <button
             type="submit"
@@ -60,6 +97,9 @@ export function Login({ onLogin }: LoginProps) {
             {loading ? "登录中..." : "登录"}
           </button>
         </form>
+
+        {/* 底部金线 */}
+        <hr className="divider-gold mt-8" />
       </div>
     </div>
   );

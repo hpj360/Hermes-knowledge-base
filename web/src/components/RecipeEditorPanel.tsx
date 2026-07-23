@@ -174,27 +174,35 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
     }
   };
 
-  const bannerClass = (() => {
+  const bannerStyle = (() => {
     switch (status) {
-      case "published": return "bg-brand-50 text-brand-700 border-brand-500";
-      case "pending": return "bg-gold-100 text-gold-700 border-gold-500";
-      case "rejected": return "bg-red-50 text-red-600 border-red-500";
-      default: return "bg-ink-100 text-ink-600 border-ink-200";
+      case "published":
+        return { background: "var(--brand-50)", color: "var(--brand-700)", borderColor: "var(--brand-500)" };
+      case "pending":
+        return { background: "var(--gold-100)", color: "var(--gold-700)", borderColor: "var(--gold-500)" };
+      case "rejected":
+        return { background: "rgba(179, 38, 30, 0.08)", color: "var(--danger)", borderColor: "var(--danger)" };
+      default:
+        return { background: "var(--ink-100)", color: "var(--ink-600)", borderColor: "var(--ink-200)" };
     }
   })();
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-4">
-        <div className="text-xs uppercase tracking-widest text-gold-700 mb-1">Lab · 调酒研究室</div>
-        <h2 className="text-2xl font-bold text-brand-700">
+      <div className="mb-6">
+        <p className="eyebrow mb-1">LAB · 调酒研究室</p>
+        <h2 className="display-title">
           {currentDocId ? "编辑配方" : "创作新配方"}
         </h2>
+        <hr className="divider-gold w-16 mt-3" />
       </div>
 
       <div className="card p-6 space-y-4">
         {/* 状态横幅 */}
-        <div className={`text-sm px-3 py-2 rounded border-l-4 ${bannerClass}`}>
+        <div
+          className="text-sm px-3 py-2 rounded border-l-4"
+          style={{ ...bannerStyle, fontFamily: "var(--font-sans)" }}
+        >
           当前状态：{STATUS_TEXT[status] || status}
         </div>
 
@@ -285,19 +293,21 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
           </div>
           <div className="flex flex-wrap gap-2 min-h-[24px]">
             {ingredients.length === 0 ? (
-              <span className="text-xs text-gray-400">未选择材料</span>
+              <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>未选择材料</span>
             ) : (
               ingredients.map((name, idx) => (
                 <span
                   key={`${name}-${idx}`}
-                  className="text-xs px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 inline-flex items-center gap-1"
+                  className="text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+                  style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
                 >
                   {name}
                   <button
                     type="button"
                     onClick={() => removeIngredient(idx)}
                     aria-label={`移除 ${name}`}
-                    className="text-brand-700 hover:text-brand-900"
+                    style={{ color: "var(--brand-700)" }}
+                    className="hover:opacity-70"
                     disabled={!canEdit || saving}
                   >
                     ×
@@ -306,7 +316,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               ))
             )}
           </div>
-          <p className="text-xs text-gray-400 mt-1">回车快速添加；点击 chip 上的 × 移除。</p>
+          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>回车快速添加；点击 chip 上的 × 移除。</p>
         </div>
 
         {/* 正文 */}
@@ -320,9 +330,9 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
             disabled={!canEdit || saving}
             aria-label="配方正文"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
             可在正文首行使用 frontmatter 注解材料：
-            <code className="font-mono bg-ink-100 px-1 rounded text-gold-700">&lt;!-- ingredients: 金酒|柠檬汁|糖浆 --&gt;</code>
+            <code className="font-mono px-1 rounded" style={{ background: "var(--ink-100)", color: "var(--gold-700)" }}>&lt;!-- ingredients: 金酒|柠檬汁|糖浆 --&gt;</code>
           </p>
         </div>
 
@@ -362,7 +372,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               type="button"
               onClick={onCancel}
               disabled={saving}
-              className="text-sm px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100"
+              className="btn-ghost text-sm"
             >
               取消
             </button>
@@ -371,7 +381,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
             <button
               type="button"
               onClick={onSaved}
-              className="text-sm px-4 py-2 rounded-md text-brand-700 hover:bg-brand-50 ml-auto"
+              className="btn-ghost text-sm ml-auto"
             >
               完成
             </button>
@@ -381,11 +391,12 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
         {/* 结果提示 */}
         {resultMsg && (
           <div
-            className={`text-sm px-3 py-2 rounded ${
+            className="text-sm px-3 py-2 rounded"
+            style={
               resultMsg.kind === "ok"
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-600"
-            }`}
+                ? { background: "rgba(46, 125, 91, 0.1)", color: "var(--success)", fontFamily: "var(--font-sans)" }
+                : { background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)", fontFamily: "var(--font-sans)" }
+            }
             role="status"
           >
             {resultMsg.text}

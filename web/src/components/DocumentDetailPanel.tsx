@@ -103,7 +103,7 @@ export function DocumentDetailPanel({
   if (error) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-600 mb-3">{error}</p>
+        <p className="mb-3" style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}>{error}</p>
         <button onClick={onBack} className="btn-secondary">返回</button>
       </div>
     );
@@ -169,12 +169,22 @@ export function DocumentDetailPanel({
                       setEditTagIds([...editTagIds, t.id]);
                     }
                   }}
-                  className={`text-xs px-2 py-1 rounded border transition-colors ${
+                  className="text-xs px-2 py-1 rounded border transition-colors"
+                  style={
                     editTagIds.includes(t.id)
-                      ? "bg-brand-700 text-white border-brand-700"
-                      : "bg-white text-ink-600 border-ink-200 hover:bg-ink-50"
-                  }`}
-                  style={!editTagIds.includes(t.id) ? { borderColor: t.color } : {}}
+                      ? {
+                          background: "var(--brand-700)",
+                          color: "#fff",
+                          borderColor: "var(--brand-700)",
+                          fontFamily: "var(--font-sans)",
+                        }
+                      : {
+                          background: "#fff",
+                          color: "var(--ink-600)",
+                          borderColor: t.color || "var(--ink-200)",
+                          fontFamily: "var(--font-sans)",
+                        }
+                  }
                 >
                   {t.name}
                 </button>
