@@ -4,12 +4,11 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-import pytest
 from sqlalchemy import text as sa_text
 from sqlmodel import select
 
 from hermes_kb.database import get_session
-from hermes_kb.models import Chunk, Document
+from hermes_kb.models import Chunk
 
 
 def _seed_doc_with_vec(title: str, content: str, vec: list[float]) -> tuple[str, int]:

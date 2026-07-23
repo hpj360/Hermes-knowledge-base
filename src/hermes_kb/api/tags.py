@@ -1,6 +1,7 @@
 """标签与分类端点（M2-06）。"""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,6 +13,16 @@ from hermes_kb.database import get_session
 from hermes_kb.models import PRESET_CATEGORIES, Document, DocumentTag, Tag
 
 router = APIRouter(prefix="/api", tags=["tags"])
+
+_TAG_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+_DEFAULT_TAG_COLOR = "#6b7280"
+
+
+def _validate_tag_color(color: str) -> str:
+    """校验标签颜色格式，非法则返回默认灰色。"""
+    if color and _TAG_COLOR_RE.match(color):
+        return color
+    return _DEFAULT_TAG_COLOR
 
 
 # M2-06：标签创建
@@ -58,7 +69,7 @@ async def create_tag(req: TagCreateReq) -> dict[str, Any]:
         ).first()
         if existing:
             raise HTTPException(status_code=409, detail="标签已存在")
-        tag = Tag(name=name, color=req.color)
+        tag = Tag(name=name, color=_validate_tag_color(req.color))
         session.add(tag)
         session.commit()
         session.refresh(tag)

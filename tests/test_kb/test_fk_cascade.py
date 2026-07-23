@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from sqlmodel import select
 
-from hermes_kb.database import get_session, reset_engine
+from hermes_kb.database import get_session
 from hermes_kb.models import Chunk, Document, DocumentTag, RecipeStats, Tag
 from hermes_kb.rag import ImportService
 

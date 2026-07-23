@@ -44,7 +44,7 @@ def test_ingredient_substitute_model(tmp_db):
 
 def test_ingredient_registry_canonical():
     """材料注册表能通过别名归一化到标准名。"""
-    from hermes_kb.ingredients import canonicalize, INGREDIENT_REGISTRY
+    from hermes_kb.ingredients import canonicalize
 
     assert canonicalize("gin") == "金酒"
     assert canonicalize("Gin") == "金酒"
@@ -57,7 +57,7 @@ def test_ingredient_registry_canonical():
 
 def test_ingredient_registry_category():
     """材料能正确分类。"""
-    from hermes_kb.ingredients import get_category, INGREDIENT_REGISTRY
+    from hermes_kb.ingredients import get_category
 
     assert get_category("金酒") == "base_spirit"
     assert get_category("味美思") == "modifier"
@@ -97,8 +97,6 @@ def test_substitutes_preset():
 def test_substitutes_merged_with_user(tmp_db):
     """L1 预置 + L2 用户自定义能合并查询。"""
     from hermes_kb.substitutes import get_substitutes, add_user_substitute
-    from hermes_kb.database import get_session
-    from hermes_kb.models import IngredientSubstitute
 
     preset_subs = get_substitutes("君度")
     assert "橙味力娇酒" in preset_subs
@@ -127,7 +125,6 @@ def test_substitutes_remove_user(tmp_db):
 
 def test_substitute_unique_constraint(tmp_db):
     """P1-5: (canonical, substitute) 唯一约束应拒绝重复插入。"""
-    import pytest
     from sqlalchemy.exc import IntegrityError
     from hermes_kb.models import IngredientSubstitute
     from hermes_kb.database import get_session
@@ -391,7 +388,6 @@ def test_api_seed_recipes(client):
     assert data["failed"] == 0
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
-    from sqlmodel import select
 
     with get_session() as session:
         recipes = session.exec(
@@ -409,7 +405,6 @@ def test_api_seed_recipes_idempotent(client):
     assert resp.status_code == 200
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
-    from sqlmodel import select
 
     with get_session() as session:
         count = len(

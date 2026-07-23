@@ -10,7 +10,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 # 默认 JWT 密钥：仅 dev 模式使用，prod 模式缺失则启动失败
-_DEFAULT_JWT_SECRET = "hermes-kb-dev-only-secret-DO-NOT-USE-IN-PROD"
+_DEFAULT_JWT_SECRET = "hermes-kb-default-secret-please-change"
 
 # M2-06 预设分类（业务配置，归属 config 而非 models）
 PRESET_CATEGORIES = [
@@ -199,7 +199,7 @@ class Settings:
                     "jwt_secret must be set to a non-empty value when "
                     "KB_AUTH_ENABLED=true (set KB_JWT_SECRET env var)"
                 )
-            if self.jwt_secret == "hermes-kb-default-secret-please-change":
+            if self.jwt_secret == _DEFAULT_JWT_SECRET:
                 raise RuntimeError(
                     "jwt_secret is still the default value. Set a unique "
                     "secret via the KB_JWT_SECRET environment variable before "

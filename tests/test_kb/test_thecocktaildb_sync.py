@@ -1,9 +1,7 @@
 """TheCocktailDB 同步器测试（B2）。"""
 from __future__ import annotations
 
-from unittest.mock import patch
 
-import pytest
 from sqlmodel import select
 
 from hermes_kb.database import get_session

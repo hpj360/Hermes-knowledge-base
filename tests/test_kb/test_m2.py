@@ -352,7 +352,6 @@ def test_query_rewriter_empty_query():
 
 def test_query_rewriter_disabled_returns_heuristic():
     """LLM 不可用时（默认 mock），QueryRewriter 应使用启发式。"""
-    from hermes_kb.config import get_settings
     from hermes_kb.query_rewriter import QueryRewriter
 
     # 默认 settings.llm_available = False

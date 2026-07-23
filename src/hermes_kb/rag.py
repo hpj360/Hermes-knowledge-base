@@ -26,10 +26,9 @@ from typing import Any, AsyncIterator
 from uuid import uuid4
 
 from sqlalchemy import text as sa_text
-from sqlmodel import select
 
 from hermes_kb.config import get_settings
-from hermes_kb.database import _SQLITE_VEC_AVAILABLE, get_engine, get_session
+from hermes_kb.database import _SQLITE_VEC_AVAILABLE, get_session
 from hermes_kb.embedding import EmbeddingService
 from hermes_kb.llm import LLMClient
 from hermes_kb.models import QueryLog

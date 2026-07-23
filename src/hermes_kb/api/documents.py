@@ -143,10 +143,25 @@ async def upload_file(
     tmp_dir = Path(settings.db_path).parent / "uploads"
     tmp_dir.mkdir(parents=True, exist_ok=True)
     tmp_path = _safe_upload_path(tmp_dir, file.filename)
-    with tmp_path.open("wb") as f:
-        f.write(await file.read())
+    content = await file.read()
+    # 单文件上限 10MB
+    _MAX_UPLOAD_SINGLE = 10 * 1024 * 1024
+    if len(content) > _MAX_UPLOAD_SINGLE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"文件 {file.filename} 超过单文件上限 10MB",
+        )
+    tmp_path.write_bytes(content)
     try:
         return importer.import_file(tmp_path, title=title or file.filename)
+    except HTTPException:
+        raise
+    except Exception as e:
+        # PDF 解析失败等 → 友好 400
+        raise HTTPException(
+            status_code=400,
+            detail=f"文件解析失败：{type(e).__name__}: {e}",
+        )
     finally:
         try:
             tmp_path.unlink(missing_ok=True)
@@ -166,15 +181,25 @@ async def delete_document(
 
 # M2-03：文档详情
 @router.get("/{doc_id}", dependencies=[Depends(require_auth)])
-async def get_document(doc_id: str) -> dict[str, Any]:
-    """文档详情：元信息 + 全部 chunks。"""
+async def get_document(
+    doc_id: str,
+    chunk_limit: int | None = None,
+    chunk_offset: int = 0,
+) -> dict[str, Any]:
+    """文档详情：元信息 + chunks（支持分页）。"""
     with get_session() as session:
         doc = session.get(Document, doc_id)
         if not doc:
             raise HTTPException(status_code=404, detail="文档不存在")
-        chunks = session.exec(
-            select(Chunk).where(Chunk.doc_id == doc_id).order_by(Chunk.idx)
-        ).all()
+        stmt = (
+            select(Chunk)
+            .where(Chunk.doc_id == doc_id)
+            .order_by(Chunk.idx)
+        )
+        total_chunks = len(session.exec(stmt).all())
+        if chunk_limit is not None:
+            stmt = stmt.offset(chunk_offset).limit(chunk_limit)
+        chunks = session.exec(stmt).all()
         tags = session.exec(
             select(Tag).join(
                 DocumentTag, DocumentTag.tag_id == Tag.id, isouter=True
@@ -202,22 +227,31 @@ async def get_document(doc_id: str) -> dict[str, Any]:
                 }
                 for c in chunks
             ],
+            "pagination": {
+                "limit": chunk_limit,
+                "offset": chunk_offset,
+                "total": total_chunks,
+                "returned": len(chunks),
+            },
         }
 
 
 @router.get("/{doc_id}/raw", dependencies=[Depends(require_auth)])
 async def get_document_raw(doc_id: str):
-    """原始内容下载（MD/txt 文件）。"""
+    """原始内容下载（解析后的纯文本）。"""
     with get_session() as session:
         doc = session.get(Document, doc_id)
         if not doc:
             raise HTTPException(status_code=404, detail="文档不存在")
-        ext = doc.file_type or "txt"
+        # content 是解析后的纯文本，统一返回 text/plain；
+        # PDF 不返回 application/pdf（避免浏览器尝试渲染非 PDF 二进制）
         media = {
             "md": "text/markdown; charset=utf-8",
             "txt": "text/plain; charset=utf-8",
-            "pdf": "application/pdf",
-        }.get(ext, "text/plain; charset=utf-8")
+            "pdf": "text/plain; charset=utf-8",
+        }.get(doc.file_type or "txt", "text/plain; charset=utf-8")
+        # 文件名用 .txt（因为返回的是解析后纯文本）
+        ext = "txt" if doc.file_type == "pdf" else (doc.file_type or "txt")
         filename = f"{doc.title}.{ext}"
         # RFC 5987：filename* 用 UTF-8 percent-encoding（兼容中文）
         # filename 用 ASCII 兜底（latin-1 不支持中文）
@@ -249,6 +283,7 @@ async def update_doc_metadata(doc_id: str, req: DocMetadataReq) -> dict[str, Any
             doc.title = req.title.strip()
         if req.category is not None:
             doc.category = req.category
+        skipped: list[int] = []
         if req.tag_ids is not None:
             # 替换关联
             old_links = session.exec(
@@ -259,11 +294,12 @@ async def update_doc_metadata(doc_id: str, req: DocMetadataReq) -> dict[str, Any
             for tid in req.tag_ids:
                 # 校验 tag 存在
                 if not session.get(Tag, tid):
+                    skipped.append(tid)
                     continue
                 session.add(DocumentTag(doc_id=doc_id, tag_id=tid))
         session.add(doc)
         session.commit()
-        return {"doc_id": doc_id, "status": "updated"}
+        return {"doc_id": doc_id, "status": "updated", "skipped_tag_ids": skipped}
 
 
 # M2-05：批量导入
@@ -301,6 +337,13 @@ async def upload_batch(
         tmp_path = _safe_upload_path(tmp_dir, f.filename)
         try:
             content = await f.read()
+            # 单文件上限 10MB
+            _MAX_UPLOAD_SINGLE = 10 * 1024 * 1024
+            if len(content) > _MAX_UPLOAD_SINGLE:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"文件 {f.filename} 超过单文件上限 10MB",
+                )
             tmp_path.write_bytes(content)
             r = importer.import_file(tmp_path, title=f.filename)
             results.append(
@@ -311,6 +354,8 @@ async def upload_batch(
                     "chunk_count": r.get("chunk_count", 0),
                 }
             )
+        except HTTPException:
+            raise
         except Exception as e:
             results.append(
                 {"filename": f.filename, "status": "failed", "error": str(e)}

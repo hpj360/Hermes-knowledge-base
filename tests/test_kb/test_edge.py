@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from hermes_kb.rag import RAGEngine
 from hermes_kb.retrieval import (

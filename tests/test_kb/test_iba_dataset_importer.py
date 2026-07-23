@@ -1,7 +1,6 @@
 """IBA dataset importer 测试（B3）。"""
 from __future__ import annotations
 
-import pytest
 from sqlmodel import select
 
 from hermes_kb.database import get_session

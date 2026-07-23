@@ -1,12 +1,10 @@
 """B6: 外部数据源同步 API 端点测试。"""
 from __future__ import annotations
 
-import pytest
 
 
 def test_sync_thecocktaildb_endpoint(client, monkeypatch):
     """POST /api/lab/sync source=thecocktaildb 返回同步结果。"""
-    from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
 
     def fake_sync(limit=50, letters="abcdefghijklmnopqrstuvwxyz0123456789", importer=None):
         return {"imported": 5, "skipped": 2, "failed": 0, "unknown_ingredients": ["Baileys"]}

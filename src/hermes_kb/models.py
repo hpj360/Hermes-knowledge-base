@@ -115,18 +115,6 @@ class QueryLog(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_now_utc, index=True)
 
 
-# M2-06 预设分类
-PRESET_CATEGORIES = [
-    "烈酒",
-    "葡萄酒",
-    "啤酒",
-    "中国白酒",
-    "利口酒",
-    "资料",
-    "其他",
-]
-
-
 class RecipeStats(SQLModel, table=True):
     """M3：配方使用统计。"""
 
@@ -176,4 +164,4 @@ class RecipeVariant(SQLModel, table=True):
         sa_column=Column("variant_doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
     )  # 变体配方
     variant_note: str = Field(default="", max_length=200)  # 变体说明
-    created_at: datetime = Field(default_factory=_utcnow)
+    created_at: datetime = Field(default_factory=_now_utc)

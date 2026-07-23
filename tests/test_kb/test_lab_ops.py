@@ -1,7 +1,6 @@
 """M4.1 自动运营层测试：每日推荐 + 缺材料统计 + 运营看板。"""
 from __future__ import annotations
 
-import pytest
 from sqlmodel import select
 
 
@@ -198,7 +197,6 @@ def test_weekly_match_count_semantics(seeded_recipes):
     from hermes_kb.lab_dashboard import get_lab_dashboard
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
-    from sqlmodel import select
 
     # seeded_recipes 是 ImportService，从 DB 取前 2 个 recipe 的 doc_id
     with get_session() as session:

@@ -15,13 +15,11 @@ from __future__ import annotations
 import asyncio
 import json
 
-import pytest
 
 from hermes_kb.app import create_app, jwt_decode, jwt_encode
-from hermes_kb.config import get_settings, override_settings
+from hermes_kb.config import get_settings
 from hermes_kb.embedding import (
     EmbeddingService,
-    HashEmbeddingBackend,
 )
 from hermes_kb.llm import LLMClient, MockLLMBackend
 

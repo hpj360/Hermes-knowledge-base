@@ -25,7 +25,6 @@ def test_generic_exception_production_mode_hides_detail():
     """生产模式：500 响应不应包含 str(exc)。"""
     app = _make_app_with_debug(debug=False)
     # 注入一个会抛 Exception 的路由
-    from fastapi import Request
 
     async def _raise_internal():
         raise RuntimeError("DB_CONNECTION_STRING=postgres://secret@host:5432")
@@ -48,7 +47,6 @@ def test_generic_exception_production_mode_hides_detail():
 def test_generic_exception_dev_mode_shows_detail():
     """开发模式：500 响应保留 str(exc) 便于排查。"""
     app = _make_app_with_debug(debug=True)
-    from fastapi import Request
 
     async def _raise_internal():
         raise RuntimeError("DB_CONNECTION_STRING=postgres://secret@host:5432")
@@ -68,7 +66,6 @@ def test_generic_exception_dev_mode_shows_detail():
 def test_value_error_keeps_400_with_detail():
     """ValueError 仍应返回 400 + 业务 detail。"""
     app = _make_app_with_debug(debug=False)
-    from fastapi import Request
 
     async def _raise_value_error():
         raise ValueError("document title cannot be empty")

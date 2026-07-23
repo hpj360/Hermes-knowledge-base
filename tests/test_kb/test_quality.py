@@ -15,10 +15,7 @@
 from __future__ import annotations
 
 import io
-import os
 import time
-from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
 
@@ -272,10 +269,10 @@ def test_cors_credentials_false_when_empty(monkeypatch):
 # ---------------------------------------------------------------------------
 def test_expired_token_returns_401(client, monkeypatch):
     """过期 token 访问受保护端点 → 401。"""
-    from hermes_kb.app import jwt_encode
-    from hermes_kb.config import get_settings
+    # 使用非默认 secret（__post_init__ 安全校验拒绝默认值）
+    test_secret = "test-secret-for-expired-token-xxx"
+    monkeypatch.setenv("KB_JWT_SECRET", test_secret)
 
-    settings = get_settings()
     # 构造一个已过期的 token（exp 设为 1 小时前）
     import time as _time
     payload = {
@@ -296,7 +293,7 @@ def test_expired_token_returns_401(client, monkeypatch):
     h = _b64e(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
     p = _b64e(json.dumps(payload).encode())
     signing_input = f"{h}.{p}".encode()
-    sig = hmac.new(settings.jwt_secret.encode(), signing_input, hashlib.sha256).digest()
+    sig = hmac.new(test_secret.encode(), signing_input, hashlib.sha256).digest()
     expired_token = f"{h}.{p}.{_b64e(sig)}"
 
     # 启用认证

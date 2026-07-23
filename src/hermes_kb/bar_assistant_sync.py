@@ -11,10 +11,8 @@ from typing import Any
 
 import httpx
 from sqlalchemy import text as sa_text
-from sqlmodel import select
 
 from hermes_kb.database import get_session
-from hermes_kb.models import IngredientSubstitute
 
 _logger = logging.getLogger(__name__)
 
