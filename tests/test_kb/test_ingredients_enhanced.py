@@ -76,9 +76,13 @@ def test_new_ingredients_have_abv_and_brands():
     # 抽检若干新材料具备 ABV 与品牌字段
     assert get_abv("苦艾烈酒") == pytest.approx(0.55)
     assert get_abv("咖啡力娇酒") == pytest.approx(0.20)
-    assert get_brands("苦杏仁酒") == ["Disaronno"]
-    assert get_brands("咖啡力娇酒") == ["Kahlúa", "Tia Maria"]
-    assert get_brands("百利甜酒") == ["Baileys"]
+    # P2-A: 品牌列表已扩充，使用包含断言代替严格相等
+    amaretto_brands = get_brands("苦杏仁酒")
+    assert "Disaronno" in amaretto_brands
+    assert amaretto_brands[0] == "Disaronno"  # 主品牌保持首位
+    coffee_brands = get_brands("咖啡力娇酒")
+    assert "Kahlúa" in coffee_brands and "Tia Maria" in coffee_brands
+    assert get_brands("百利甜酒")[0] == "Baileys"
 
     # 全注册表每条都应有 abv(float) 与 brands(list)
     for info in INGREDIENT_REGISTRY.values():

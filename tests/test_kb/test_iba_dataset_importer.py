@@ -151,9 +151,10 @@ def test_sync_iba_dataset_dedup_with_seed():
             "type": "Contemporary Classics",
         },
         {
-            "name": "DAIQUIRI",  # 新配方
+            # 完全虚构配方名，避免与 57 款 IBA 全量种子去重
+            "name": "TEST UNIQUE RECIPE X",
             "ingredients": [
-                {"name": "white rum", "quantity": 4.5},
+                {"name": "gin", "quantity": 4.5},
                 {"name": "lime juice", "quantity": 2.0},
                 {"name": "sugar syrup", "quantity": 1.5},
             ],
@@ -163,8 +164,9 @@ def test_sync_iba_dataset_dedup_with_seed():
 
     result = sync_iba_dataset(data=mock_data)
     # Mojito 应被去重（与种子模糊匹配）
-    # DAIQUIRI 应导入
-    # 注意：模糊匹配逻辑可能是 title 包含关系或相似度
+    # TEST UNIQUE RECIPE X 应导入
+    # 注意：种子已扩展至 57 款 IBA 全量，常见 IBA 名均会去重，
+    # 故使用虚构名确保 imported >= 1
     assert result["imported"] >= 1
     assert result["skipped"] >= 1
 

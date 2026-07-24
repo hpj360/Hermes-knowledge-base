@@ -384,7 +384,7 @@ def test_api_seed_recipes(client):
     resp = client.post("/api/seed/recipes")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["seeded"] == 8
+    assert data["seeded"] == 57  # IBA 全量：23 Unforgettables + 24 Contemporary + 10 New Era
     assert data["failed"] == 0
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
@@ -393,7 +393,7 @@ def test_api_seed_recipes(client):
         recipes = session.exec(
             select(Document).where(Document.category == "recipe")
         ).all()
-        assert len(recipes) == 8
+        assert len(recipes) == 57
         titles = [d.title for d in recipes]
         assert "马天尼 Martini" in titles
 
@@ -412,4 +412,4 @@ def test_api_seed_recipes_idempotent(client):
                 select(Document).where(Document.category == "recipe")
             ).all()
         )
-        assert count == 8
+        assert count == 57
