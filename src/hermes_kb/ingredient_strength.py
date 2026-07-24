@@ -96,15 +96,43 @@ def estimate_recipe_stats(ingredient_names: list[str]) -> dict:
 def fetch_iba_strength_data() -> dict[str, float]:
     """从 IBA GitHub 拉取 ingredients_strength.json。
 
+    尝试顺序：直连 GitHub → gh-proxy 镜像 → 本地文件。
+
     Returns:
-        {材料英文名: ABV小数}；网络失败返回空 dict。
+        {材料英文名: ABV小数}；全部失败返回空 dict。
     """
-    try:
-        resp = httpx.get(IBA_STRENGTH_URL, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-    except (httpx.HTTPError, ValueError, OSError):
-        return {}
+    from pathlib import Path
+
+    # 直连 GitHub
+    for branch in ("master", "main"):
+        try:
+            url = IBA_STRENGTH_URL
+            resp = httpx.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except (httpx.HTTPError, ValueError, OSError):
+            continue
+    else:
+        # gh-proxy 镜像
+        for branch in ("master", "main"):
+            try:
+                url = f"https://gh-proxy.com/https://raw.githubusercontent.com/lmc2179/iba_dataset_json/{branch}/ingredients_strength.json"
+                resp = httpx.get(url, timeout=30)
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except (httpx.HTTPError, ValueError, OSError):
+                continue
+        else:
+            # 本地文件回退
+            local_file = Path(__file__).parent.parent.parent / "data" / "iba_strength.json"
+            if local_file.exists():
+                import json
+                with open(local_file, encoding="utf-8") as f:
+                    data = json.load(f)
+            else:
+                return {}
 
     result: dict[str, float] = {}
     if isinstance(data, dict):

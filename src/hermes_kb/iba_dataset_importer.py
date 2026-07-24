@@ -292,7 +292,16 @@ def sync_iba_dataset(
 
 
 def _fetch_remote_data() -> list[dict[str, Any]]:
-    """从 GitHub 拉取 IBA dataset。master 404 时自动 fallback 到 main。"""
+    """从 GitHub 拉取 IBA dataset。
+
+    尝试顺序：
+    1. raw.githubusercontent.com (master → main)
+    2. gh-proxy.com 镜像 (master → main)
+    3. 本地 data/iba_recipes.json 文件
+    """
+    from pathlib import Path
+
+    # 直连 GitHub
     for branch in ("master", "main"):
         try:
             url = f"https://raw.githubusercontent.com/lmc2179/iba_dataset_json/{branch}/recipes.json"
@@ -303,8 +312,29 @@ def _fetch_remote_data() -> list[dict[str, Any]]:
             if branch == "master":
                 _logger.info("IBA dataset master branch failed, trying main: %s", e)
                 continue
-            _logger.warning("IBA dataset remote fetch failed (master+main): %s", e)
-            return []
+            _logger.warning("IBA dataset direct fetch failed: %s", e)
+
+    # gh-proxy 镜像
+    for branch in ("master", "main"):
+        try:
+            url = f"https://gh-proxy.com/https://raw.githubusercontent.com/lmc2179/iba_dataset_json/{branch}/recipes.json"
+            resp = httpx.get(url, timeout=30)
+            resp.raise_for_status()
+            return resp.json()
+        except (httpx.HTTPError, ValueError, OSError) as e:
+            if branch == "master":
+                _logger.info("IBA dataset mirror master failed, trying main: %s", e)
+                continue
+            _logger.warning("IBA dataset mirror fetch failed: %s", e)
+
+    # 本地文件回退
+    local_file = Path(__file__).parent.parent.parent / "data" / "iba_recipes.json"
+    if local_file.exists():
+        _logger.info("IBA dataset: using local file %s", local_file)
+        import json
+        with open(local_file, encoding="utf-8") as f:
+            return json.load(f)
+
     return []
 
 
