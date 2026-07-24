@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import type { LabRecipe } from "../types";
+import type { LabRecipe, LabRecipeVariant } from "../types";
 import { PendingReviewPanel } from "./PendingReviewPanel";
 import { SkeletonList } from "./Skeleton";
 
@@ -271,6 +271,9 @@ interface RecipeCardProps {
 
 function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCardProps) {
   const [imgError, setImgError] = useState(false);
+  const [showVariants, setShowVariants] = useState(false);
+  const [variants, setVariants] = useState<LabRecipeVariant[]>([]);
+  const [variantLoading, setVariantLoading] = useState(false);
   const statusText = (() => {
     switch (recipe.status) {
       case "draft": return "草稿";
@@ -420,6 +423,55 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           >
             编辑
           </button>
+        )}
+      </div>
+      {/* 配方变体 */}
+      <div>
+        <button
+          type="button"
+          onClick={async () => {
+            if (!showVariants && variants.length === 0) {
+              setVariantLoading(true);
+              try {
+                const res = await api.labListVariants(recipe.doc_id);
+                setVariants(res.items);
+              } catch { setVariants([]); }
+              setVariantLoading(false);
+            }
+            setShowVariants(!showVariants);
+          }}
+          className="btn-ghost text-xs"
+          style={{ color: "var(--ink-500)" }}
+        >
+          {showVariants ? "▾" : "▸"} 变体
+          {variants.length > 0 && ` (${variants.length})`}
+        </button>
+        {showVariants && (
+          <div className="mt-2 space-y-1">
+            {variantLoading ? (
+              <span className="text-xs" style={{ color: "var(--ink-400)" }}>加载中…</span>
+            ) : variants.length === 0 ? (
+              <span className="text-xs" style={{ color: "var(--ink-400)" }}>暂无变体</span>
+            ) : (
+              variants.map((v) => (
+                <div
+                  key={v.variant_doc_id}
+                  className="text-xs flex items-center gap-1 px-2 py-1 rounded"
+                  style={{ background: "var(--ink-50)" }}
+                >
+                  <span style={{ color: "var(--brand-600)" }}>↳</span>
+                  <span className="truncate" style={{ color: "var(--ink-700)" }}>
+                    {v.variant_title}
+                  </span>
+                  {v.variant_note && (
+                    <span className="truncate ml-1" style={{ color: "var(--ink-400)" }}>
+                      — {v.variant_note}
+                    </span>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         )}
       </div>
     </div>

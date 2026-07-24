@@ -522,3 +522,28 @@ async def lab_create_variant(doc_id: str, req: dict[str, Any]) -> dict[str, Any]
     if not ok:
         raise HTTPException(status_code=400, detail="关联已存在或配方不存在")
     return {"base_doc_id": doc_id, "variant_doc_id": variant_doc_id, "status": "ok"}
+
+
+# P1: LLM 翻译配方标题
+class TranslateRequest(BaseModel):
+    """翻译请求。"""
+    doc_ids: list[str] = Field(default_factory=list, description="指定 doc_id 列表")
+    source: str = Field(default="", description="按数据源筛选（iba/thecocktaildb）")
+    limit: int = Field(default=50, ge=1, le=500)
+
+
+@router.post("/translate-titles", dependencies=[Depends(require_age_gate)])
+async def lab_translate_titles(req: TranslateRequest) -> dict[str, Any]:
+    """批量翻译英文配方标题为中文。
+
+    Mock 后端使用内置鸡尾酒词典翻译，真实 LLM 后端使用 AI 翻译。
+    已含中文的标题自动跳过。
+    """
+    from hermes_kb.translation import batch_translate_titles
+
+    result = batch_translate_titles(
+        doc_ids=req.doc_ids or None,
+        source=req.source or None,
+        limit=req.limit,
+    )
+    return {"status": "ok", **result}
