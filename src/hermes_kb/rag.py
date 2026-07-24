@@ -56,6 +56,25 @@ _INJECTION_RE = re.compile(
     "|".join(re.escape(p) for p in _INJECTION_PATTERNS), re.IGNORECASE
 )
 
+# B6+: IMA「酒博士」外部参考联检触发关键词（S 级高价值内容维度）
+# 命中其一即在 IMA 启用时触发联检；低置信度也会触发
+_HIGH_VALUE_PATTERNS = [
+    # 国标号（GB/T 10781、GB 2757 等）
+    r"GB[/\s]*T?\s*\d+",
+    # 十二大香型
+    r"浓香|酱香|清香|米香|兼香|凤香|董香|豉香|特香|芝麻香|老白干|药香|兼型",
+    # 地理标志产区
+    r"茅台镇|泸州|汾阳|宜宾|杏花村|绵竹|洋河|古井|董公寺|宿迁|仁怀",
+    # 高价值主题词
+    r"国家标准|法规|酿造工艺|固态发酵|大曲|品鉴|评酒|感官|术语|地理标志|年份酒|陈酿|勾兑",
+]
+_HIGH_VALUE_RE = re.compile(
+    "|".join(_HIGH_VALUE_PATTERNS), re.IGNORECASE
+)
+
+# IMA 外部参考单次返回上限（避免响应过大 / 配额浪费）
+_EXTERNAL_REFS_LIMIT = 5
+
 _OUTPUT_LEAK_MARKERS = (
     "你是 Hermes",
     "检索片段：",
@@ -123,6 +142,41 @@ def _is_low_confidence(hits: list[RetrievalHit]) -> bool:
     return all(h.score < threshold for h in hits)
 
 
+def _is_high_value_query(query: str) -> bool:
+    """B6+：判断是否为 S 级高价值查询（命中 IMA 联检触发词）。
+
+    触发词覆盖：国标号、香型名、地理标志产区、酿造/品鉴主题词。
+    用于在不依赖低置信度的情况下，主动联检「酒博士」权威内容。
+    """
+    if not isinstance(query, str) or not query:
+        return False
+    return bool(_HIGH_VALUE_RE.search(query))
+
+
+def _build_external_refs(items: list[dict[str, Any]]) -> list["ExternalRef"]:
+    """把 IMA search_knowledge 响应条目转为 ExternalRef 列表（去重 + 截断）。"""
+    seen: set[str] = set()
+    refs: list[ExternalRef] = []
+    for item in items:
+        title = (item.get("title") or "").strip()
+        if not title or title in seen:
+            continue
+        seen.add(title)
+        url = (item.get("url") or "").strip()
+        snippet = (item.get("content") or "").strip()
+        refs.append(
+            ExternalRef(
+                title=title,
+                url=url,
+                snippet=snippet[:200],
+                source="酒博士",
+            )
+        )
+        if len(refs) >= _EXTERNAL_REFS_LIMIT:
+            break
+    return refs
+
+
 # ---------------------------------------------------------------------------
 # 数据类
 # ---------------------------------------------------------------------------
@@ -149,6 +203,28 @@ class Citation:
 
 
 @dataclass
+class ExternalRef:
+    """B6+：IMA「酒博士」外部参考条目。
+
+    订阅知识库正文不可读取，仅暴露 title + url + 截断 snippet，
+    作为本地 RAG 答案的「外部参考」补充（不进入 LLM 上下文，避免不可信内容污染）。
+    """
+
+    title: str
+    url: str = ""
+    snippet: str = ""
+    source: str = "酒博士"  # 来源标注，前端固定展示
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "title": self.title,
+            "url": self.url,
+            "snippet": self.snippet,
+            "source": self.source,
+        }
+
+
+@dataclass
 class RAGAnswer:
     """RAG 答案。"""
 
@@ -160,6 +236,7 @@ class RAGAnswer:
     latency_ms: int = 0
     rejected: bool = False  # 越狱拒绝标记
     low_confidence: bool = False  # M1-06：低置信度标记
+    external_refs: list[ExternalRef] = field(default_factory=list)  # B6+：外部参考
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -171,6 +248,7 @@ class RAGAnswer:
             "latency_ms": self.latency_ms,
             "rejected": self.rejected,
             "low_confidence": self.low_confidence,
+            "external_refs": [r.to_dict() for r in self.external_refs],
         }
 
 
@@ -196,6 +274,44 @@ class RAGEngine:
             return self.rewriter.rewrite(query)
         except Exception:
             return query
+
+    def _fetch_external_refs(
+        self, query: str, low_confidence: bool
+    ) -> list[ExternalRef]:
+        """B6+：联检 IMA「酒博士」外部参考。
+
+        触发条件（ima_enabled 为前提）：
+        - low_confidence=True（本地无足够相关信息时补足权威参考）
+        - OR 命中 S 级高价值关键词（国标/香型/产区/工艺主题词）
+
+        设计原则：
+        - 不进入 LLM 上下文（订阅库正文不可信，仅作外部参考展示）
+        - 失败降级为空列表，绝不影响主问答流程
+        - 不抛异常（网络/配额/权限错误均吞掉并记录 warning）
+        """
+        if not get_settings().ima_enabled:
+            return []
+        if not low_confidence and not _is_high_value_query(query):
+            return []
+        try:
+            # 延迟导入避免循环依赖
+            from hermes_kb.ima_sync import (
+                IMAAPIError,
+                IMAConfigError,
+                search_knowledge,
+            )
+
+            page = search_knowledge(
+                query=query,
+                limit=_EXTERNAL_REFS_LIMIT,
+            )
+        except (IMAAPIError, IMAConfigError) as e:
+            logging.warning("IMA external refs failed (query=%r): %s", query[:80], e)
+            return []
+        except Exception as e:  # noqa: BLE001 — 外部参考为可选补充，任何异常都不阻塞主流程
+            logging.warning("IMA external refs unexpected error: %s", e)
+            return []
+        return _build_external_refs(page.get("info_list") or [])
 
     def answer(self, query: str, top_k: int | None = None) -> RAGAnswer:
         """端到端问答：检索 → 生成 → 引用。"""
@@ -223,6 +339,8 @@ class RAGEngine:
 
         # M1-06：低置信度直接返回提示，不调用 LLM
         if _is_low_confidence(hits):
+            # B6+：低置信度时尝试 IMA 外部参考补足
+            external_refs = self._fetch_external_refs(query, low_confidence=True)
             result = RAGAnswer(
                 answer_id=answer_id,
                 query=query,
@@ -231,6 +349,7 @@ class RAGEngine:
                 model_used="mock-llm",
                 latency_ms=int((time.time() - started) * 1000),
                 low_confidence=True,
+                external_refs=external_refs,
             )
             self._log_query(result)
             return result
@@ -239,6 +358,8 @@ class RAGEngine:
         messages = self._build_messages(query, context)
         llm_resp = self.llm_client.chat(messages)
         safe_answer = _check_output(query, llm_resp.content)
+        # B6+：高价值查询主动联检 IMA 外部参考
+        external_refs = self._fetch_external_refs(query, low_confidence=False)
         result = RAGAnswer(
             answer_id=answer_id,
             query=query,
@@ -246,6 +367,7 @@ class RAGEngine:
             citations=citations,
             model_used=llm_resp.model,
             latency_ms=int((time.time() - started) * 1000),
+            external_refs=external_refs,
         )
         self._log_query(result)
         return result
@@ -297,6 +419,10 @@ class RAGEngine:
 
         # M1-06：低置信度
         if _is_low_confidence(hits):
+            # B6+：低置信度时尝试 IMA 外部参考补足（在线程池中执行避免阻塞）
+            external_refs = await asyncio.to_thread(
+                self._fetch_external_refs, query, True
+            )
             meta = {
                 "type": "meta",
                 "answer_id": answer_id,
@@ -304,6 +430,7 @@ class RAGEngine:
                 "rejected": False,
                 "low_confidence": True,
                 "model_used": "mock-llm",
+                "external_refs": [r.to_dict() for r in external_refs],
             }
             yield f"data: {json.dumps(meta, ensure_ascii=False)}\n\n"
             full_answer.append(_LOW_CONFIDENCE_NOTICE)
@@ -315,13 +442,19 @@ class RAGEngine:
                 RAGAnswer(
                     answer_id=answer_id, query=query, answer=_LOW_CONFIDENCE_NOTICE,
                     citations=citations, model_used="mock-llm",
-                    latency_ms=int((time.time() - started) * 1000), low_confidence=True,
+                    latency_ms=int((time.time() - started) * 1000),
+                    low_confidence=True, external_refs=external_refs,
                 )
             )
             return
 
         context = self._build_context(citations, hits)
         messages = self._build_messages(query, context)
+
+        # B6+：高价值查询主动联检 IMA 外部参考（在线程池中执行避免阻塞）
+        external_refs = await asyncio.to_thread(
+            self._fetch_external_refs, query, False
+        )
 
         # 发送 meta（含引用，前端立即渲染引用区）
         meta = {
@@ -331,6 +464,7 @@ class RAGEngine:
             "rejected": False,
             "low_confidence": False,
             "model_used": self.llm_client.backend_name,
+            "external_refs": [r.to_dict() for r in external_refs],
         }
         yield f"data: {json.dumps(meta, ensure_ascii=False)}\n\n"
 
@@ -374,6 +508,7 @@ class RAGEngine:
                 answer_id=answer_id, query=query, answer=final_answer,
                 citations=citations, model_used=self.llm_client.backend_name,
                 latency_ms=int((time.time() - started) * 1000),
+                external_refs=external_refs,
             )
         )
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CitationList } from "./CitationList";
-import type { Citation, SSEEvent } from "../types";
+import type { Citation, ExternalRef, SSEEvent } from "../types";
 
 interface ChatPanelProps {
   refreshDocs: () => void;
@@ -17,6 +17,7 @@ interface Message {
   modelUsed?: string;
   latencyMs?: number;
   streaming?: boolean;
+  externalRefs?: ExternalRef[];  // B6+: IMA「酒博士」外部参考
 }
 
 /** 问答面板（M1-03：SSE 流式生成）。 */
@@ -66,6 +67,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                 rejected: evt.rejected,
                 lowConfidence: evt.low_confidence,
                 modelUsed: evt.model_used,
+                externalRefs: evt.external_refs ?? [],
               };
               return copy;
             });
@@ -253,6 +255,70 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   </p>
                   {m.citations && m.citations.length > 0 && (
                     <CitationList citations={m.citations} onJumpToDoc={onJumpToDoc} />
+                  )}
+                  {m.externalRefs && m.externalRefs.length > 0 && (
+                    <div
+                      className="mt-3 pt-3 border-t"
+                      style={{ borderColor: "var(--ink-100)" }}
+                    >
+                      <div
+                        className="text-xs mb-2 flex items-center gap-2"
+                        style={{ color: "var(--ink-500)", fontFamily: "var(--font-sans)" }}
+                      >
+                        <span
+                          className="inline-block px-2 py-0.5 rounded"
+                          style={{
+                            background: "var(--gold-100)",
+                            color: "var(--warning)",
+                            fontSize: "0.7rem",
+                          }}
+                        >
+                          外部参考
+                        </span>
+                        <span>来自「酒博士」订阅知识库 · 仅供参考</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {m.externalRefs.map((ref, idx) => (
+                          <li
+                            key={`${ref.title}-${idx}`}
+                            className="text-sm flex items-start gap-2"
+                            style={{ fontFamily: "var(--font-sans)" }}
+                          >
+                            <span
+                              className="numeral flex-shrink-0"
+                              style={{ color: "var(--gold-500)", fontSize: "0.75rem" }}
+                            >
+                              {String(idx + 1).padStart(2, "0")}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              {ref.url ? (
+                                <a
+                                  href={ref.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="hover:underline"
+                                  style={{ color: "var(--brand-700)" }}
+                                >
+                                  {ref.title}
+                                </a>
+                              ) : (
+                                <span style={{ color: "var(--ink-900)" }}>
+                                  {ref.title}
+                                </span>
+                              )}
+                              {ref.snippet && (
+                                <p
+                                  className="text-xs mt-0.5 line-clamp-2"
+                                  style={{ color: "var(--ink-400)" }}
+                                >
+                                  {ref.snippet}
+                                </p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                   {m.latencyMs !== undefined && !m.streaming && (
                     <div

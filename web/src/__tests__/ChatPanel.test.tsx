@@ -165,6 +165,79 @@ describe("ChatPanel SSE branches", () => {
     });
   });
 
+  it("meta event with external_refs: renders 酒博士 external reference list", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "GB/T 10781 浓香型白酒");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [],
+        rejected: false,
+        low_confidence: true,
+        model_used: "mock",
+        latency_ms: 0,
+        external_refs: [
+          {
+            title: "GB/T 10781 浓香型白酒国家标准",
+            url: "https://example.com/gb10781",
+            snippet: "本标准规定了浓香型白酒的术语和定义、技术要求。",
+            source: "酒博士",
+          },
+          {
+            title: "浓香型白酒技术规范",
+            url: "",
+            snippet: "",
+            source: "酒博士",
+          },
+        ],
+      });
+    });
+
+    // 外部参考标题与来源标注应被渲染
+    await waitFor(() => {
+      expect(screen.getByText("GB/T 10781 浓香型白酒国家标准")).toBeInTheDocument();
+      expect(screen.getByText("浓香型白酒技术规范")).toBeInTheDocument();
+      expect(screen.getByText(/来自「酒博士」订阅知识库/)).toBeInTheDocument();
+    });
+
+    // 带 url 的条目应渲染为链接
+    const link = screen.getByRole("link", { name: "GB/T 10781 浓香型白酒国家标准" });
+    expect(link).toHaveAttribute("href", "https://example.com/gb10781");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("meta event without external_refs: does not render external reference section", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "金酒");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [],
+        rejected: false,
+        low_confidence: false,
+        model_used: "mock",
+        latency_ms: 0,
+      });
+    });
+
+    // 不应渲染外部参考区块
+    expect(screen.queryByText(/来自「酒博士」订阅知识库/)).not.toBeInTheDocument();
+  });
+
   it("AbortError: shows cancelled message", async () => {
     const user = userEvent.setup();
     vi.mocked(api.askStream).mockImplementation(async () => {

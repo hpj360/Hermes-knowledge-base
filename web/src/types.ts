@@ -9,6 +9,14 @@ export interface Citation {
   chunk_rowid: number;
 }
 
+/** B6+: IMA「酒博士」外部参考条目（订阅库正文不可读取，仅暴露标题/URL/片段） */
+export interface ExternalRef {
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;  // 固定 "酒博士"
+}
+
 export interface RAGAnswer {
   answer_id: string;
   query: string;
@@ -18,6 +26,7 @@ export interface RAGAnswer {
   latency_ms: number;
   rejected: boolean;
   low_confidence: boolean;
+  external_refs?: ExternalRef[];  // B6+: 外部参考列表，默认空数组
 }
 
 export interface DocumentItem {
@@ -112,7 +121,7 @@ export interface SeedResult {
 
 // SSE 流式事件
 export type SSEEvent =
-  | { type: "meta"; answer_id: string; citations: Citation[]; rejected: boolean; low_confidence: boolean; model_used: string }
+  | { type: "meta"; answer_id: string; citations: Citation[]; rejected: boolean; low_confidence: boolean; model_used: string; external_refs?: ExternalRef[] }
   | { type: "delta"; content: string }
   | { type: "done"; latency_ms: number }
   | { type: "error"; message: string };
