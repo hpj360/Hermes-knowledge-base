@@ -34,9 +34,10 @@ def _isolated_loops_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(hermes.loop, "_project_root", lambda: tmp_path)
     # Patch module-level imports in runner.py and main.py that bound loops_dir
     # at import time (before this fixture runs).
+    # raising=False: 模块可能来自不同版本（如 workbench），不含 loops_dir 时不报错
     import hermes.main
     import hermes.runner
 
-    monkeypatch.setattr(hermes.runner, "loops_dir", lambda: test_loops_dir)
-    monkeypatch.setattr(hermes.main, "loops_dir", lambda: test_loops_dir)
+    monkeypatch.setattr(hermes.runner, "loops_dir", lambda: test_loops_dir, raising=False)
+    monkeypatch.setattr(hermes.main, "loops_dir", lambda: test_loops_dir, raising=False)
     yield

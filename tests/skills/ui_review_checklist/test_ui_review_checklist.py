@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -11,9 +12,10 @@ SCRIPTS = SKILL_DIR / "scripts"
 
 
 def run_script(name: str, *args: str) -> subprocess.CompletedProcess:
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
         [sys.executable, str(SCRIPTS / name), *args],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8",
     )
 
 
@@ -23,7 +25,7 @@ class TestScan:
         f.write_text("<html><style>body { font-family: 'Inter', sans-serif; }</style></html>")
         out = tmp_path / "scan.json"
         run_script("scan.py", "--target", str(f), "--output", str(out))
-        data = json.loads(out.read_text())
+        data = json.loads(out.read_text(encoding="utf-8"))
         ids = [x["id"] for x in data["findings"]["anti_patterns"]]
         assert "inter-font" in ids
 
@@ -32,7 +34,7 @@ class TestScan:
         f.write_text('<img src="https://picsum.photos/200">')
         out = tmp_path / "scan.json"
         run_script("scan.py", "--target", str(f), "--output", str(out))
-        data = json.loads(out.read_text())
+        data = json.loads(out.read_text(encoding="utf-8"))
         ids = [x["id"] for x in data["findings"]["anti_patterns"]]
         assert "placeholder-image" in ids
 
@@ -41,7 +43,7 @@ class TestScan:
         f.write_text("<html><body>Hello</body></html>")
         out = tmp_path / "scan.json"
         run_script("scan.py", "--target", str(f), "--output", str(out))
-        data = json.loads(out.read_text())
+        data = json.loads(out.read_text(encoding="utf-8"))
         assert len(data["findings"]["anti_patterns"]) == 0
 
     def test_scan_summary_in_stdout(self, tmp_path):
