@@ -34,6 +34,10 @@ _API_BASE = "https://ima.qq.com"
 _LIST_KB_PATH = "/openapi/wiki/v1/search_knowledge_base"
 _SEARCH_KB_PATH = "/openapi/wiki/v1/search_knowledge"
 
+# IMA OpenAPI 每页上限：list_knowledge_base 为 20，search_knowledge 为 50
+_LIST_KB_MAX_LIMIT = 20
+_SEARCH_KB_MAX_LIMIT = 50
+
 # 同步请求超时（秒）
 _HTTP_TIMEOUT = 30.0
 
@@ -93,23 +97,24 @@ def _post(path: str, body: dict[str, Any]) -> dict[str, Any]:
     return payload.get("data") or {}
 
 
-def list_knowledge_bases(query: str = "", limit: int = 50) -> list[dict[str, Any]]:
+def list_knowledge_bases(query: str = "", limit: int = _LIST_KB_MAX_LIMIT) -> list[dict[str, Any]]:
     """列出/搜索当前账号下的所有知识库。
 
     Args:
         query: 关键词过滤（空串返回全部）
-        limit: 最多返回条数
+        limit: 最多返回条数（IMA API 上限 20）
 
     Returns:
         [{kb_id, kb_name, content_count, ...}, ...]
     """
     s = get_settings()
+    page_size = min(s.ima_page_size or limit, _LIST_KB_MAX_LIMIT)
     data = _post(
         _LIST_KB_PATH,
         {
             "query": query or "",
             "cursor": "",
-            "limit": max(1, min(limit, s.ima_page_size or limit)),
+            "limit": max(1, min(limit, page_size)),
         },
     )
     info_list = data.get("info_list") or []
@@ -147,7 +152,7 @@ def search_knowledge(
             "knowledge_base_id": kb_id,
             "query": query,
             "cursor": cursor or "",
-            "limit": max(1, min(limit, 50)),
+            "limit": max(1, min(limit, _SEARCH_KB_MAX_LIMIT)),
         },
     )
     return {
