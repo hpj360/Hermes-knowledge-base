@@ -202,4 +202,81 @@ describe("api client", () => {
       expect(api.getToken()).toBeNull();
     });
   });
+
+  describe("request 401 处理", () => {
+    it("401 响应触发 onUnauthorized 并清 token", async () => {
+      const { setUnauthorizedHandler } = await import("../api");
+      const handler = vi.fn();
+      setUnauthorizedHandler(handler);
+
+      api.setToken("expired-token");
+      fetchMock.mockResolvedValueOnce({
+        status: 401,
+        json: async () => ({ detail: "token expired" }),
+      });
+
+      await expect(api.health()).rejects.toThrow("登录已过期");
+      expect(handler).toHaveBeenCalled();
+      expect(api.getToken()).toBeNull();
+      setUnauthorizedHandler(null);
+    });
+  });
+
+  describe("health", () => {
+    it("成功返回健康状态", async () => {
+      fetchMock.mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({
+          status: "ok",
+          service: "hermes-kb",
+          version: "0.2.0",
+          time: "2026-07-21T00:00:00",
+          doc_count: 5,
+          llm_provider: "mock",
+          llm_available: false,
+          embedding_provider: "hash",
+          embedding_available: false,
+          auth_enabled: false,
+          age_gate_enabled: true,
+        }),
+      });
+
+      const h = await api.health();
+      expect(h.status).toBe("ok");
+      expect(h.doc_count).toBe(5);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/health",
+        expect.objectContaining({
+          headers: expect.objectContaining({ "Content-Type": "application/json" }),
+        })
+      );
+    });
+
+    it("非 200 响应抛错", async () => {
+      fetchMock.mockResolvedValueOnce({
+        status: 500,
+        json: async () => ({ detail: "服务器错误" }),
+      });
+
+      await expect(api.health()).rejects.toThrow("服务器错误");
+    });
+  });
+
+  describe("askStream 401", () => {
+    it("401 触发 onUnauthorized", async () => {
+      const { setUnauthorizedHandler } = await import("../api");
+      const handler = vi.fn();
+      setUnauthorizedHandler(handler);
+
+      api.setToken("expired");
+      fetchMock.mockResolvedValueOnce({ status: 401 });
+
+      await expect(
+        api.askStream("测试", undefined, () => {})
+      ).rejects.toThrow("登录已过期");
+      expect(handler).toHaveBeenCalled();
+      setUnauthorizedHandler(null);
+    });
+  });
 });
