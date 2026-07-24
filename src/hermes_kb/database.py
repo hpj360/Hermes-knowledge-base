@@ -20,7 +20,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
-import pysqlite3 as sqlite3  # 替代标准库 sqlite3，支持 extension loading
+try:
+    import pysqlite3 as sqlite3  # 替代标准库 sqlite3，支持 extension loading
+except ImportError:  # Windows / 非 pysqlite3 环境
+    import sqlite3  # 标准库 sqlite3（extension loading 可能不可用，降级无 ANN）
 from sqlalchemy import event, text as sa_text
 from sqlmodel import Session, SQLModel, create_engine
 
