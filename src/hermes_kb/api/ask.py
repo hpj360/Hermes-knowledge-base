@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import json
+import re
+from datetime import datetime, timedelta
 from typing import Any
 
 import anyio
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlmodel import select
@@ -84,32 +86,181 @@ async def ask_stream(
 
 
 # 历史 + 反馈
+
+# M2-07：历史搜索关键词净化——剥离 SQL/regex 元字符，避免 LIKE 注入与意外语义。
+# 保留中文 / 字母 / 数字 / 空格。多空白折叠为单空格。
+_SEARCH_SAFE_RE = re.compile(r'[^\w\u4e00-\u9fff\s]', re.UNICODE)
+_WHITESPACE_RE = re.compile(r'\s+')
+# 高亮 mark 标签（前端直接渲染，已转义查询词避免 XSS）
+_HIGHLIGHT_PRE = '<mark>'
+_HIGHLIGHT_POST = '</mark>'
+# snippet 最大长度（前后截断）
+_SNIPPET_MAX = 80
+
+
+def _sanitize_search_q(q: str) -> str:
+    """净化搜索关键词：剥离特殊字符 + 折叠空白。
+
+    返回空串表示无有效关键词（回退普通查询）。
+    """
+    cleaned = _SEARCH_SAFE_RE.sub(' ', q)
+    cleaned = _WHITESPACE_RE.sub(' ', cleaned).strip()
+    return cleaned
+
+
+def _highlight(text: str, keyword: str) -> str | None:
+    """在 text 中高亮 keyword（大小写不敏感，转义 regex 元字符）。
+
+    返回带 <mark> 标签的文本。无命中返回 None。
+    """
+    if not text or not keyword:
+        return None
+    pattern = re.escape(keyword)
+    highlighted = re.sub(
+        pattern,
+        lambda m: f"{_HIGHLIGHT_PRE}{m.group()}{_HIGHLIGHT_POST}",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if _HIGHLIGHT_PRE not in highlighted:
+        return None
+    return highlighted
+
+
+def _make_snippet(text: str, keyword: str, max_len: int = _SNIPPET_MAX) -> str | None:
+    """生成 keyword 周围的 snippet（前后截断 + 高亮）。
+
+    无命中返回 None。
+    """
+    if not text or not keyword:
+        return None
+    match = re.search(re.escape(keyword), text, flags=re.IGNORECASE)
+    if not match:
+        return None
+    start = max(0, match.start() - max_len // 2)
+    end = min(len(text), match.end() + max_len // 2)
+    snippet = text[start:end]
+    if start > 0:
+        snippet = '...' + snippet
+    if end < len(text):
+        snippet = snippet + '...'
+    # 高亮 snippet 中的 keyword
+    return re.sub(
+        re.escape(keyword),
+        lambda m: f"{_HIGHLIGHT_PRE}{m.group()}{_HIGHLIGHT_POST}",
+        snippet,
+        flags=re.IGNORECASE,
+    )
+
+
+def _parse_date(date_str: str | None, *, end_of_day: bool = False) -> datetime | None:
+    """解析 YYYY-MM-DD 日期字符串为 datetime。
+
+    end_of_day=True 时返回当日 23:59:59，便于 `<=` 闭区间筛选。
+    解析失败返回 None。
+    """
+    if not date_str or not date_str.strip():
+        return None
+    try:
+        d = datetime.strptime(date_str.strip()[:10], '%Y-%m-%d')
+    except ValueError:
+        return None
+    if end_of_day:
+        d = d + timedelta(days=1) - timedelta(seconds=1)
+    return d
+
+
+def _format_history_item(
+    log: QueryLog,
+    *,
+    query_highlight: str | None = None,
+    answer_snippet: str | None = None,
+) -> dict[str, Any]:
+    """统一格式化历史条目。"""
+    created_at = log.created_at
+    if isinstance(created_at, datetime):
+        created_at = created_at.isoformat()
+    elif created_at is not None:
+        created_at = str(created_at)
+    return {
+        "id": log.id,
+        "query": log.query,
+        "answer": log.answer,
+        "citations": json.loads(log.citations or "[]"),
+        "model_used": log.model_used,
+        "latency_ms": log.latency_ms,
+        "feedback": log.feedback,
+        "created_at": created_at,
+        # M2-07：高亮字段（仅搜索路径返回非 None）
+        "query_highlight": query_highlight,
+        "answer_snippet": answer_snippet,
+    }
+
+
 @router.get("/history", dependencies=[Depends(require_auth)])
-async def history(limit: int = 50) -> dict[str, Any]:
+async def history(
+    limit: int = Query(default=50, ge=1),
+    offset: int = Query(default=0, ge=0),
+    q: str | None = Query(default=None, description="关键词搜索"),
+    feedback: int | None = Query(default=None, ge=-1, le=1, description="反馈筛选：1=赞/-1=踩/0=无"),
+    date_from: str | None = Query(default=None, description="起始日期 YYYY-MM-DD（含）"),
+    date_to: str | None = Query(default=None, description="结束日期 YYYY-MM-DD（含）"),
+) -> dict[str, Any]:
+    """M2-07：历史搜索 + 筛选。
+
+    - 无 q：按时间倒序普通查询，支持 feedback / date_from / date_to 筛选
+    - 有 q：用 LIKE 子串匹配（覆盖所有中文场景），返回 query_highlight 与 answer_snippet
+    - 验收：响应 < 200ms（LIKE 在 1w 条以内性能足够；超大规模可切 FTS5）
+
+    注：history_fts 表已建（迁移 0004）并随 querylog 自动同步，
+    当前 API 暂用 LIKE 保证中文子串召回（FTS5 unicode61 对连续中文
+    整体作为单 token，前缀匹配无法命中中间子串）。后续大数据量可切 FTS5。
+    """
+    limit = max(1, min(limit, 500))
+    dt_from = _parse_date(date_from, end_of_day=False)
+    dt_to = _parse_date(date_to, end_of_day=True)
+    search_q = _sanitize_search_q(q) if q else ''
+
     with get_session() as session:
-        logs = session.exec(
-            select(QueryLog)
-            .order_by(QueryLog.created_at.desc())
-            .limit(max(1, min(limit, 500)))
-        ).all()
-        return {
-            "total": len(logs),
-            "items": [
-                {
-                    "id": log.id,
-                    "query": log.query,
-                    "answer": log.answer,
-                    "citations": json.loads(log.citations or "[]"),
-                    "model_used": log.model_used,
-                    "latency_ms": log.latency_ms,
-                    "feedback": log.feedback,
-                    "created_at": log.created_at.isoformat()
-                    if log.created_at
-                    else None,
-                }
-                for log in logs
-            ],
-        }
+        stmt = select(QueryLog)
+        if feedback is not None:
+            stmt = stmt.where(QueryLog.feedback == feedback)
+        if dt_from is not None:
+            stmt = stmt.where(QueryLog.created_at >= dt_from)
+        if dt_to is not None:
+            stmt = stmt.where(QueryLog.created_at <= dt_to)
+        if search_q:
+            # LIKE 子串匹配（query OR answer），覆盖中文所有位置
+            like_pattern = f"%{search_q}%"
+            stmt = stmt.where(
+                (QueryLog.query.like(like_pattern))
+                | (QueryLog.answer.like(like_pattern))
+            )
+        # 总数
+        total_stmt = stmt  # 复用同一筛选条件
+        total = len(session.exec(total_stmt).all())
+        # 分页 + 倒序
+        stmt = stmt.order_by(QueryLog.created_at.desc()).offset(offset).limit(limit)
+        logs = session.exec(stmt).all()
+        items: list[dict[str, Any]] = []
+        for log in logs:
+            if search_q:
+                q_h = _highlight(log.query, search_q)
+                a_s = _make_snippet(log.answer, search_q)
+            else:
+                q_h = None
+                a_s = None
+            items.append(
+                _format_history_item(log, query_highlight=q_h, answer_snippet=a_s)
+            )
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "q": q or "",
+        "items": items,
+    }
 
 
 @router.post("/feedback/{log_id}", dependencies=[Depends(require_auth)])

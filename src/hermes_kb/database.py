@@ -149,7 +149,12 @@ def init_db(eng=None) -> None:
 
 
 def _init_fts(eng) -> None:
-    """初始化 FTS5 全文检索表。"""
+    """初始化 FTS5 全文检索表。
+
+    包含两套 FTS5 索引：
+    - chunks_fts：对 chunk.text 做全文索引（M0）
+    - history_fts：对 querylog.query / answer 做全文索引（M2-07）
+    """
     with eng.begin() as conn:
         # chunks_fts：对 chunk.text 做全文索引
         conn.execute(sa_text(
@@ -177,6 +182,72 @@ def _init_fts(eng) -> None:
             "VALUES (new.text, new.doc_id, new.id); "
             "END"
         ))
+
+        # M2-07：history_fts 全文索引（query + answer）
+        # contentless='1' 避免冗余存储（answer 可能很长），但 highlight/snippet
+        # 需要重读 querylog 原文。为简化并支持 highlight，这里仍用普通 FTS5
+        # 表（保留内容），通过 JOIN querylog 取原列。
+        conn.execute(sa_text(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS history_fts USING fts5("
+            "query, answer, log_id UNINDEXED, "
+            "tokenize='unicode61'"
+            ")"
+        ))
+        # querylog 触发器：写 FTS5 时携带 log_id（用于 JOIN 回表）
+        # 注意：history_fts.rowid 与 querylog.id 不保证一致（FTS5 rowid 自动分配），
+        # 用 log_id 列绑定，避免依赖 rowid 对齐。
+        conn.execute(sa_text(
+            "CREATE TRIGGER IF NOT EXISTS querylog_ai AFTER INSERT ON querylog BEGIN "
+            "INSERT INTO history_fts(query, answer, log_id) "
+            "VALUES (new.query, new.answer, new.id); "
+            "END"
+        ))
+        conn.execute(sa_text(
+            "CREATE TRIGGER IF NOT EXISTS querylog_ad AFTER DELETE ON querylog BEGIN "
+            "DELETE FROM history_fts WHERE log_id = old.id; "
+            "END"
+        ))
+        conn.execute(sa_text(
+            "CREATE TRIGGER IF NOT EXISTS querylog_au AFTER UPDATE ON querylog BEGIN "
+            "DELETE FROM history_fts WHERE log_id = old.id; "
+            "INSERT INTO history_fts(query, answer, log_id) "
+            "VALUES (new.query, new.answer, new.id); "
+            "END"
+        ))
+
+
+def backfill_history_fts(eng=None) -> int:
+    """M2-07：将 querylog 现有数据回填到 history_fts（旧库升级）。
+
+    幂等：仅迁移尚未在 history_fts 中的 log_id。
+    返回新增行数。供迁移脚本与运维工具调用。
+    """
+    if eng is None:
+        eng = get_engine()
+    try:
+        with eng.connect() as conn:
+            rows = conn.execute(
+                sa_text(
+                    "SELECT q.id, q.query, q.answer FROM querylog q "
+                    "LEFT JOIN history_fts f ON f.log_id = q.id "
+                    "WHERE f.log_id IS NULL"
+                )
+            ).fetchall()
+        if not rows:
+            return 0
+        with eng.begin() as conn:
+            for log_id, query, answer in rows:
+                conn.execute(
+                    sa_text(
+                        "INSERT INTO history_fts(query, answer, log_id) "
+                        "VALUES (:q, :a, :lid)"
+                    ),
+                    {"q": query or "", "a": answer or "", "lid": int(log_id)},
+                )
+        return len(rows)
+    except Exception as exc:  # pragma: no cover
+        log.warning("history_fts backfill failed: %s", exc)
+        return 0
 
 
 def _init_vec_table(eng) -> None:
