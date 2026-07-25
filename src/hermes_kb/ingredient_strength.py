@@ -9,15 +9,17 @@
 """
 from __future__ import annotations
 
+import logging
+
 import httpx
 
 from hermes_kb import ingredients
 
-# IBA ingredients_strength.json 远程地址
-IBA_STRENGTH_URL = (
-    "https://raw.githubusercontent.com/lmc2179/iba_dataset_json/"
-    "master/ingredients_strength.json"
-)
+_logger = logging.getLogger(__name__)
+
+# IBA dataset 仓库基础 URL（分支在 fetch 时拼接，避免硬编码 master 导致 main 分支永远不被尝试）
+IBA_REPO = "lmc2179/iba_dataset_json"
+IBA_RAW_BASE = f"https://raw.githubusercontent.com/{IBA_REPO}"
 
 # 无体积时的估算假设（ml）：按材料分类给默认体积
 # 烈酒 45ml，利口酒 15ml，果汁 30ml，糖浆 10ml，装饰 0ml
@@ -35,11 +37,43 @@ def get_ingredient_abv(name: str) -> float:
     return ingredients.get_abv(canonical)
 
 
-def calculate_cocktail_abv(ingredients_list: list[tuple[str, float]]) -> float:
+def get_ingredient_abv_with_fallback(
+    name: str,
+    strength_data: dict[str, float] | None = None,
+) -> float:
+    """先查本地注册表，未命中或返回 0.0 时回退到 IBA strength_data。
+
+    本地 ingredients.py 是权威源，但 IBA dataset 中部分英文材料名
+    （如 "1 sugar cube" / "half lime cut into 4 wedges" 等带数量短语）
+    未在别名索引中，此时 strength_data 提供兜底 ABV，避免 ABV 计算偏少。
+
+    Args:
+        name: 材料英文名（IBA dataset 原文）
+        strength_data: IBA ingredients_strength.json 解析后的 dict
+
+    Returns:
+        0.0-1.0 的小数；两边都未命中返回 0.0。
+    """
+    local_abv = get_ingredient_abv(name)
+    if local_abv > 0:
+        return local_abv
+    if not strength_data or not name:
+        return 0.0
+    try:
+        return float(strength_data.get(name.strip().lower(), 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def calculate_cocktail_abv(
+    ingredients_list: list[tuple[str, float]],
+    strength_data: dict[str, float] | None = None,
+) -> float:
     """加权平均 ABV。
 
     Args:
         ingredients_list: [(材料名, 体积ml), ...]
+        strength_data: 可选的 IBA strength 兜底映射
 
     Returns:
         0.0-1.0 的小数；总体积为 0 时返回 0.0。
@@ -47,7 +81,10 @@ def calculate_cocktail_abv(ingredients_list: list[tuple[str, float]]) -> float:
     total_volume = sum(vol for _, vol in ingredients_list)
     if total_volume <= 0:
         return 0.0
-    weighted = sum(get_ingredient_abv(name) * vol for name, vol in ingredients_list)
+    weighted = sum(
+        get_ingredient_abv_with_fallback(name, strength_data) * vol
+        for name, vol in ingredients_list
+    )
     return weighted / total_volume
 
 
@@ -96,43 +133,53 @@ def estimate_recipe_stats(ingredient_names: list[str]) -> dict:
 def fetch_iba_strength_data() -> dict[str, float]:
     """从 IBA GitHub 拉取 ingredients_strength.json。
 
-    尝试顺序：直连 GitHub → gh-proxy 镜像 → 本地文件。
+    尝试顺序：直连 GitHub (master → main) → gh-proxy 镜像 (master → main) → 本地文件。
 
     Returns:
         {材料英文名: ABV小数}；全部失败返回空 dict。
     """
     from pathlib import Path
 
+    data: dict | None = None
+
     # 直连 GitHub
     for branch in ("master", "main"):
         try:
-            url = IBA_STRENGTH_URL
+            url = f"{IBA_RAW_BASE}/{branch}/ingredients_strength.json"
             resp = httpx.get(url, timeout=15)
             resp.raise_for_status()
             data = resp.json()
             break
-        except (httpx.HTTPError, ValueError, OSError):
+        except (httpx.HTTPError, ValueError, OSError) as e:
+            _logger.info("IBA strength direct fetch (%s) failed: %s", branch, e)
             continue
-    else:
-        # gh-proxy 镜像
+
+    # gh-proxy 镜像
+    if data is None:
         for branch in ("master", "main"):
             try:
-                url = f"https://gh-proxy.com/https://raw.githubusercontent.com/lmc2179/iba_dataset_json/{branch}/ingredients_strength.json"
+                url = (
+                    f"https://gh-proxy.com/{IBA_RAW_BASE}/{branch}/"
+                    f"ingredients_strength.json"
+                )
                 resp = httpx.get(url, timeout=30)
                 resp.raise_for_status()
                 data = resp.json()
                 break
-            except (httpx.HTTPError, ValueError, OSError):
+            except (httpx.HTTPError, ValueError, OSError) as e:
+                _logger.info("IBA strength mirror fetch (%s) failed: %s", branch, e)
                 continue
+
+    # 本地文件回退
+    if data is None:
+        local_file = Path(__file__).parent.parent.parent / "data" / "iba_strength.json"
+        if local_file.exists():
+            import json
+            with open(local_file, encoding="utf-8") as f:
+                data = json.load(f)
+            _logger.info("IBA strength: using local file %s", local_file)
         else:
-            # 本地文件回退
-            local_file = Path(__file__).parent.parent.parent / "data" / "iba_strength.json"
-            if local_file.exists():
-                import json
-                with open(local_file, encoding="utf-8") as f:
-                    data = json.load(f)
-            else:
-                return {}
+            return {}
 
     result: dict[str, float] = {}
     if isinstance(data, dict):

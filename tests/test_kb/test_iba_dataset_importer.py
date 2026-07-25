@@ -1,6 +1,7 @@
 """IBA dataset importer 测试（B3）。"""
 from __future__ import annotations
 
+import pytest
 from sqlmodel import select
 
 from hermes_kb.database import get_session
@@ -65,6 +66,71 @@ def test_parse_iba_recipe_unknown_ingredient():
     assert "金酒" in recipe["ingredients"]
     # 未归一化的应在 unknown_ingredients
     assert "some rare liqueur" in recipe["unknown_ingredients"]
+
+
+def test_parse_iba_recipe_strength_data_fallback_abv():
+    """B3: strength_data 提供兜底 ABV，避免未知材料被当成 0.0 拉低计算。
+
+    场景：'mystery liqueur' 不在本地 ingredients.py 别名索引，
+    但 strength_data 给出 0.25，应被采用参与加权 ABV 计算。
+    """
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "FALLBACK TEST",
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},  # 本地 0.40, 45ml
+            {"name": "mystery liqueur", "quantity": 1.5},  # 本地未知, 15ml
+        ],
+        "type": "Test",
+    }
+
+    # 无 strength_data：mystery liqueur ABV=0.0
+    recipe_no_fallback = parse_iba_recipe(raw, strength_data=None)
+    # 加权: (0.40*45 + 0*15) / 60 = 18/60 = 0.30
+    assert recipe_no_fallback["abv"] is not None
+    assert recipe_no_fallback["abv"] == pytest.approx(0.30, abs=1e-3)
+
+    # 有 strength_data：mystery liqueur ABV=0.25
+    recipe_with_fallback = parse_iba_recipe(
+        raw, strength_data={"mystery liqueur": 0.25}
+    )
+    # 加权: (0.40*45 + 0.25*15) / 60 = (18 + 3.75) / 60 = 0.3625
+    assert recipe_with_fallback["abv"] is not None
+    assert recipe_with_fallback["abv"] == pytest.approx(0.3625, abs=1e-3)
+    # calories 也应更高
+    assert recipe_with_fallback["calories"] > recipe_no_fallback["calories"]
+
+
+def test_parse_iba_recipe_abv_calc_exception_logged(monkeypatch, caplog):
+    """B3: ABV 计算抛异常时应记录 warning 而非静默吞并。"""
+    from hermes_kb import iba_dataset_importer
+
+    # 让 ingredient_strength.calculate_cocktail_abv 抛异常
+    def boom(*args, **kwargs):
+        raise RuntimeError("calc boom")
+
+    # 模块内 import 是函数级 lazy import，patch 顶层模块即可
+    import hermes_kb.ingredient_strength as is_mod
+
+    monkeypatch.setattr(is_mod, "calculate_cocktail_abv", boom)
+
+    raw = {
+        "name": "BOOM TEST",
+        "ingredients": [{"name": "gin", "quantity": 4.5}],
+        "type": "Test",
+    }
+
+    import logging
+
+    with caplog.at_level(logging.WARNING, logger="hermes_kb.iba_dataset_importer"):
+        recipe = iba_dataset_importer.parse_iba_recipe(raw)
+
+    # ABV 应为 None（计算失败），content 不应含 abv frontmatter
+    assert recipe["abv"] is None
+    assert "<!-- abv:" not in recipe["content"]
+    # 应有 warning 日志
+    assert any("ABV/calories calc failed" in r.message for r in caplog.records)
 
 
 def test_sync_iba_dataset_with_mock_data():

@@ -108,17 +108,24 @@ def parse_iba_recipe(
             from hermes_kb.ingredient_strength import (
                 calculate_alcohol_calories,
                 calculate_cocktail_abv,
-                get_ingredient_abv,
+                get_ingredient_abv_with_fallback,
             )
 
-            abv = calculate_cocktail_abv(volume_pairs)
+            # strength_data 作为兜底：本地别名索引未命中时，用 IBA dataset 的
+            # ingredients_strength.json 提供的 ABV，避免带数量短语材料（如
+            # "1 sugar cube"）被当成 0.0 ABV 拉低整体计算。
+            abv = calculate_cocktail_abv(volume_pairs, strength_data=strength_data)
             total_calories = sum(
-                calculate_alcohol_calories(vol, get_ingredient_abv(name))
+                calculate_alcohol_calories(
+                    vol, get_ingredient_abv_with_fallback(name, strength_data)
+                )
                 for name, vol in volume_pairs
             )
             calories = round(total_calories, 1)
-        except Exception:
-            pass
+        except Exception as e:
+            _logger.warning(
+                "IBA recipe ABV/calories calc failed for '%s': %s", title, e
+            )
 
     # 构建 content（含 frontmatter，供 recipe_match 优先解析）
     ing_str = "|".join(ingredients)
