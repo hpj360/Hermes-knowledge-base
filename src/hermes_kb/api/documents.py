@@ -247,7 +247,12 @@ async def get_document_as_markdown(doc_id: str):
         filename = f"{title}.md"
         filename_star = quote(filename)
         # ASCII 兜底：纯中文标题 strip 后只剩 ".md"——保留扩展名但补 basename
-        ascii_fallback = filename.encode("ascii", "ignore").decode("ascii").strip()
+        # 安全：剥离 " \r \n ; 防止 Content-Disposition 头注入
+        import re
+
+        ascii_fallback = re.sub(
+            r'["\r\n;]', '', filename.encode("ascii", "ignore").decode("ascii")
+        ).strip()
         if not ascii_fallback or ascii_fallback.startswith("."):
             ascii_fallback = "document.md"
         return Response(
@@ -338,8 +343,14 @@ async def get_document_raw(doc_id: str):
         filename = f"{doc.title}.{ext}"
         # RFC 5987：filename* 用 UTF-8 percent-encoding（兼容中文）
         # filename 用 ASCII 兜底（latin-1 不支持中文）
+        # 安全：剥离 " \r \n ; 防止 Content-Disposition 头注入
+        import re as _re
+
         filename_star = quote(filename)
-        ascii_fallback = filename.encode("ascii", "ignore").decode("ascii") or "download"
+        ascii_fallback = (
+            _re.sub(r'["\r\n;]', '', filename.encode("ascii", "ignore").decode("ascii"))
+            or "download"
+        )
         return Response(
             content=doc.content or "",
             media_type=media,

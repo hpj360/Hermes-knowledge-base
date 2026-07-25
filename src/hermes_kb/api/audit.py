@@ -5,6 +5,7 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlmodel import select
 
 from hermes_kb.api.deps import require_auth
@@ -61,8 +62,9 @@ async def list_audit(
             stmt = stmt.where(AuditLog.target_type == target_type)
         if user:
             stmt = stmt.where(AuditLog.user == user)
-        # 总数（不应用 offset/limit）
-        total = len(session.exec(stmt).all())
+        # 总数下推到 SQL COUNT(*)，避免 len(.all()) 全量加载到内存（10w 行 OOM 风险）
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = session.exec(count_stmt).one()
         # 分页
         stmt = stmt.order_by(AuditLog.created_at.desc()).offset(offset).limit(limit)
         items = session.exec(stmt).all()

@@ -89,6 +89,7 @@ async def ask_stream(
 
 # M2-07：历史搜索关键词净化——剥离 SQL/regex 元字符，避免 LIKE 注入与意外语义。
 # 保留中文 / 字母 / 数字 / 空格。多空白折叠为单空格。
+# 注：\w 在 re.UNICODE 下包含下划线，但下划线是 LIKE 通配符，需在净化后单独转义。
 _SEARCH_SAFE_RE = re.compile(r'[^\w\u4e00-\u9fff\s]', re.UNICODE)
 _WHITESPACE_RE = re.compile(r'\s+')
 # 高亮 mark 标签（前端直接渲染，已转义查询词避免 XSS）
@@ -96,30 +97,51 @@ _HIGHLIGHT_PRE = '<mark>'
 _HIGHLIGHT_POST = '</mark>'
 # snippet 最大长度（前后截断）
 _SNIPPET_MAX = 80
+# history 关键词最大长度（防超长 LIKE 拖慢大表查询）
+_Q_MAX_LENGTH = 200
 
 
 def _sanitize_search_q(q: str) -> str:
     """净化搜索关键词：剥离特殊字符 + 折叠空白。
 
     返回空串表示无有效关键词（回退普通查询）。
+    注：净化后仍可能含 `_`（LIKE 通配符），需在构造 LIKE pattern 时转义。
     """
     cleaned = _SEARCH_SAFE_RE.sub(' ', q)
     cleaned = _WHITESPACE_RE.sub(' ', cleaned).strip()
+    # 长度截断，防超长输入拖慢 LIKE 全表扫描
+    if len(cleaned) > _Q_MAX_LENGTH:
+        cleaned = cleaned[:_Q_MAX_LENGTH]
     return cleaned
+
+
+def _escape_like(value: str) -> str:
+    """转义 LIKE 通配符（% 和 _），避免用户输入意外匹配。
+
+    配合 LIKE ... ESCAPE '\\' 使用。
+    """
+    return value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
 
 
 def _highlight(text: str, keyword: str) -> str | None:
     """在 text 中高亮 keyword（大小写不敏感，转义 regex 元字符）。
 
     返回带 <mark> 标签的文本。无命中返回 None。
+
+    安全：先用 html.escape 转义 text 全文，避免 answer/query 中嵌入的
+    HTML 标签被前端 v-html 渲染导致 XSS。
     """
     if not text or not keyword:
         return None
+    # 先转义全文，防 XSS（answer 可能含 <script> 等用户输入）
+    import html
+
+    safe_text = html.escape(text)
     pattern = re.escape(keyword)
     highlighted = re.sub(
         pattern,
         lambda m: f"{_HIGHLIGHT_PRE}{m.group()}{_HIGHLIGHT_POST}",
-        text,
+        safe_text,
         flags=re.IGNORECASE,
     )
     if _HIGHLIGHT_PRE not in highlighted:
@@ -131,18 +153,23 @@ def _make_snippet(text: str, keyword: str, max_len: int = _SNIPPET_MAX) -> str |
     """生成 keyword 周围的 snippet（前后截断 + 高亮）。
 
     无命中返回 None。
+
+    安全：先转义全文再高亮，防 XSS。
     """
     if not text or not keyword:
         return None
-    match = re.search(re.escape(keyword), text, flags=re.IGNORECASE)
+    import html
+
+    safe_text = html.escape(text)
+    match = re.search(re.escape(keyword), safe_text, flags=re.IGNORECASE)
     if not match:
         return None
     start = max(0, match.start() - max_len // 2)
-    end = min(len(text), match.end() + max_len // 2)
-    snippet = text[start:end]
+    end = min(len(safe_text), match.end() + max_len // 2)
+    snippet = safe_text[start:end]
     if start > 0:
         snippet = '...' + snippet
-    if end < len(text):
+    if end < len(safe_text):
         snippet = snippet + '...'
     # 高亮 snippet 中的 keyword
     return re.sub(
@@ -201,7 +228,7 @@ def _format_history_item(
 async def history(
     limit: int = Query(default=50, ge=1),
     offset: int = Query(default=0, ge=0),
-    q: str | None = Query(default=None, description="关键词搜索"),
+    q: str | None = Query(default=None, max_length=200, description="关键词搜索"),
     feedback: int | None = Query(default=None, ge=-1, le=1, description="反馈筛选：1=赞/-1=踩/0=无"),
     date_from: str | None = Query(default=None, description="起始日期 YYYY-MM-DD（含）"),
     date_to: str | None = Query(default=None, description="结束日期 YYYY-MM-DD（含）"),
@@ -215,6 +242,10 @@ async def history(
     注：history_fts 表已建（迁移 0004）并随 querylog 自动同步，
     当前 API 暂用 LIKE 保证中文子串召回（FTS5 unicode61 对连续中文
     整体作为单 token，前缀匹配无法命中中间子串）。后续大数据量可切 FTS5。
+
+    性能/安全：
+    - 计数下推到 SQL COUNT(*)，避免 len(.all()) 全量加载到内存
+    - LIKE pattern 转义 % 和 _ 通配符，避免用户输入意外匹配
     """
     limit = max(1, min(limit, 500))
     dt_from = _parse_date(date_from, end_of_day=False)
@@ -231,14 +262,18 @@ async def history(
             stmt = stmt.where(QueryLog.created_at <= dt_to)
         if search_q:
             # LIKE 子串匹配（query OR answer），覆盖中文所有位置
-            like_pattern = f"%{search_q}%"
+            # 转义 % 和 _ 通配符，避免用户输入的 _ 意外匹配任意单字符
+            escaped_q = _escape_like(search_q)
+            like_pattern = f"%{escaped_q}%"
             stmt = stmt.where(
-                (QueryLog.query.like(like_pattern))
-                | (QueryLog.answer.like(like_pattern))
+                (QueryLog.query.like(like_pattern, escape='\\'))
+                | (QueryLog.answer.like(like_pattern, escape='\\'))
             )
-        # 总数
-        total_stmt = stmt  # 复用同一筛选条件
-        total = len(session.exec(total_stmt).all())
+        # 总数下推到 SQL COUNT(*)，避免全量加载到内存（10w 行 OOM 风险）
+        from sqlalchemy import func
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = session.exec(count_stmt).one()
         # 分页 + 倒序
         stmt = stmt.order_by(QueryLog.created_at.desc()).offset(offset).limit(limit)
         logs = session.exec(stmt).all()
@@ -264,7 +299,11 @@ async def history(
 
 
 @router.post("/feedback/{log_id}", dependencies=[Depends(require_auth)])
-async def feedback(log_id: int, req: FeedbackReq) -> dict[str, Any]:
+async def feedback(
+    log_id: int,
+    req: FeedbackReq,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
     with get_session() as session:
         log = session.get(QueryLog, log_id)
         if not log:
@@ -272,7 +311,15 @@ async def feedback(log_id: int, req: FeedbackReq) -> dict[str, Any]:
         log.feedback = req.feedback
         session.add(log)
         session.commit()
-        return {"id": log_id, "feedback": req.feedback, "status": "ok"}
+    # M2-08：审计 feedback 写操作（之前遗漏，导致反馈篡改无法追溯）
+    log_action(
+        action="feedback",
+        target_type="query",
+        target_id=str(log_id),
+        user=extract_user(payload),
+        meta={"feedback": req.feedback},
+    )
+    return {"id": log_id, "feedback": req.feedback, "status": "ok"}
 
 
 # 种子数据

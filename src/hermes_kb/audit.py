@@ -31,11 +31,13 @@ def _should_sample_ask(query: str) -> bool:
 
     用确定性 hash 而非 random.random()：
     1. 测试可复现（避免 flaky）
-    2. 同一 query 多次问询只会采样一次（去重）
+    2. 同一 query 多次问询都会被采样（去重由调用方决定，此处只判断是否采样）
+
+    实现：用 sha256 替代 md5（FIPS 兼容；md5 在部分安全基线下不可用）。
     """
     if not query:
         return False
-    h = hashlib.md5(query.encode("utf-8")).hexdigest()
+    h = hashlib.sha256(query.encode("utf-8")).hexdigest()
     # 取 hash 前 8 位（int 截断溢出无关紧要，只需稳定 mod）
     return int(h[:8], 16) % _ASK_SAMPLE_RATE == 0
 

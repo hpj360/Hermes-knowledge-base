@@ -207,6 +207,8 @@ class Settings:
         """启动期安全校验（A1-1）。
 
         - 启用认证时必须显式配置非默认 jwt_secret，否则禁止启动。
+        - 生产环境（KB_ENV=prod）必须显式开启认证（KB_AUTH_ENABLED=true），
+          否则所有管理员端点（审计/导出/仪表盘）将完全暴露（C-1 安全修复）。
         """
         if self.auth_enabled:
             if not self.jwt_secret or not self.jwt_secret.strip():
@@ -220,6 +222,25 @@ class Settings:
                     "secret via the KB_JWT_SECRET environment variable before "
                     "enabling auth (KB_AUTH_ENABLED=true)."
                 )
+        # 生产环境强制开启认证，避免 admin 端点（dashboard/audit/export）裸奔
+        if self.is_prod and not self.auth_enabled:
+            raise RuntimeError(
+                "KB_AUTH_ENABLED must be true in production (KB_ENV=prod). "
+                "Admin endpoints (dashboard/audit/export) require authentication. "
+                "Set KB_AUTH_ENABLED=true and KB_JWT_SECRET=<unique-secret>."
+            )
+        # 生产环境禁止使用通配符 CORS（防任意网站跨域读）
+        if self.is_prod and ("*" in self.cors_origins):
+            raise RuntimeError(
+                "KB_CORS must not contain '*' in production (KB_ENV=prod). "
+                "Specify explicit origins to prevent cross-site data exfiltration."
+            )
+        # 生产环境禁止 debug 模式（避免异常详情泄露）
+        if self.is_prod and self.debug:
+            raise RuntimeError(
+                "KB_DEBUG must be false in production (KB_ENV=prod). "
+                "Debug mode exposes internal exception details to clients."
+            )
 
 
 _SETTINGS: Settings | None = None

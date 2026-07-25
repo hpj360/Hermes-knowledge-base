@@ -204,9 +204,28 @@ async def import_from_export(
     上传 ``/api/export/all.json`` 产生的 JSON 文件，按依赖顺序恢复所有表。
     使用 INSERT OR REPLACE 语义——同主键行会被覆盖，多次导入幂等。
 
-    注：向量表不恢复（导出未包含），需要后续重新向量化。
+    注：
+    - 向量表不恢复（导出未包含），需要后续重新向量化。
+    - ``audit_logs`` 表不导入（审计日志应为 append-only，导入会破坏审计链完整性）。
+    - 单行失败计入 ``failed_counts`` 并记录错误，不阻塞整体导入。
+    - 上传文件大小上限 50MB（防 OOM）。
     """
-    raw = await file.read()
+    # 大小校验：先读 chunk 累计，超限直接 413
+    max_size = 50 * 1024 * 1024  # 50MB
+    chunks: list[bytes] = []
+    total_read = 0
+    while True:
+        chunk = await file.read(1024 * 1024)  # 1MB chunks
+        if not chunk:
+            break
+        total_read += len(chunk)
+        if total_read > max_size:
+            raise HTTPException(
+                status_code=413,
+                detail=f"上传文件超过上限 {max_size // 1024 // 1024}MB",
+            )
+        chunks.append(chunk)
+    raw = b"".join(chunks)
     if not raw:
         raise HTTPException(status_code=400, detail="上传文件为空")
     try:
@@ -217,13 +236,13 @@ async def import_from_export(
     tables = data["tables"]
 
     # 导入顺序：先无 FK 依赖的表，后有依赖的
-    # Document / Tag / QueryLog / AuditLog / MissingIngredientStats / IngredientSubstitute
-    #   先于 Chunk / DocumentTag / RecipeStats / RecipeVariant
+    # 注：audit_logs 不导入——审计日志应 append-only，导入会覆盖现有审计链。
+    # 当前实现的 import 会写一条新的 action=import 审计记录，足够追溯。
     import_order = [
         ("documents", Document),
         ("tags", Tag),
         ("query_logs", QueryLog),
-        ("audit_logs", AuditLog),
+        # ("audit_logs", AuditLog),  # 跳过：保护审计完整性
         ("missing_ingredient_stats", MissingIngredientStats),
         ("ingredient_substitutes", IngredientSubstitute),
         ("chunks", Chunk),
@@ -233,11 +252,14 @@ async def import_from_export(
     ]
 
     counts: dict[str, int] = {}
+    failed_counts: dict[str, int] = {}
+    errors: list[dict[str, Any]] = []
     with get_session() as session:
         for name, model in import_order:
             rows = tables.get(name, [])
             inserted = 0
-            for row in rows:
+            failed = 0
+            for row_idx, row in enumerate(rows):
                 # 跳过空行
                 if not row:
                     continue
@@ -245,10 +267,18 @@ async def import_from_export(
                     instance = _import_row(model, row)
                     session.merge(instance)
                     inserted += 1
-                except Exception:
-                    # 单行失败不阻塞整体导入，但计入失败（统计在 counts 失败列）
-                    continue
+                except Exception as e:
+                    # 单行失败不阻塞整体导入，但记录失败计数与详情
+                    failed += 1
+                    if len(errors) < 50:  # 限制错误列表大小
+                        errors.append({
+                            "table": name,
+                            "row_index": row_idx,
+                            "reason": str(e)[:200],
+                        })
             counts[name] = inserted
+            if failed > 0:
+                failed_counts[name] = failed
         session.commit()
 
     # 重建历史 FTS5 索引（触发器只对 INSERT/UPDATE/DELETE 生效，merge 不会
@@ -264,6 +294,8 @@ async def import_from_export(
         meta={
             "version": data.get("version", "unknown"),
             "counts": counts,
+            "failed_counts": failed_counts,
+            "errors_count": sum(failed_counts.values()),
             "source": "export-import",
         },
     )
@@ -271,5 +303,8 @@ async def import_from_export(
         "status": "imported",
         "version": data.get("version", "unknown"),
         "counts": counts,
+        "failed_counts": failed_counts,
+        "errors": errors,
         "total": sum(counts.values()),
+        "total_failed": sum(failed_counts.values()),
     }

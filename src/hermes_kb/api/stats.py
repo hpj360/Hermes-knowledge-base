@@ -94,6 +94,9 @@ async def recent_token_usage(
     """最近 N 条问答的 token 明细（管理员）。
 
     按 created_at 倒序，返回最近 limit 条记录的 token 用量。
+
+    隐私：query 字段截断到 50 字符，避免泄露用户问答原文 PII
+    （此端点用于 token 用量分析，不需要完整 query 内容）。
     """
     with get_session() as session:
         logs = session.exec(
@@ -107,7 +110,8 @@ async def recent_token_usage(
             "items": [
                 {
                     "id": log.id,
-                    "query": log.query,
+                    # 截断 query 防泄露 PII（仅用于 token 分析，不需要全文）
+                    "query": (log.query or "")[:50],
                     "model_used": log.model_used,
                     "prompt_tokens": log.prompt_tokens,
                     "completion_tokens": log.completion_tokens,
@@ -150,7 +154,7 @@ async def dashboard(
     )
 
     with get_session() as session:
-        # 1. 文档 / 分片 / 字符数
+        # 1. 文档 / 分片 / 字符数（独立表，单独查询）
         doc_stats = session.exec(
             select(
                 func.count(Document.doc_id).label("doc_count"),
@@ -163,8 +167,10 @@ async def dashboard(
             )
         ).first()
 
-        # 2. 问答数 / 今日问答数 / 平均延迟
-        query_stats = session.exec(
+        # 2-4. 合并 QueryLog 的 3 次扫描为 1 次：
+        # 问答统计 + token 用量 + 反馈分布（按 feedback 分组无法与聚合合并，
+        # 但问答统计 + token 用量可在单次扫描完成，反馈分布单独一次）
+        query_token_stats = session.exec(
             select(
                 func.count(QueryLog.id).label("total_queries"),
                 func.coalesce(
@@ -179,12 +185,7 @@ async def dashboard(
                 func.coalesce(func.avg(QueryLog.latency_ms), 0).label(
                     "avg_latency_ms"
                 ),
-            )
-        ).first()
-
-        # 3. token 用量 / 累计成本
-        token_stats = session.exec(
-            select(
+                # token 用量（同一次扫描聚合）
                 func.coalesce(func.sum(QueryLog.prompt_tokens), 0).label(
                     "prompt"
                 ),
@@ -192,27 +193,38 @@ async def dashboard(
                     "completion"
                 ),
                 func.coalesce(func.sum(QueryLog.cost_cny), 0.0).label("cost"),
+                # 反馈分布（用条件聚合避免 GROUP BY，仍能在单次扫描完成）
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (QueryLog.feedback == 1, 1),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("up_count"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (QueryLog.feedback == -1, 1),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("down_count"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (QueryLog.feedback == 0, 1),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("none_count"),
             )
         ).first()
 
-        # 4. 反馈分布
-        feedback_rows = session.exec(
-            select(
-                QueryLog.feedback,
-                func.count(QueryLog.id).label("count"),
-            )
-            .group_by(QueryLog.feedback)
-        ).all()
-        feedback_dist: dict[int, int] = {1: 0, -1: 0, 0: 0}
-        for row in feedback_rows:
-            feedback_dist[int(row.feedback)] = int(row.count)
-
-        # 5. 准确率（赞 / (赞 + 踩)）
-        up = feedback_dist[1]
-        down = feedback_dist[-1]
-        accuracy = round(up / (up + down), 4) if (up + down) > 0 else None
-
-        # 6. Top N 热门文档（按 match_count）
+        # 5. Top N 热门文档（按 match_count）
         top_docs = session.exec(
             select(
                 RecipeStats.doc_id,
@@ -225,6 +237,11 @@ async def dashboard(
             .limit(top_n)
         ).all()
 
+    # 准确率（赞 / (赞 + 踩)）
+    up = int(query_token_stats.up_count or 0)
+    down = int(query_token_stats.down_count or 0)
+    accuracy = round(up / (up + down), 4) if (up + down) > 0 else None
+
     return {
         "generated_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat() + "Z",
         "documents": {
@@ -233,22 +250,23 @@ async def dashboard(
             "total_chars": int(doc_stats.total_chars or 0),
         },
         "queries": {
-            "total": int(query_stats.total_queries or 0),
-            "today": int(query_stats.today_queries or 0),
-            "avg_latency_ms": round(float(query_stats.avg_latency_ms or 0), 2),
+            "total": int(query_token_stats.total_queries or 0),
+            "today": int(query_token_stats.today_queries or 0),
+            "avg_latency_ms": round(float(query_token_stats.avg_latency_ms or 0), 2),
         },
         "tokens": {
-            "prompt_tokens": int(token_stats.prompt or 0),
-            "completion_tokens": int(token_stats.completion or 0),
+            "prompt_tokens": int(query_token_stats.prompt or 0),
+            "completion_tokens": int(query_token_stats.completion or 0),
             "total_tokens": int(
-                (token_stats.prompt or 0) + (token_stats.completion or 0)
+                (query_token_stats.prompt or 0)
+                + (query_token_stats.completion or 0)
             ),
-            "total_cost_cny": round(float(token_stats.cost or 0.0), 6),
+            "total_cost_cny": round(float(query_token_stats.cost or 0.0), 6),
         },
         "feedback": {
-            "up": feedback_dist[1],
-            "down": feedback_dist[-1],
-            "none": feedback_dist[0],
+            "up": up,
+            "down": down,
+            "none": int(query_token_stats.none_count or 0),
             "accuracy": accuracy,
         },
         "top_documents": [
