@@ -112,6 +112,10 @@ class QueryLog(SQLModel, table=True):
     model_used: str = Field(default="mock", max_length=64)
     latency_ms: int = Field(default=0)
     feedback: int = Field(default=0)  # 1=up / -1=down / 0=none
+    # M2-10：token 用量统计（默认 0，向后兼容旧记录）
+    prompt_tokens: int = Field(default=0)
+    completion_tokens: int = Field(default=0)
+    cost_cny: float = Field(default=0.0)
     created_at: datetime = Field(default_factory=_now_utc, index=True)
 
 

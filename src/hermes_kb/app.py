@@ -35,6 +35,7 @@ from hermes_kb.api.deps import (
 from hermes_kb.api.documents import router as documents_router
 from hermes_kb.api.health import router as health_router
 from hermes_kb.api.lab import router as lab_router
+from hermes_kb.api.stats import router as stats_router
 from hermes_kb.api.tags import router as tags_router
 from hermes_kb.config import get_settings
 from hermes_kb.rag import ImportService, RAGEngine
@@ -103,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(lab_router)
     app.include_router(audit_router)
+    app.include_router(stats_router)
 
     # -----------------------------------------------------------------------
     # 静态文件挂载（单进程部署，必须最后）

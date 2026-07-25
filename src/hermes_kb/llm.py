@@ -20,8 +20,18 @@ from hermes_kb.config import get_settings
 
 @dataclass
 class LLMResponse:
+    """LLM 响应（M2-10：含 token 用量）。
+
+    Attributes:
+        content: LLM 生成的文本
+        model: 模型名（如 "glm-4-flash" / "gpt-4o-mini"）
+        prompt_tokens: 输入 token 数（M2-10），默认 0（mock / 解析失败时）
+        completion_tokens: 输出 token 数（M2-10），默认 0
+    """
     content: str
     model: str
+    prompt_tokens: int = 0  # M2-10
+    completion_tokens: int = 0  # M2-10
 
 
 class LLMBackend(Protocol):
@@ -104,12 +114,23 @@ class OpenAICompatBackend:
             resp.raise_for_status()
             data = resp.json()
         content = data["choices"][0]["message"]["content"]
-        return LLMResponse(content=content, model=self.settings.llm_model)
+        # M2-10：解析 usage 字段（OpenAI 兼容协议标准字段）
+        usage = data.get("usage") or {}
+        prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
+        completion_tokens = int(usage.get("completion_tokens", 0) or 0)
+        return LLMResponse(
+            content=content,
+            model=self.settings.llm_model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
 
     async def chat_stream(self, messages: list[dict[str, str]]) -> AsyncIterator[str]:
         """流式调用 OpenAI 兼容接口。
 
         解析 SSE `data: {...}` 行，yield content delta。
+        M2-10：请求 stream_options.include_usage=true 以在最后一帧获取 usage。
+        注意：流式 usage 不通过 yield 传递（保持接口简单），由调用方按需估算。
         """
         import httpx
 
@@ -125,6 +146,8 @@ class OpenAICompatBackend:
             "temperature": 0.3,
             "max_tokens": 800,
             "stream": True,
+            # M2-10：请求 usage 统计（OpenAI 协议；智谱等兼容厂商也支持）
+            "stream_options": {"include_usage": True},
         }
         async with httpx.AsyncClient(timeout=60.0) as client:
             async with client.stream("POST", url, headers=headers, json=body) as resp:
@@ -142,6 +165,8 @@ class OpenAICompatBackend:
                             continue
                         choices = obj.get("choices") or []
                         if not choices:
+                            # M2-10：choices 为空但含 usage 的最后一帧，跳过
+                            # （usage 在流式中无法通过 yield 传递，留给估算）
                             continue
                         delta = choices[0].get("delta") or {}
                         content = delta.get("content")

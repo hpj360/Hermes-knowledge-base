@@ -237,6 +237,9 @@ class RAGAnswer:
     rejected: bool = False  # 越狱拒绝标记
     low_confidence: bool = False  # M1-06：低置信度标记
     external_refs: list[ExternalRef] = field(default_factory=list)  # B6+：外部参考
+    # M2-10：token 用量（默认 0，mock / 低置信度 / 越狱拒绝时为 0）
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -249,6 +252,9 @@ class RAGAnswer:
             "rejected": self.rejected,
             "low_confidence": self.low_confidence,
             "external_refs": [r.to_dict() for r in self.external_refs],
+            # M2-10：暴露 token 用量给前端
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
         }
 
 
@@ -368,6 +374,9 @@ class RAGEngine:
             model_used=llm_resp.model,
             latency_ms=int((time.time() - started) * 1000),
             external_refs=external_refs,
+            # M2-10：传递 token 用量（mock 时为 0）
+            prompt_tokens=llm_resp.prompt_tokens,
+            completion_tokens=llm_resp.completion_tokens,
         )
         self._log_query(result)
         return result
@@ -501,6 +510,13 @@ class RAGEngine:
         done = {"type": "done", "latency_ms": int((time.time() - started) * 1000)}
         yield f"data: {json.dumps(done, ensure_ascii=False)}\n\n"
 
+        # M2-10：流式无 usage 时用 estimate_tokens 兜底估算
+        # （OpenAI 流式 include_usage=true 的最后一帧 usage 未通过 yield 传递）
+        from hermes_kb.token_cost import estimate_tokens
+
+        prompt_tokens_est = estimate_tokens(query)
+        completion_tokens_est = estimate_tokens(final_answer)
+
         # 记录日志
         await asyncio.to_thread(
             self._log_query,
@@ -509,6 +525,8 @@ class RAGEngine:
                 citations=citations, model_used=self.llm_client.backend_name,
                 latency_ms=int((time.time() - started) * 1000),
                 external_refs=external_refs,
+                prompt_tokens=prompt_tokens_est,
+                completion_tokens=completion_tokens_est,
             )
         )
 
@@ -558,6 +576,14 @@ class RAGEngine:
 
     def _log_query(self, result: RAGAnswer) -> None:
         """写入问答日志。"""
+        # M2-10：计算成本（mock / 未知模型返回 0）
+        from hermes_kb.token_cost import calculate_cost
+
+        cost = calculate_cost(
+            result.model_used,
+            result.prompt_tokens,
+            result.completion_tokens,
+        )
         log = QueryLog(
             query=result.query,
             answer=result.answer,
@@ -566,6 +592,9 @@ class RAGEngine:
             ),
             model_used=result.model_used,
             latency_ms=result.latency_ms,
+            prompt_tokens=result.prompt_tokens,
+            completion_tokens=result.completion_tokens,
+            cost_cny=cost,
         )
         with get_session() as session:
             session.add(log)
