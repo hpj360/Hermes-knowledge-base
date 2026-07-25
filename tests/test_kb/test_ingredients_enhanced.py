@@ -55,7 +55,7 @@ def test_new_ingredients_coverage():
         "香槟", "普罗塞克", "红葡萄酒", "波特酒",
         # 其他
         "干味美思", "甜味美思", "橙味苦精", "蛋清", "奶油", "浓缩咖啡",
-        "红石榴糖浆", "蜂蜜糖浆", "龙舌兰糖浆", "椰奶油",
+        "红石榴糖浆", "蜂蜜糖浆", "龙舌兰蜜", "椰奶油",
     ]
     for canonical in new_canonicals:
         assert canonicalize(canonical) == canonical, f"新增材料未被注册: {canonical}"

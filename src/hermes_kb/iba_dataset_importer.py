@@ -31,23 +31,27 @@ def _normalize_ingredient(en_name: str) -> tuple[str, bool]:
     """英文材料名 → 中文标准名。
 
     复用 ingredients 模块的别名索引（与种子配方共享归一化口径）。
+    归一化时合并多空格/非断空格，匹配 IBA dataset 的脏数据
+    （如 '2  mint leafs' 双空格 / 'half\\xa0lime' 非断空格）。
 
     Returns:
         (normalized_name, is_unknown)
     """
     if not en_name:
         return ("", True)
-    stripped = en_name.strip()
-    key = stripped.lower()
+    # 合并连续空白（含 non-breaking space）为单空格，与 canonicalize 口径一致
+    normalized = " ".join(en_name.split())
     try:
-        from hermes_kb.ingredients import _ALIAS_INDEX
+        from hermes_kb.ingredients import canonicalize
 
-        if key in _ALIAS_INDEX:
-            return (_ALIAS_INDEX[key], False)
+        canonical = canonicalize(normalized)
+        # canonicalize 对未知材料返回原值（归一化后），通过比较判断是否命中
+        if canonical != normalized:
+            return (canonical, False)
     except ImportError:
         pass
-    # 未命中别名表，保留原名并标记为未知
-    return (stripped, True)
+    # 未命中别名表，保留归一化后的原名并标记为未知
+    return (normalized, True)
 
 
 def parse_iba_recipe(

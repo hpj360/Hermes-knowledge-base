@@ -106,7 +106,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "sugar_syrup": {
         "canonical": "糖浆",
-        "aliases": ["sugar syrup", "simple syrup", "syrup", "糖浆", "糖水"],
+        "aliases": ["sugar syrup", "simple syrup", "gomme syrup", "syrup", "糖浆", "糖水"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -123,7 +123,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "angostura": {
         "canonical": "苦精",
-        "aliases": ["angostura", "bitters", "苦精", "安高天娜"],
+        "aliases": ["angostura", "angostura bitters", "bitters", "苦精", "安高天娜"],
         "category": "modifier",
         "abv": 0.44,
         "abv_range": [0.35, 0.45],
@@ -164,21 +164,21 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     # === 果汁 ===
     "lemon_juice": {
         "canonical": "柠檬汁",
-        "aliases": ["lemon juice", "柠檬汁"],
+        "aliases": ["lemon juice", "lemon juice,", "柠檬汁"],
         "category": "juice",
         "abv": 0.0,
         "brands": [],
     },
     "lime_juice": {
         "canonical": "青柠汁",
-        "aliases": ["lime juice", "青柠汁", "莱姆汁"],
+        "aliases": ["lime juice", "lime juice,", "青柠汁", "莱姆汁"],
         "category": "juice",
         "abv": 0.0,
         "brands": [],
     },
     "orange_juice": {
         "canonical": "橙汁",
-        "aliases": ["orange juice", "橙汁", "橘子汁"],
+        "aliases": ["orange juice", "orange juice,", "橙汁", "橘子汁"],
         "category": "juice",
         "abv": 0.0,
         "brands": [],
@@ -221,7 +221,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "mint": {
         "canonical": "薄荷叶",
-        "aliases": ["mint", "mint leaves", "薄荷叶", "薄荷"],
+        "aliases": ["mint", "mint leaves", "mint sprigs", "mint leafs", "4 mint sprigs", "6 mint sprigs", "2 mint leafs", "薄荷叶", "薄荷"],
         "category": "garnish",
         "abv": 0.0,
         "brands": [],
@@ -243,7 +243,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     # === 扩展：烈酒类 ===
     "absinthe": {
         "canonical": "苦艾烈酒",
-        "aliases": ["absinthe", "绿魔", "苦艾烈酒"],
+        "aliases": ["absinthe", "absinth", "绿魔", "苦艾烈酒"],
         "category": "base_spirit",
         "abv": 0.55,
         "abv_range": [0.45, 0.74],
@@ -253,7 +253,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "bourbon": {
         "canonical": "波本威士忌",
-        "aliases": ["bourbon", "bourbon whiskey", "波本", "波本威士忌"],
+        "aliases": ["bourbon", "bourbon whiskey", "bourbon or rye whiskey", "波本", "波本威士忌"],
         "category": "base_spirit",
         "abv": 0.40,
         "abv_range": [0.40, 0.50],
@@ -354,7 +354,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     # === 扩展：利口酒类 ===
     "amaretto": {
         "canonical": "苦杏仁酒",
-        "aliases": ["amaretto", "苦杏仁酒", "杏仁力娇酒"],
+        "aliases": ["amaretto", "disaronno", "苦杏仁酒", "杏仁力娇酒"],
         "category": "modifier",
         "abv": 0.28,
         "abv_range": [0.24, 0.30],
@@ -364,7 +364,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "baileys": {
         "canonical": "百利甜酒",
-        "aliases": ["baileys", "irish cream", "百利甜酒", "百利"],
+        "aliases": ["baileys", "bailey's irish cream", "irish cream", "百利甜酒", "百利"],
         "category": "modifier",
         "abv": 0.17,
         "abv_range": [0.15, 0.20],
@@ -384,7 +384,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "coffee_liqueur": {
         "canonical": "咖啡力娇酒",
-        "aliases": ["coffee liqueur", "咖啡力娇酒", "咖啡酒"],
+        "aliases": ["coffee liqueur", "kahlua", "kahlúa", "咖啡力娇酒", "咖啡酒"],
         "category": "modifier",
         "abv": 0.20,
         "abv_range": [0.20, 0.25],
@@ -464,7 +464,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "triple_sec": {
         "canonical": "白橙力娇酒",
-        "aliases": ["triple sec", "triple sec liqueur", "白橙力娇酒", "三秒酒"],
+        "aliases": ["triple sec", "triple sec liqueur", "orange curacao", "orange curaçao", "白橙力娇酒", "三秒酒"],
         "category": "modifier",
         "abv": 0.30,
         "abv_range": [0.15, 0.40],
@@ -526,7 +526,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "port_wine": {
         "canonical": "波特酒",
-        "aliases": ["port wine", "port", "波特酒", "portwine"],
+        "aliases": ["port wine", "port", "red port", "tawny port", "波特酒", "portwine"],
         "category": "wine",
         "abv": 0.20,
         "brands": [],
@@ -541,7 +541,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "sweet_vermouth": {
         "canonical": "甜味美思",
-        "aliases": ["sweet vermouth rouge", "甜味美思"],
+        "aliases": ["sweet vermouth rouge", "red vermouth", "sweet red vermouth", "甜味美思"],
         "category": "modifier",
         "abv": 0.20,
         "brands": [],
@@ -555,7 +555,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "egg_white": {
         "canonical": "蛋清",
-        "aliases": ["egg white", "蛋清", "蛋白"],
+        "aliases": ["egg white", "1 egg white", "1 raw egg white", "egg whites", "蛋清", "蛋白"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -576,14 +576,14 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "grenadine": {
         "canonical": "红石榴糖浆",
-        "aliases": ["grenadine", "红石榴糖浆", "石榴糖浆"],
+        "aliases": ["grenadine", "grenadine syrup", "红石榴糖浆", "石榴糖浆"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
     },
     "honey_syrup": {
         "canonical": "蜂蜜糖浆",
-        "aliases": ["honey syrup", "蜂蜜糖浆", "蜜糖浆"],
+        "aliases": ["honey syrup", "honey", "蜂蜜糖浆", "蜜糖浆", "蜂蜜"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -990,7 +990,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "lillet_blanc": {
         "canonical": "利莱白",
-        "aliases": ["lillet blanc", "lillet", "利莱白", "里雷白"],
+        "aliases": ["lillet blanc", "lillet blonde", "lillet", "利莱白", "里雷白"],
         "category": "modifier",
         "abv": 0.17,
         "abv_range": [0.17, 0.17],
@@ -1040,7 +1040,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "benedictine": {
         "canonical": "本笃力娇酒",
-        "aliases": ["benedictine", "bénédictine", "本笃力娇酒", "本尼狄克汀"],
+        "aliases": ["benedictine", "bénédictine", "dom benedictine", "bénédictine d.o.m.", "本笃力娇酒", "本尼狄克汀"],
         "category": "modifier",
         "abv": 0.40,
         "abv_range": [0.40, 0.40],
@@ -1311,7 +1311,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "orgeat_syrup": {
         "canonical": "杏仁糖浆",
-        "aliases": ["orgeat syrup", "orgeat", "杏仁糖浆", "奥吉糖浆"],
+        "aliases": ["orgeat syrup", "orgeat", "杏仁糖浆", "奥吉糖浆", "奥尔热糖浆"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1368,7 +1368,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     # === 扩展 II：苦精 ===
     "peychauds_bitters": {
         "canonical": "佩肖苦精",
-        "aliases": ["peychaud's bitters", "peychauds", "佩肖苦精", "佩查德苦精"],
+        "aliases": ["peychaud's bitters", "peychaud\u2019s bitters", "peychauds bitters", "peychauds", "佩肖苦精", "佩查德苦精"],
         "category": "modifier",
         "abv": 0.30,
         "brands": [],
@@ -1560,7 +1560,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "coconut_milk": {
         "canonical": "椰奶",
-        "aliases": ["coconut milk", "椰奶"],
+        "aliases": ["coconut milk", "椰奶", "coconut cream", "椰浆"],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1582,7 +1582,15 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     # === 扩展 II：装饰 ===
     "lime_wedge": {
         "canonical": "青柠角",
-        "aliases": ["lime wedge", "青柠角", "莱姆角"],
+        "aliases": [
+            "lime wedge",
+            "青柠角",
+            "莱姆角",
+            "half lime cut into 4 wedges",
+            "1 slice lime in a highball glass",
+            "slice lime in a highball glass",
+            "柠檬角",
+        ],
         "category": "garnish",
         "abv": 0.0,
         "brands": [],
@@ -1717,7 +1725,15 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "brown_sugar": {
         "canonical": "红糖",
-        "aliases": ["brown sugar", "红糖", "棕糖", "黑糖"],
+        "aliases": [
+            "brown sugar",
+            "红糖",
+            "棕糖",
+            "黑糖",
+            "demerara sugar",
+            "raw sugar",
+            "黄糖",
+        ],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1752,10 +1768,17 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "worcestershire_sauce": {
         "canonical": "伍斯特酱",
-        "aliases": ["worcestershire sauce", "worcestershire", "伍斯特酱", "辣酱油"],
+        "aliases": [
+            "worcestershire sauce",
+            "worcestershire",
+            "worchestershire sauce",
+            "worcester sauce",
+            "伍斯特酱",
+            "辣酱油",
+        ],
         "category": "modifier",
         "abv": 0.0,
-        "brands": [],
+        "brands": ["Lea & Perrins", "French's", "Heinz"],
     },
     "soy_sauce": {
         "canonical": "酱油",
@@ -1766,7 +1789,14 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "vanilla_extract": {
         "canonical": "香草精",
-        "aliases": ["vanilla extract", "vanilla essence", "香草精", "香草提取物"],
+        "aliases": [
+            "vanilla extract",
+            "vanilla essence",
+            "vanilla",
+            "香草精",
+            "香草提取物",
+            "香草萃取",
+        ],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1809,8 +1839,16 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "peach_puree": {
         "canonical": "蜜桃泥",
-        "aliases": ["peach puree", "蜜桃泥", "桃泥"],
-        "category": "modifier",
+        "aliases": [
+            "peach puree",
+            "peach purée",
+            "peach pulp",
+            "蜜桃泥",
+            "桃泥",
+            "桃子泥",
+            "桃蓉",
+        ],
+        "category": "juice",
         "abv": 0.0,
         "brands": [],
     },
@@ -1843,7 +1881,13 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "olive_juice": {
         "canonical": "橄榄汁",
-        "aliases": ["olive juice", "olive brine", "橄榄汁", "橄榄盐水"],
+        "aliases": [
+            "olive juice",
+            "olive brine",
+            "橄榄汁",
+            "橄榄盐水",
+            "橄榄卤水",
+        ],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1852,7 +1896,13 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
     },
     "orange_flower_water": {
         "canonical": "橙花水",
-        "aliases": ["orange flower water", "orange blossom water", "橙花水", "橙花纯露"],
+        "aliases": [
+            "orange flower water",
+            "orange blossom water",
+            "橙花水",
+            "橙花纯露",
+            "橘子花水",
+        ],
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
@@ -1888,6 +1938,140 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
         "tags": ["cherry", "dark-fruit", "sweet", "stone-fruit"],
         "origin": "Denmark/Netherlands",
     },
+    # === Phase 5.2: IBA dataset 缺失材料补全 ===
+    "gold_rum": {
+        "canonical": "金朗姆酒",
+        "aliases": ["gold rum", "golden rum", "amber rum", "金朗姆", "金朗姆酒", "金标朗姆"],
+        "category": "base_spirit",
+        "abv": 0.40,
+        "abv_range": [0.37, 0.43],
+        "brands": ["Bacardi Gold", "Diplomático Reserva Exclusiva", "Appleton Estate Reserve"],
+        "tags": ["molasses", "caramel", "vanilla", "tropical", "smooth"],
+        "origin": "Caribbean",
+    },
+    "old_tom_gin": {
+        "canonical": "老汤姆金酒",
+        "aliases": ["old tom gin", "old tom", "老汤姆金酒", "老汤姆"],
+        "category": "base_spirit",
+        "abv": 0.40,
+        "abv_range": [0.40, 0.43],
+        "brands": ["Hayman's Old Tom", "Ransom Old Tom", "Tanqueray Old Tom"],
+        "tags": ["juniper", "malty", "sweet", "botanical", "historical"],
+        "origin": "UK",
+    },
+    "kirsch": {
+        "canonical": "樱桃白兰地",
+        "aliases": ["kirsch", "kirschwasser", "cherry brandy", "樱桃白兰地", "樱桃烧酒"],
+        "category": "base_spirit",
+        "abv": 0.40,
+        "abv_range": [0.40, 0.50],
+        "brands": ["Fischer Kirschwasser", "Etter Kirsch", "Schladerer Kirschwasser"],
+        "tags": ["cherry", "stone-fruit", "clear", "dry", "almond"],
+        "origin": "Germany/France",
+    },
+    "citron_vodka": {
+        "canonical": "柠檬伏特加",
+        "aliases": ["citron vodka", "lemon vodka", "柠檬伏特加", "柠檬味伏特加"],
+        "category": "base_spirit",
+        "abv": 0.40,
+        "abv_range": [0.35, 0.40],
+        "brands": ["Absolut Citron", "Smirnoff Citrus", "Grey Goose Le Citron"],
+        "tags": ["lemon", "citrus", "neutral", "flavored"],
+        "origin": "Sweden/France",
+    },
+    "blackberry_liqueur": {
+        "canonical": "黑莓利口酒",
+        "aliases": ["blackberry liqueur", "crème de mûre", "creme de mure", "黑莓利口酒", "黑莓酒"],
+        "category": "modifier",
+        "abv": 0.20,
+        "abv_range": [0.18, 0.25],
+        "brands": ["Bols Crème de Mûre", "Giffard Crème de Mûre", "Mathilde Crème de Mûre"],
+        "tags": ["blackberry", "berry", "sweet", "dark-fruit"],
+        "origin": "France",
+    },
+    "raspberry_liqueur": {
+        "canonical": "覆盆子利口酒",
+        "aliases": ["raspberry liqueur", "chambord liqueur", "crème de framboise", "覆盆子利口酒", "树莓利口酒"],
+        "category": "modifier",
+        "abv": 0.20,
+        "abv_range": [0.16, 0.25],
+        "brands": ["Chambord", "Bols Crème de Framboise", "Giffard Crème de Framboise"],
+        "tags": ["raspberry", "berry", "sweet", "red-fruit"],
+        "origin": "France",
+    },
+    "peach_bitters": {
+        "canonical": "桃子苦精",
+        "aliases": ["peach bitters", "桃子苦精", "水蜜桃苦精"],
+        "category": "modifier",
+        "abv": 0.44,
+        "abv_range": [0.35, 0.45],
+        "brands": ["Fee Brothers Peach Bitters", "Bittermens Peach", "The Bitter Truth Peach"],
+        "tags": ["peach", "stone-fruit", "bitter", "aromatic"],
+        "origin": "USA",
+    },
+    "egg_yolk": {
+        "canonical": "蛋黄",
+        "aliases": ["egg yolk", "蛋黄", "鸡蛋黄"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "lemon_twist": {
+        "canonical": "柠檬皮卷",
+        "aliases": ["lemon twist", "lemon peel twist", "柠檬皮卷", "柠檬卷"],
+        "category": "garnish",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "sugar_cube": {
+        "canonical": "方糖",
+        "aliases": ["sugar cube", "1 sugar cube", "方糖", "糖块"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "sugar_plain": {
+        "canonical": "糖",
+        "aliases": ["sugar", "white sugar", "granulated sugar", "糖", "白糖"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "water": {
+        "canonical": "水",
+        "aliases": ["water", "plain water", "filtered water", "水", "清水"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "celery_salt": {
+        "canonical": "芹菜盐",
+        "aliases": ["celery salt", "芹菜盐"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "agave_nectar": {
+        "canonical": "龙舌兰蜜",
+        "aliases": ["agave nectar", "agave syrup", "龙舌兰蜜", "龙舌兰糖浆"],
+        "category": "modifier",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "chili_pepper": {
+        "canonical": "辣椒",
+        "aliases": ["chili pepper", "red hot chili pepper", "few slices red hot chili peppers", "chilli", "辣椒", "红辣椒"],
+        "category": "garnish",
+        "abv": 0.0,
+        "brands": [],
+    },
+    "onion": {
+        "canonical": "洋葱",
+        "aliases": ["onion", "half slice onion finely chopped", "cocktail onion", "洋葱"],
+        "category": "garnish",
+        "abv": 0.0,
+        "brands": [],
+    },
 }
 
 # 反向索引：alias(小写) → canonical
@@ -1901,10 +2085,19 @@ for _key, _info in INGREDIENT_REGISTRY.items():
 
 
 def canonicalize(name: str) -> str:
-    """将别名归一化为标准名。未知材料返回原值。"""
+    """将别名归一化为标准名。未知材料返回原值。
+
+    归一化规则：
+    1. 去除首尾空白
+    2. 将非断空格 (\\xa0) 等异常空白替换为普通空格
+    3. 合并连续多空格为单空格（IBA dataset 存在 '2  mint leafs' 等双空格脏数据）
+    4. 转小写后查 _ALIAS_INDEX
+    """
     if not name:
         return name
-    return _ALIAS_INDEX.get(name.strip().lower(), name.strip())
+    # 统一空白：non-breaking space / 制表符 / 多空格 → 单空格
+    normalized = " ".join(name.split())
+    return _ALIAS_INDEX.get(normalized.lower(), normalized)
 
 
 def get_category(canonical: str) -> str | None:
