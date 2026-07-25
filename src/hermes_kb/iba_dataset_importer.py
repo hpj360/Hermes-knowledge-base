@@ -87,9 +87,12 @@ def parse_iba_recipe(
         ingredients.append(normalized if normalized else en_name)
         if is_unknown and en_name:
             unknown.append(en_name)
-        # cl → ml 转换
+        # cl → ml 转换（非数字 quantity 安全降级为"适量"）
         if quantity is not None:
-            measures.append(f"{float(quantity) * 10:.0f}ml")
+            try:
+                measures.append(f"{float(quantity) * 10:.0f}ml")
+            except (ValueError, TypeError):
+                measures.append("适量")
         else:
             measures.append("适量")
 

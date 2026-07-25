@@ -299,3 +299,362 @@ def test_diff_iba_official_network_fail(monkeypatch):
     # 本地全部算作 extra
     assert sorted(result["extra_locally"]) == ["mojito", "negroni"]
     assert result["matched"] == []
+
+
+def test_normalize_ingredient_empty_string():
+    """空字符串返回 ('', True)。"""
+    from hermes_kb.iba_dataset_importer import _normalize_ingredient
+
+    assert _normalize_ingredient("") == ("", True)
+    assert _normalize_ingredient(None) == ("", True)  # type: ignore[arg-type]
+
+
+def test_normalize_ingredient_unknown():
+    """未知材料返回 (原名, True)。"""
+    from hermes_kb.iba_dataset_importer import _normalize_ingredient
+
+    norm, unknown = _normalize_ingredient("some rare liqueur")
+    assert norm == "some rare liqueur"
+    assert unknown is True
+
+
+def test_normalize_ingredient_known():
+    """已知材料返回 (canonical, False)。"""
+    from hermes_kb.iba_dataset_importer import _normalize_ingredient
+
+    norm, unknown = _normalize_ingredient("white rum")
+    assert norm == "白朗姆酒"
+    assert unknown is False
+
+
+def test_normalize_ingredient_collapses_whitespace():
+    """多空格/非断空格被合并。"""
+    from hermes_kb.iba_dataset_importer import _normalize_ingredient
+
+    # 双空格 + 非断空格
+    norm, _ = _normalize_ingredient("white\u00a0rum")
+    assert norm == "白朗姆酒"
+
+
+def test_parse_iba_recipe_empty_ingredient_name():
+    """空材料名安全跳过。"""
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "TEST EMPTY ING",
+        "ingredients": [
+            {"name": "", "quantity": 4.5},  # 空名
+            {"name": "gin", "quantity": 4.5},
+        ],
+        "type": "Test",
+    }
+    recipe = parse_iba_recipe(raw)
+    # 空名不会进 unknown_ingredients
+    assert "" not in recipe["unknown_ingredients"]
+    # gin 仍然被正确归一化
+    assert "金酒" in recipe["ingredients"]
+
+
+def test_parse_iba_recipe_invalid_quantity_skipped():
+    """非数字 quantity 被安全跳过（不影响 ABV 计算）。"""
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "BAD QTY",
+        "ingredients": [
+            {"name": "gin", "quantity": "not-a-number"},  # 非数字
+            {"name": "vodka", "quantity": 4.5},  # 45ml, 0.40
+        ],
+        "type": "Test",
+    }
+    recipe = parse_iba_recipe(raw)
+    # measures 中 gin 显示 'nanml'（float('not-a-number') 会抛 ValueError）
+    # 但 vodka 仍参与 ABV 计算
+    assert recipe["abv"] is not None
+    # vodka 单独参与 → 0.40
+    assert recipe["abv"] == pytest.approx(0.40, abs=1e-3)
+
+
+def test_parse_iba_recipe_no_ingredients():
+    """ingredients 为空列表时不抛异常。"""
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {"name": "EMPTY", "ingredients": [], "type": "Test"}
+    recipe = parse_iba_recipe(raw)
+    assert recipe["title"] == "EMPTY"
+    assert recipe["ingredients"] == []
+    assert recipe["abv"] is None
+    assert recipe["calories"] is None
+    # content 不应含 abv/calories frontmatter
+    assert "<!-- abv:" not in recipe["content"]
+    assert "<!-- calories:" not in recipe["content"]
+
+
+def test_normalize_title_empty():
+    """空标题返回空字符串。"""
+    from hermes_kb.iba_dataset_importer import _normalize_title
+
+    assert _normalize_title("") == ""
+    assert _normalize_title(None) == ""  # type: ignore[arg-type]
+
+
+def test_normalize_title_strips_punctuation():
+    """标点符号被剥离（& 不在剥离列表中，保留）。"""
+    from hermes_kb.iba_dataset_importer import _normalize_title
+
+    assert _normalize_title("Mojito!") == "mojito"
+    assert _normalize_title("Old-Fashioned") == "oldfashioned"
+    # & 不在正则 [\s\-_/\\,.!?;:'\"()] 里，故保留
+    assert _normalize_title("Gin & Tonic") == "gin&tonic"
+    # 多种标点
+    assert _normalize_title("Test, Drink; (v2)") == "testdrinkv2"
+
+
+def test_tokenize_title_empty():
+    """空标题返回空 frozenset。"""
+    from hermes_kb.iba_dataset_importer import _tokenize_title
+
+    assert _tokenize_title("") == frozenset()
+    assert _tokenize_title(None) == frozenset()  # type: ignore[arg-type]
+
+
+def test_tokenize_title_extracts_tokens():
+    """标题被分词为 token 集合。"""
+    from hermes_kb.iba_dataset_importer import _tokenize_title
+
+    toks = _tokenize_title("Old Fashioned 123")
+    assert "old" in toks
+    assert "fashioned" in toks
+    assert "123" in toks
+    # 中文 token
+    toks_zh = _tokenize_title("莫吉托 mojito")
+    assert "莫吉托" in toks_zh
+    assert "mojito" in toks_zh
+
+
+def test_is_duplicate_fuzzy_empty_candidate():
+    """空候选标题返回 False。"""
+    from hermes_kb.iba_dataset_importer import _is_duplicate_fuzzy
+
+    assert _is_duplicate_fuzzy("", set(), set(), []) is False
+    assert _is_duplicate_fuzzy(None, set(), set(), []) is False  # type: ignore[arg-type]
+
+
+def test_is_duplicate_fuzzy_short_norm():
+    """规范化后长度 <4 不参与模糊匹配。"""
+    from hermes_kb.iba_dataset_importer import _is_duplicate_fuzzy
+
+    # 'abc' 长度 3，不参与 token 模糊匹配
+    assert _is_duplicate_fuzzy("abc", set(), set(), []) is False
+
+
+def test_is_duplicate_fuzzy_exact_match():
+    """精确匹配返回 True。"""
+    from hermes_kb.iba_dataset_importer import _is_duplicate_fuzzy
+
+    # 'mojito' 在 iba_exact 中
+    assert _is_duplicate_fuzzy("Mojito", {"mojito"}, set(), []) is True
+    # 'negroni' 在 recipe_exact 中
+    assert _is_duplicate_fuzzy("Negroni", set(), {"negroni"}, []) is True
+
+
+def test_is_duplicate_fuzzy_token_subset():
+    """token 子集匹配返回 True。"""
+    from hermes_kb.iba_dataset_importer import _is_duplicate_fuzzy
+
+    # 现有 token 集合 {old, fashioned}
+    existing = [frozenset({"old", "fashioned"})]
+    # 候选 'old fashioned' tokens {old, fashioned} ⊆ existing
+    assert _is_duplicate_fuzzy("Old Fashioned", set(), set(), existing) is True
+    # 候选 'old fashioned v2' tokens 是 existing 的超集
+    assert _is_duplicate_fuzzy("Old Fashioned V2", set(), set(), existing) is True
+    # 不相关候选
+    assert _is_duplicate_fuzzy("Mojito Recipe", set(), set(), existing) is False
+
+
+def test_is_duplicate_fuzzy_no_existing_tokens():
+    """existing_token_list 含空 frozenset 时不抛异常（continue 跳过）。"""
+    from hermes_kb.iba_dataset_importer import _is_duplicate_fuzzy
+
+    # existing_tokens 含空集（被 continue 跳过），不相关候选返回 False
+    existing = [frozenset(), frozenset({"negroni"})]
+    assert _is_duplicate_fuzzy("Mojito Recipe", set(), set(), existing) is False
+    # 候选 'negroni' 命中 existing 非空集
+    assert _is_duplicate_fuzzy("Negroni", set(), set(), existing) is True
+
+
+def test_sync_iba_dataset_with_invalid_recipe_records_failed():
+    """解析失败的配方计入 failed。"""
+    from hermes_kb.iba_dataset_importer import sync_iba_dataset
+
+    # name 字段缺失会让 parse_iba_recipe 返回 title=""，sync 仍会处理
+    # 但 import_text 会失败（无标题）→ failed
+    mock_data = [
+        {"name": "VALID RECIPE X", "ingredients": [], "type": "T"},
+        # 故意构造一个会让 parse_iba_recipe 抛异常的对象
+        "not-a-dict",  # type: ignore[list-item]
+    ]
+
+    result = sync_iba_dataset(data=mock_data)
+    # 'not-a-dict' 会让 .get 抛 AttributeError，被 except 捕获，failed += 1
+    assert result["failed"] >= 1
+
+
+def test_fetch_remote_data_direct_success(monkeypatch):
+    """_fetch_remote_data 直连 GitHub 成功时返回 dict 列表。"""
+    from hermes_kb import iba_dataset_importer
+
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return [{"name": "Mojito", "ingredients": [], "type": "Test"}]
+
+    def fake_get(url, timeout):
+        assert "raw.githubusercontent.com" in url
+        assert "/master/" in url
+        return FakeResp()
+
+    monkeypatch.setattr(iba_dataset_importer.httpx, "get", fake_get)
+    result = iba_dataset_importer._fetch_remote_data()
+    assert result == [{"name": "Mojito", "ingredients": [], "type": "Test"}]
+
+
+def test_fetch_remote_data_mirror_success(monkeypatch):
+    """直连失败但 gh-proxy 镜像成功时返回镜像数据。"""
+    from hermes_kb import iba_dataset_importer
+    import httpx
+
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return [{"name": "Negroni", "ingredients": [], "type": "Test"}]
+
+    call_count = {"n": 0}
+
+    def fake_get(url, timeout):
+        call_count["n"] += 1
+        # 直连 GitHub 两次（master + main）都失败
+        if "gh-proxy.com" not in url:
+            raise httpx.HTTPError("direct blocked")
+        return FakeResp()
+
+    monkeypatch.setattr(iba_dataset_importer.httpx, "get", fake_get)
+    result = iba_dataset_importer._fetch_remote_data()
+    assert result == [{"name": "Negroni", "ingredients": [], "type": "Test"}]
+    # 至少 3 次（2 次直连 + 1 次镜像）
+    assert call_count["n"] >= 3
+
+
+def test_fetch_remote_data_local_fallback(monkeypatch, tmp_path):
+    """所有远程都失败时回退本地 data/iba_recipes.json。"""
+    from hermes_kb import iba_dataset_importer
+    import httpx
+    import json
+
+    def fake_get(url, timeout):
+        raise httpx.HTTPError("all network down")
+
+    monkeypatch.setattr(iba_dataset_importer.httpx, "get", fake_get)
+
+    # 写一个临时本地文件并 patch Path.exists / open 让 _fetch_remote_data 读到它
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    local_file = data_dir / "iba_recipes.json"
+    local_file.write_text(
+        json.dumps([{"name": "LOCAL FALLBACK", "ingredients": [], "type": "T"}]),
+        encoding="utf-8",
+    )
+
+    import pathlib
+
+    real_exists = pathlib.Path.exists
+
+    def patched_exists(self):
+        if str(self).endswith("iba_recipes.json"):
+            return True
+        return real_exists(self)
+
+    real_open = open
+
+    def patched_open(path, *args, **kwargs):
+        if str(path).endswith("iba_recipes.json"):
+            return real_open(local_file, *args, **kwargs)
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(pathlib.Path, "exists", patched_exists)
+    monkeypatch.setattr("builtins.open", patched_open)
+
+    result = iba_dataset_importer._fetch_remote_data()
+    assert result == [{"name": "LOCAL FALLBACK", "ingredients": [], "type": "T"}]
+
+
+def test_fetch_remote_data_all_fail_returns_empty(monkeypatch):
+    """所有远程失败 + 无本地文件 → 返回空列表。"""
+    from hermes_kb import iba_dataset_importer
+    import httpx
+    import pathlib
+
+    def fake_get(url, timeout):
+        raise httpx.HTTPError("all down")
+
+    monkeypatch.setattr(iba_dataset_importer.httpx, "get", fake_get)
+    # 让所有 Path.exists 返回 False（无本地文件）
+    monkeypatch.setattr(pathlib.Path, "exists", lambda self: False)
+
+    result = iba_dataset_importer._fetch_remote_data()
+    assert result == []
+
+
+def test_diff_iba_official_with_db_local(tmp_db):
+    """local_data=None 时从 DB 查询本地 IBA 配方。"""
+    from hermes_kb.iba_dataset_importer import diff_iba_official
+    from hermes_kb.rag import ImportService
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
+
+    # 播种一条 IBA 配方到 DB
+    importer = ImportService()
+    importer.import_text(
+        content="# Mojito\n\n## 配方\n- 白朗姆酒 45ml",
+        title="Mojito",
+        source_type="iba",
+        file_type="md",
+    )
+    with get_session() as session:
+        docs = session.exec(
+            __import__("sqlmodel").select(Document).where(Document.title == "Mojito")
+        ).all()
+        for d in docs:
+            d.source = "iba"
+            d.category = "recipe"
+            session.add(d)
+        session.commit()
+
+    official = [{"name": "Mojito"}, {"name": "Daiquiri"}]
+    result = diff_iba_official(local_data=None, official_data=official)
+
+    assert result["local_count"] == 1
+    assert result["official_count"] == 2
+    assert "mojito" in result["matched"]
+    assert "daiquiri" in result["missing_locally"]
+
+
+def test_diff_iba_official_handles_non_dict_items():
+    """diff 时遇到非 dict 项不抛异常（_title_of 返回空字符串）。"""
+    from hermes_kb.iba_dataset_importer import diff_iba_official
+
+    local_data = [{"title": "Mojito"}, "not-a-dict", 123, None]
+    official_data = [{"name": "Mojito"}, {"name": "Negroni"}]
+
+    result = diff_iba_official(local_data=local_data, official_data=official_data)
+    # 非 dict 项被 _title_of 安全跳过
+    assert result["local_count"] == 1
+    assert result["official_count"] == 2
+    assert "mojito" in result["matched"]
+    assert "negroni" in result["missing_locally"]
