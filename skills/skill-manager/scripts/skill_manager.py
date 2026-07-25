@@ -190,7 +190,7 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
     
     # list command
-    list_parser = subparsers.add_parser("list", help="List installed skills")
+    subparsers.add_parser("list", help="List installed skills")
     
     # install command
     install_parser = subparsers.add_parser("install", help="Install a skill")

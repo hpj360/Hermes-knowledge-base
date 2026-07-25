@@ -91,7 +91,7 @@ def _run_script(args: list[str], name: str) -> dict | None:
     }
     script_path = os.path.join(os.path.dirname(__file__), script_map[name])
     try:
-        result = subprocess.run(
+        subprocess.run(
             [sys.executable, script_path] + args, capture_output=True, text=True, timeout=120
         )
         # 从 output 文件读取

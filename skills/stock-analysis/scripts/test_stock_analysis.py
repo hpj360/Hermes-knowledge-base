@@ -184,7 +184,7 @@ class TestMomentum:
         
         assert result is not None
         assert result.rsi_status == "overbought"
-        assert result.near_52w_high == True
+        assert result.near_52w_high is True
         assert result.score < 0  # Overbought = negative score
 
 
@@ -284,8 +284,8 @@ class TestWatchlist:
         mock_save.return_value = None
         
         result = add_to_watchlist("AAPL", target_price=200.0)
-        
-        assert result["success"] == True
+
+        assert result["success"] is True
         assert result["action"] == "added"
         assert result["ticker"] == "AAPL"
         assert result["target_price"] == 200.0
@@ -300,8 +300,8 @@ class TestWatchlist:
         mock_save.return_value = None
         
         result = remove_from_watchlist("AAPL")
-        
-        assert result["success"] == True
+
+        assert result["success"] is True
         assert result["removed"] == "AAPL"
 
 

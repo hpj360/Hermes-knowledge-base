@@ -2386,9 +2386,6 @@ def generate_portfolio_summary(
     period: str | None = None,
 ) -> dict:
     """Generate portfolio summary data."""
-    # Map results by ticker
-    result_map = {r.ticker: r for r in results}
-
     # Calculate portfolio metrics
     total_cost = 0.0
     total_value = 0.0
