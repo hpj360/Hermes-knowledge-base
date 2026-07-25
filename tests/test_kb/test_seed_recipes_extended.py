@@ -11,7 +11,6 @@
 """
 from __future__ import annotations
 
-import pytest
 
 
 def test_seed_recipes_count_meets_iba_minimum():

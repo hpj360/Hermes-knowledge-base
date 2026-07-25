@@ -90,13 +90,13 @@ def main() -> int:
             failed += 1
             print(f"  ❌ 失败: {recipe['title']} → {e}")
 
-    print(f"\n=== 同步结果 ===")
+    print("\n=== 同步结果 ===")
     print(f"  导入: {seeded}")
     print(f"  跳过: {skipped}")
     print(f"  失败: {failed}")
 
     # 4. 验证：统计 DB 中 recipe 总数
-    print(f"\n=== DB 状态验证 ===")
+    print("\n=== DB 状态验证 ===")
     with get_session() as session:
         total_recipes = session.exec(
             select(Document).where(Document.category == "recipe")

@@ -9,7 +9,7 @@ from hermes_kb.ingredients import INGREDIENT_REGISTRY, canonicalize
 
 
 def main() -> None:
-    print(f"=== seed_recipes 统计 ===")
+    print("=== seed_recipes 统计 ===")
     print(f"总配方数: {len(SEED_RECIPES)}")
 
     # 分类统计
@@ -54,7 +54,7 @@ def main() -> None:
     if duplicates:
         print(f"❌ 标题重复: {set(duplicates)}")
     else:
-        print(f"✅ 标题唯一")
+        print("✅ 标题唯一")
 
     # 材料归一化检查
     print("\n=== 材料归一化检查 ===")
@@ -75,7 +75,7 @@ def main() -> None:
         for ing, recipes in sorted(unknown_ingredients.items()):
             print(f"  - {ing} (用于 {len(recipes)} 款配方)")
     else:
-        print(f"✅ 所有材料均已注册")
+        print("✅ 所有材料均已注册")
 
     # content frontmatter 检查
     print("\n=== frontmatter 检查 ===")
@@ -101,7 +101,7 @@ def main() -> None:
         for title, issue in frontmatter_issues:
             print(f"  - {title}: {issue}")
     else:
-        print(f"✅ 所有 frontmatter 正确")
+        print("✅ 所有 frontmatter 正确")
 
 
 if __name__ == "__main__":

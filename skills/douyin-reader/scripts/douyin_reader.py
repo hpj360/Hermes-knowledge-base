@@ -456,7 +456,7 @@ def main():
 
     # Step 1: SSR 解析
     if not args.json:
-        print(f"[1/4] SSR 解析分享链接...")
+        print("[1/4] SSR 解析分享链接...")
     try:
         info = resolve_share_url(args.url)
     except Exception as e:
@@ -474,7 +474,7 @@ def main():
 
     # Step 2: 下载视频
     if not args.json:
-        print(f"[2/4] 下载无水印视频...")
+        print("[2/4] 下载无水印视频...")
     try:
         video_path = download_video(info["download_url"], output_dir)
         size_mb = os.path.getsize(video_path) / 1024 / 1024
@@ -545,7 +545,7 @@ def main():
 
             if args.ocr:
                 if not args.json:
-                    print(f"  OCR 识别中...")
+                    print("  OCR 识别中...")
                 ocr_results = ocr_frames(frames, interval=args.frame_interval)
                 if not args.json:
                     valid = [r for r in ocr_results if r.get("texts")]
@@ -609,7 +609,7 @@ def main():
             if len(ocr_results) > 3:
                 print(f"  ... 共 {len(ocr_results)} 帧")
         if llm_prompt:
-            print(f"\n--- LLM 校对提示词 ---")
+            print("\n--- LLM 校对提示词 ---")
             print(llm_prompt)
         print(f"{'='*50}")
 

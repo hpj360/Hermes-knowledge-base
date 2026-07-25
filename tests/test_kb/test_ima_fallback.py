@@ -17,16 +17,14 @@ import json
 from typing import Any
 
 import httpx
-import pytest
 
 from hermes_kb.llm import LLMClient
 from hermes_kb.rag import (
-    ExternalRef,
     RAGEngine,
     _build_external_refs,
     _is_high_value_query,
 )
-from hermes_kb.retrieval import HybridRetriever, RetrievalHit
+from hermes_kb.retrieval import RetrievalHit
 
 
 # ---------------------------------------------------------------------------

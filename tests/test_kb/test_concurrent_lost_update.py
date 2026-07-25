@@ -69,7 +69,9 @@ def test_concurrent_title_update_no_corruption(tmp_db):
             executor.submit(_update_title, doc_id, t)
             for t in titles
         ]
-        results = [f.result() for f in as_completed(futures)]
+        # 等待所有 future 完成（result 值本身不用于断言，并发场景只验证最终 DB 状态）
+        for f in as_completed(futures):
+            f.result()
 
     # 最终标题是两个值之一（last-write-wins），不是空或损坏
     with get_session() as session:
@@ -89,7 +91,9 @@ def test_concurrent_category_update_no_corruption(tmp_db):
             executor.submit(_update_category, doc_id, c)
             for c in categories
         ]
-        results = [f.result() for f in as_completed(futures)]
+        # 等待所有 future 完成（result 值本身不用于断言，并发场景只验证最终 DB 状态）
+        for f in as_completed(futures):
+            f.result()
 
     # 最终分类是写入值之一
     with get_session() as session:

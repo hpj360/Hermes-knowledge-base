@@ -24,7 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections import Counter, defaultdict
+from collections import defaultdict
 from pathlib import Path
 
 # 让脚本无需安装即可运行
@@ -34,7 +34,6 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from hermes_kb.config import get_settings, reset_settings  # noqa: E402
 from hermes_kb.database import get_engine  # noqa: E402
-from hermes_kb.embedding import EmbeddingService  # noqa: E402
 from hermes_kb.rag import ImportService  # noqa: E402
 from hermes_kb.retrieval import HybridRetriever  # noqa: E402
 from hermes_kb.seed import SEED_DOCS  # noqa: E402

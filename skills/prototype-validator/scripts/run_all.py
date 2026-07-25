@@ -17,9 +17,6 @@ from pathlib import Path
 
 # 允许作为脚本运行
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from run_a11y import main as run_a11y_main
-from run_visual import main as run_visual_main
-from run_perf import main as run_perf_main
 
 
 def run_all(url: str, output_dir: str) -> dict:

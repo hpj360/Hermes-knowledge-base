@@ -13,10 +13,9 @@ Tests for Stock Analysis Skill v6.0
 Run with: uv run pytest test_stock_analysis.py -v
 """
 
-import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import Mock, patch
+from datetime import datetime
 import pandas as pd
 
 # Import modules to test
@@ -30,7 +29,6 @@ from analyze_stock import (
     synthesize_signal,
     EarningsSurprise,
     Fundamentals,
-    MomentumAnalysis,
     MarketContext,
     StockData,
 )
@@ -38,10 +36,8 @@ from dividends import analyze_dividends
 from watchlist import (
     add_to_watchlist,
     remove_from_watchlist,
-    list_watchlist,
     WatchlistItem,
 )
-from portfolio import PortfolioStore
 
 
 class TestAssetTypeDetection:
