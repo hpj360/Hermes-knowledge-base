@@ -83,7 +83,6 @@ class TestBarAssistantSync:
     def test_sync_batch_insert_failure(self, client, monkeypatch):
         """批量插入异常时返回全 failed。"""
         from hermes_kb import bar_assistant_sync
-        from hermes_kb.database import get_session
 
         def failing_session():
             raise RuntimeError("DB 故障")

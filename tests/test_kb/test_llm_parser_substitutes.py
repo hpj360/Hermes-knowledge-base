@@ -311,7 +311,7 @@ class TestLLMClient:
     def test_chat_exception_falls_back_to_mock(self, monkeypatch):
         """后端异常时降级 Mock。"""
         from hermes_kb.config import override_settings
-        from hermes_kb.llm import LLMClient, OpenAICompatBackend, MockLLMBackend
+        from hermes_kb.llm import LLMClient, OpenAICompatBackend
 
         override_settings(
             llm_provider="openai",
@@ -341,7 +341,7 @@ class TestLLMClient:
 
         async def failing_stream(self, messages):
             raise RuntimeError("stream 故障")
-            yield  # noqa: unreachable - 让函数成为 async generator
+            yield  # pragma: no cover - 让函数成为 async generator
 
         monkeypatch.setattr(OpenAICompatBackend, "chat_stream", failing_stream)
         client = LLMClient()
