@@ -26,7 +26,7 @@ async def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "hermes-kb",
-        "version": "0.2.0",
+        "version": "0.5.0",
         "time": datetime.now(timezone.utc).isoformat(),
         "doc_count": doc_count,
         "llm_provider": settings.llm_provider,

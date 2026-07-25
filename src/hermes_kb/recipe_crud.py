@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from sqlalchemy import text as sa_text
 from sqlmodel import select
 
 from hermes_kb.database import get_session
@@ -93,15 +94,21 @@ def update_recipe(
 
 
 def submit_recipe(doc_id: str) -> bool:
-    """提交审核（draft → pending）。"""
+    """提交审核（draft → pending）。
+
+    用原子 SQL UPDATE WHERE status='draft' 消除读-改-写竞态，
+    防止并发双提交（P2-1 同类问题：两个线程同时读到 draft 都返回 True）。
+    """
     with get_session() as session:
-        doc = session.get(Document, doc_id)
-        if not doc or doc.status != "draft":
-            return False
-        doc.status = "pending"
-        session.add(doc)
+        result = session.execute(
+            sa_text(
+                "UPDATE document SET status='pending' "
+                "WHERE doc_id=:did AND status='draft'"
+            ),
+            {"did": doc_id},
+        )
         session.commit()
-        return True
+        return result.rowcount > 0
 
 
 def approve_recipe(doc_id: str) -> bool:

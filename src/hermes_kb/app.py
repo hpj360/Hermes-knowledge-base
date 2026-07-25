@@ -46,7 +46,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Hermes Knowledge Base",
         description="AI 原生酒类知识库（M0+M1）",
-        version="0.2.0",
+        version="0.5.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
