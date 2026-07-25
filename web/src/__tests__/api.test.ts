@@ -230,7 +230,7 @@ describe("api client", () => {
         json: async () => ({
           status: "ok",
           service: "hermes-kb",
-          version: "0.2.0",
+          version: "0.5.0",
           time: "2026-07-21T00:00:00",
           doc_count: 5,
           llm_provider: "mock",

@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter
 from sqlmodel import select
 
+from hermes_kb import __version__
 from hermes_kb.config import get_settings
 from hermes_kb.database import get_session
 from hermes_kb.models import Document
@@ -26,7 +27,7 @@ async def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "hermes-kb",
-        "version": "0.5.0",
+        "version": __version__,
         "time": datetime.now(timezone.utc).isoformat(),
         "doc_count": doc_count,
         "llm_provider": settings.llm_provider,

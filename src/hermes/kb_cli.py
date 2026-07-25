@@ -194,7 +194,7 @@ def cmd_health(_args: argparse.Namespace) -> int:
         {
             "status": "ok",
             "service": "hermes-kb",
-            "version": "0.2.0",
+            "version": "0.5.0",
             "doc_count": doc_count,
             "llm_provider": settings.llm_provider,
             "llm_available": settings.llm_available,

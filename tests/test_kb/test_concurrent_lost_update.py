@@ -139,9 +139,9 @@ def test_concurrent_mixed_field_update_consistency(tmp_db):
     with ThreadPoolExecutor(max_workers=2) as executor:
         f1 = executor.submit(_update_title, doc_id, "新标题")
         f2 = executor.submit(_update_category, doc_id, "葡萄酒")
-        as_completed([f1, f2])
-        f1.result()
-        f2.result()
+        # 等待所有 future 完成（result 值不用于断言，并发场景只验证最终 DB 状态）
+        for f in as_completed([f1, f2]):
+            f.result()
 
     with get_session() as session:
         doc = session.get(Document, doc_id)
