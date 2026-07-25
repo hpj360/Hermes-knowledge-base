@@ -160,13 +160,33 @@ def _is_datetime_col(col) -> bool:
 
 
 def _import_row(model: type, row: dict[str, Any]) -> Any:
-    """从 dict 构造 SQLModel 实例（datetime 字段特殊处理）。"""
-    kwargs = dict(row)
+    """从 dict 构造 SQLModel 实例（datetime 字段特殊处理 + 未知字段过滤）。
+
+    M5 兼容性：导出 JSON 可能来自新旧不同 schema 版本（旧版导出缺少新字段，
+    新版导出含已删除字段）。未识别字段直接传给 model(**kwargs) 会触发
+    TypeError 导致整行失败。这里按 model.__table__.columns 白名单过滤，
+    缺失字段由 SQLModel 默认值兜底，多余字段静默丢弃并计入 unknown 统计。
+    """
+    valid_cols = {c.name for c in model.__table__.columns}
+    # Document 模型有 metadata property 映射到 meta 列；导出可能用任一键
+    if model is Document:
+        valid_cols.update({"metadata"})  # __init__ 会把 metadata 映射到 meta
+    kwargs: dict[str, Any] = {}
+    unknown: list[str] = []
+    for k, v in row.items():
+        if k in valid_cols:
+            kwargs[k] = v
+        else:
+            unknown.append(k)
     # datetime 字段从 ISO 字符串恢复
     for col in model.__table__.columns:
         if _is_datetime_col(col) and col.name in kwargs:
             kwargs[col.name] = _parse_dt(kwargs[col.name])
-    return model(**kwargs)
+    instance = model(**kwargs)
+    # 挂载未知字段统计供调用方记录（不阻塞导入）
+    if unknown:
+        instance._import_unknown_fields = unknown  # type: ignore[attr-defined]
+    return instance
 
 
 def _validate_import_payload(data: Any) -> dict[str, Any]:
@@ -209,6 +229,9 @@ async def import_from_export(
     - ``audit_logs`` 表不导入（审计日志应为 append-only，导入会破坏审计链完整性）。
     - 单行失败计入 ``failed_counts`` 并记录错误，不阻塞整体导入。
     - 上传文件大小上限 50MB（防 OOM）。
+    - M5：导出 JSON 中的未知字段（schema 版本差异）静默丢弃，并在响应
+      ``unknown_fields`` 中列出，便于运维识别版本漂移。
+    - H3：每 1000 行分批 commit，避免长事务阻塞其他写入者。
     """
     # 大小校验：先读 chunk 累计，超限直接 413
     max_size = 50 * 1024 * 1024  # 50MB
@@ -253,7 +276,12 @@ async def import_from_export(
 
     counts: dict[str, int] = {}
     failed_counts: dict[str, int] = {}
+    unknown_fields_seen: dict[str, set[str]] = {}
     errors: list[dict[str, Any]] = []
+    # H3：分批 commit 减少长事务持锁时间（每 1000 行提交一次）
+    # SQLite WAL 模式下，长事务会阻塞其他写入者并增大 -wal 文件。
+    # 分批提交让其他写请求能交错进行，也降低 OOM 风险（merge 对象不累积）。
+    _BATCH_SIZE = 1000
     with get_session() as session:
         for name, model in import_order:
             rows = tables.get(name, [])
@@ -267,6 +295,13 @@ async def import_from_export(
                     instance = _import_row(model, row)
                     session.merge(instance)
                     inserted += 1
+                    # 收集未知字段（M5 兼容性报告）
+                    unknown = getattr(instance, "_import_unknown_fields", None)
+                    if unknown:
+                        unknown_fields_seen.setdefault(name, set()).update(unknown)
+                    # H3：每 _BATCH_SIZE 行提交一次，释放锁与内存
+                    if inserted % _BATCH_SIZE == 0:
+                        session.commit()
                 except Exception as e:
                     # 单行失败不阻塞整体导入，但记录失败计数与详情
                     failed += 1
@@ -279,6 +314,7 @@ async def import_from_export(
             counts[name] = inserted
             if failed > 0:
                 failed_counts[name] = failed
+        # 最终提交（剩余未提交的行）
         session.commit()
 
     # 重建历史 FTS5 索引（触发器只对 INSERT/UPDATE/DELETE 生效，merge 不会
@@ -286,6 +322,9 @@ async def import_from_export(
     backfill_history_fts()
 
     # 审计导入动作
+    unknown_fields_summary = {
+        name: sorted(fields) for name, fields in unknown_fields_seen.items()
+    }
     log_action(
         action="import",
         target_type="database",
@@ -296,6 +335,7 @@ async def import_from_export(
             "counts": counts,
             "failed_counts": failed_counts,
             "errors_count": sum(failed_counts.values()),
+            "unknown_fields": unknown_fields_summary,
             "source": "export-import",
         },
     )
@@ -305,6 +345,8 @@ async def import_from_export(
         "counts": counts,
         "failed_counts": failed_counts,
         "errors": errors,
+        # M5：报告被丢弃的未知字段，帮助运维识别 schema 版本差异
+        "unknown_fields": unknown_fields_summary,
         "total": sum(counts.values()),
         "total_failed": sum(failed_counts.values()),
     }

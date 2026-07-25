@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta
 from typing import Any
@@ -10,7 +11,8 @@ import anyio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlmodel import select
+from sqlalchemy import func, text as sa_text
+from sqlmodel import Session, select
 
 from hermes_kb.api.deps import get_importer, get_rag, require_age_gate, require_auth
 from hermes_kb.audit import extract_user, log_action, log_ask_sampled
@@ -19,6 +21,8 @@ from hermes_kb.models import Document, QueryLog
 from hermes_kb.rag import ImportService, RAGEngine
 from hermes_kb.seed import SEED_DOCS
 from hermes_kb.seed_recipes import SEED_RECIPES
+
+log = logging.getLogger("hermes_kb.ask")
 
 router = APIRouter(prefix="/api", tags=["ask"])
 
@@ -99,6 +103,8 @@ _HIGHLIGHT_POST = '</mark>'
 _SNIPPET_MAX = 80
 # history 关键词最大长度（防超长 LIKE 拖慢大表查询）
 _Q_MAX_LENGTH = 200
+# H2：FTS5 trigram MATCH 最小查询长度（trigram 索引 3 字符子串，< 3 不命中）
+_FTS_MIN_QUERY_LEN = 3
 
 
 def _sanitize_search_q(q: str) -> str:
@@ -121,6 +127,94 @@ def _escape_like(value: str) -> str:
     配合 LIKE ... ESCAPE '\\' 使用。
     """
     return value.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+
+
+def _build_fts_match_phrase(term: str) -> str:
+    """构造 FTS5 短语 MATCH 表达式（H2 trigram 快路径）。
+
+    将 term 包裹在双引号中作为字面短语，避免 FTS5 把 *、OR、AND、NOT 等
+    解释为操作符。内部双引号通过重复转义（FTS5 phrase 语法："" 表示字面 "）。
+
+    安全：term 已经过 _sanitize_search_q 净化（剥离 SQL/regex 元字符），
+    此处仅处理 FTS5 phrase 语法转义。参数化绑定由 SQLAlchemy 负责，
+    不存在 SQL 注入风险。
+    """
+    escaped = term.replace('"', '""')
+    return f'"{escaped}"'
+
+
+def _search_history_fts(
+    session: Session,
+    search_q: str,
+    *,
+    feedback: int | None,
+    dt_from: datetime | None,
+    dt_to: datetime | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[QueryLog], int] | None:
+    """H2：使用 FTS5 trigram MATCH 搜索历史（快路径）。
+
+    通过 JOIN history_fts 虚拟表利用 trigram 索引加速子串匹配，
+    替代 LIKE 全表扫描。trigram 索引所有 3 字符子串，对 ≥ 3 字符的
+    查询能命中任意位置（含中文中间子串）。
+
+    Returns:
+        (logs, total) 成功时返回结果列表与总数；
+        None 表示 FTS5 路径不可用（表缺失/tokenizer 错误等），调用方应回退 LIKE。
+
+    安全：所有用户输入通过参数化绑定（:match / :feedback / :dt_*）传入，
+    不拼接 SQL 字符串，杜绝注入。
+    """
+    match_expr = _build_fts_match_phrase(search_q)
+    params: dict[str, Any] = {"match": match_expr}
+
+    # 动态构建 WHERE 子句（参数化，非字符串拼接）
+    where_clauses = ["history_fts MATCH :match"]
+    if feedback is not None:
+        where_clauses.append("q.feedback = :feedback")
+        params["feedback"] = feedback
+    if dt_from is not None:
+        where_clauses.append("q.created_at >= :dt_from")
+        params["dt_from"] = dt_from
+    if dt_to is not None:
+        where_clauses.append("q.created_at <= :dt_to")
+        params["dt_to"] = dt_to
+    where_sql = " AND ".join(where_clauses)
+
+    try:
+        # 1. 总数（COUNT 下推到 SQL，避免全量加载）
+        count_sql = (
+            "SELECT COUNT(*) FROM querylog q "
+            "JOIN history_fts f ON f.log_id = q.id "
+            f"WHERE {where_sql}"
+        )
+        total = session.execute(sa_text(count_sql), params).scalar() or 0
+
+        # 2. 分页数据（ORDER BY + LIMIT + OFFSET）
+        page_sql = (
+            "SELECT q.id, q.query, q.answer, q.citations, q.model_used, "
+            "q.latency_ms, q.feedback, q.created_at, q.prompt_tokens, "
+            "q.completion_tokens, q.cost_cny "
+            "FROM querylog q "
+            "JOIN history_fts f ON f.log_id = q.id "
+            f"WHERE {where_sql} "
+            "ORDER BY q.created_at DESC "
+            "LIMIT :limit OFFSET :offset"
+        )
+        page_params = {**params, "limit": limit, "offset": offset}
+        rows = session.execute(sa_text(page_sql), page_params).all()
+
+        # 将 Row 转为 QueryLog 实例（复用 _format_history_item）
+        logs: list[QueryLog] = []
+        for row in rows:
+            row_dict = row._mapping  # noqa: SLF001 —— SQLAlchemy Row 标准访问
+            logs.append(QueryLog(**row_dict))
+        return logs, total
+    except Exception as exc:
+        # FTS5 不可用（表缺失 / tokenizer 错误 / schema 漂移）→ 回退 LIKE
+        log.warning("FTS5 history search failed, falling back to LIKE: %s", exc)
+        return None
 
 
 def _highlight(text: str, keyword: str) -> str | None:
@@ -233,19 +327,22 @@ async def history(
     date_from: str | None = Query(default=None, description="起始日期 YYYY-MM-DD（含）"),
     date_to: str | None = Query(default=None, description="结束日期 YYYY-MM-DD（含）"),
 ) -> dict[str, Any]:
-    """M2-07：历史搜索 + 筛选。
+    """M2-07：历史搜索 + 筛选（H2 优化：FTS5 trigram 快路径 + LIKE 兜底）。
 
     - 无 q：按时间倒序普通查询，支持 feedback / date_from / date_to 筛选
-    - 有 q：用 LIKE 子串匹配（覆盖所有中文场景），返回 query_highlight 与 answer_snippet
-    - 验收：响应 < 200ms（LIKE 在 1w 条以内性能足够；超大规模可切 FTS5）
+    - 有 q 且 ≥ 3 字符：优先走 FTS5 trigram MATCH（索引加速，适合 10w+ 行）
+    - 有 q 且 < 3 字符，或 FTS5 不可用：回退 LIKE 子串匹配（全表扫描）
+    - 返回 query_highlight 与 answer_snippet（搜索路径）
 
-    注：history_fts 表已建（迁移 0004）并随 querylog 自动同步，
-    当前 API 暂用 LIKE 保证中文子串召回（FTS5 unicode61 对连续中文
-    整体作为单 token，前缀匹配无法命中中间子串）。后续大数据量可切 FTS5。
+    双路径设计：
+    - FTS5 trigram 索引 3 字符子串，对 ≥ 3 字符查询命中任意位置（含中文中间子串）
+    - trigram 对 < 3 字符查询不命中，必须用 LIKE 兜底
+    - FTS5 表缺失/tokenizer 错误时自动降级到 LIKE，保证可用性
 
     性能/安全：
     - 计数下推到 SQL COUNT(*)，避免 len(.all()) 全量加载到内存
-    - LIKE pattern 转义 % 和 _ 通配符，避免用户输入意外匹配
+    - LIKE pattern 转义 % 和 _ 通配符；FTS5 phrase 转义双引号
+    - FTS5 路径参数化绑定（:match/:feedback/:dt_*），杜绝注入
     """
     limit = max(1, min(limit, 500))
     dt_from = _parse_date(date_from, end_of_day=False)
@@ -253,40 +350,58 @@ async def history(
     search_q = _sanitize_search_q(q) if q else ''
 
     with get_session() as session:
-        stmt = select(QueryLog)
-        if feedback is not None:
-            stmt = stmt.where(QueryLog.feedback == feedback)
-        if dt_from is not None:
-            stmt = stmt.where(QueryLog.created_at >= dt_from)
-        if dt_to is not None:
-            stmt = stmt.where(QueryLog.created_at <= dt_to)
-        if search_q:
-            # LIKE 子串匹配（query OR answer），覆盖中文所有位置
-            # 转义 % 和 _ 通配符，避免用户输入的 _ 意外匹配任意单字符
-            escaped_q = _escape_like(search_q)
-            like_pattern = f"%{escaped_q}%"
-            stmt = stmt.where(
-                (QueryLog.query.like(like_pattern, escape='\\'))
-                | (QueryLog.answer.like(like_pattern, escape='\\'))
+        # H2：优先尝试 FTS5 trigram 快路径（仅对 ≥ 3 字符的查询）
+        fts_result: tuple[list[QueryLog], int] | None = None
+        used_fts = False
+        if search_q and len(search_q) >= _FTS_MIN_QUERY_LEN:
+            fts_result = _search_history_fts(
+                session,
+                search_q,
+                feedback=feedback,
+                dt_from=dt_from,
+                dt_to=dt_to,
+                limit=limit,
+                offset=offset,
             )
-        # 总数下推到 SQL COUNT(*)，避免全量加载到内存（10w 行 OOM 风险）
-        from sqlalchemy import func
+            if fts_result is not None:
+                logs, total = fts_result
+                used_fts = True
 
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        total = session.exec(count_stmt).one()
-        # 分页 + 倒序
-        stmt = stmt.order_by(QueryLog.created_at.desc()).offset(offset).limit(limit)
-        logs = session.exec(stmt).all()
-        items: list[dict[str, Any]] = []
-        for log in logs:
+        if not used_fts:
+            # LIKE 兜底路径（< 3 字符查询或 FTS5 不可用）
+            stmt = select(QueryLog)
+            if feedback is not None:
+                stmt = stmt.where(QueryLog.feedback == feedback)
+            if dt_from is not None:
+                stmt = stmt.where(QueryLog.created_at >= dt_from)
+            if dt_to is not None:
+                stmt = stmt.where(QueryLog.created_at <= dt_to)
             if search_q:
-                q_h = _highlight(log.query, search_q)
-                a_s = _make_snippet(log.answer, search_q)
+                # LIKE 子串匹配（query OR answer），覆盖中文所有位置
+                # 转义 % 和 _ 通配符，避免用户输入的 _ 意外匹配任意单字符
+                escaped_q = _escape_like(search_q)
+                like_pattern = f"%{escaped_q}%"
+                stmt = stmt.where(
+                    (QueryLog.query.like(like_pattern, escape='\\'))
+                    | (QueryLog.answer.like(like_pattern, escape='\\'))
+                )
+            # 总数下推到 SQL COUNT(*)，避免全量加载到内存（10w 行 OOM 风险）
+            count_stmt = select(func.count()).select_from(stmt.subquery())
+            total = session.exec(count_stmt).one()
+            # 分页 + 倒序
+            stmt = stmt.order_by(QueryLog.created_at.desc()).offset(offset).limit(limit)
+            logs = session.exec(stmt).all()
+
+        items: list[dict[str, Any]] = []
+        for log_entry in logs:
+            if search_q:
+                q_h = _highlight(log_entry.query, search_q)
+                a_s = _make_snippet(log_entry.answer, search_q)
             else:
                 q_h = None
                 a_s = None
             items.append(
-                _format_history_item(log, query_highlight=q_h, answer_snippet=a_s)
+                _format_history_item(log_entry, query_highlight=q_h, answer_snippet=a_s)
             )
 
     return {

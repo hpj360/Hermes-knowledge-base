@@ -184,13 +184,17 @@ def _init_fts(eng) -> None:
         ))
 
         # M2-07：history_fts 全文索引（query + answer）
+        # H2：改用 trigram 分词器——索引所有 3 字符子串，支持中文任意位置子串 MATCH。
+        # 旧版用 unicode61 对连续中文整体作为单 token，前缀匹配无法命中中间子串
+        # （如 "中国白酒" 中搜 "白酒" 不命中），M2-07 暂用 LIKE 兜底但全表扫描慢。
+        # 注：trigram 对 < 3 字符的查询不命中，API 层（ask.py）对短查询回退 LIKE。
         # contentless='1' 避免冗余存储（answer 可能很长），但 highlight/snippet
         # 需要重读 querylog 原文。为简化并支持 highlight，这里仍用普通 FTS5
         # 表（保留内容），通过 JOIN querylog 取原列。
         conn.execute(sa_text(
             "CREATE VIRTUAL TABLE IF NOT EXISTS history_fts USING fts5("
             "query, answer, log_id UNINDEXED, "
-            "tokenize='unicode61'"
+            "tokenize='trigram'"
             ")"
         ))
         # querylog 触发器：写 FTS5 时携带 log_id（用于 JOIN 回表）
