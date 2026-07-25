@@ -13,6 +13,7 @@ from hermes_kb.age_gate import (
     verify_age_cookie,
 )
 from hermes_kb.api.deps import jwt_encode, require_auth
+from hermes_kb.audit import log_action
 from hermes_kb.config import get_settings
 from pydantic import BaseModel, Field
 
@@ -43,11 +44,27 @@ async def login(req: LoginReq) -> dict[str, Any]:
             detail="服务端未配置认证密码（KB_AUTH_PASSWORD）",
         )
     if not hmac.compare_digest(req.password, settings.auth_password):
+        # M2-08：审计登录失败（不暴露用户名是否存在）
+        log_action(
+            action="login",
+            target_type="user",
+            target_id="",
+            user="unknown",
+            meta={"success": False, "reason": "invalid_password"},
+        )
         raise HTTPException(status_code=401, detail="密码错误")
     token = jwt_encode(
         {"sub": settings.auth_username, "role": "admin"},
         settings.jwt_secret,
         ttl_hours=settings.jwt_ttl_hours,
+    )
+    # M2-08：审计登录成功
+    log_action(
+        action="login",
+        target_type="user",
+        target_id=settings.auth_username,
+        user=settings.auth_username,
+        meta={"success": True, "ttl_hours": settings.jwt_ttl_hours},
     )
     return {
         "token": token,

@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from hermes_kb.api.ask import router as ask_router
+from hermes_kb.api.audit import router as audit_router
 from hermes_kb.api.auth import router as auth_router
 from hermes_kb.api.deps import (
     jwt_decode,  # noqa: F401  re-export（tests/test_kb/test_m1.py 仍从本模块导入）
@@ -101,6 +102,7 @@ def create_app() -> FastAPI:
     app.include_router(ask_router)
     app.include_router(auth_router)
     app.include_router(lab_router)
+    app.include_router(audit_router)
 
     # -----------------------------------------------------------------------
     # 静态文件挂载（单进程部署，必须最后）

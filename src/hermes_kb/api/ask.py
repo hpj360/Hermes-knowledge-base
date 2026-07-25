@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from hermes_kb.api.deps import get_importer, get_rag, require_age_gate, require_auth
+from hermes_kb.audit import extract_user, log_action, log_ask_sampled
 from hermes_kb.database import get_session
 from hermes_kb.models import Document, QueryLog
 from hermes_kb.rag import ImportService, RAGEngine
@@ -30,20 +31,42 @@ class FeedbackReq(BaseModel):
 
 
 @router.post("/ask", dependencies=[Depends(require_auth), Depends(require_age_gate)])
-async def ask(req: AskReq, rag: RAGEngine = Depends(get_rag)) -> dict[str, Any]:
+async def ask(
+    req: AskReq,
+    rag: RAGEngine = Depends(get_rag),
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
     if not req.query or not req.query.strip():
         raise HTTPException(status_code=400, detail="query 不能为空")
     # P2-6：将同步 RAG 调用卸载到线程池，避免阻塞事件循环
     result = await anyio.to_thread.run_sync(rag.answer, req.query, req.top_k)
+    # M2-08：ask 采样 10% 审计（hash(query) % 10 == 0，确定性可复现）
+    log_ask_sampled(
+        query=req.query,
+        user=extract_user(payload),
+        model_used=result.model_used,
+        latency_ms=result.latency_ms,
+        log_id=None,  # answer_id 为 UUID，按业务标识记录
+    )
     return result.to_dict()
 
 
 @router.post("/ask/stream", dependencies=[Depends(require_auth), Depends(require_age_gate)])
 async def ask_stream(
-    req: AskReq, rag: RAGEngine = Depends(get_rag)
+    req: AskReq,
+    rag: RAGEngine = Depends(get_rag),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> StreamingResponse:
     if not req.query or not req.query.strip():
         raise HTTPException(status_code=400, detail="query 不能为空")
+
+    # M2-08：流式问答采样审计（在请求开始时记录，避免流式完成后再写）
+    log_ask_sampled(
+        query=req.query,
+        user=extract_user(payload),
+        model_used="stream",
+        latency_ms=0,
+    )
 
     async def gen():
         async for chunk in rag.answer_stream(req.query, top_k=req.top_k):
@@ -105,6 +128,7 @@ async def feedback(log_id: int, req: FeedbackReq) -> dict[str, Any]:
 @router.post("/seed", dependencies=[Depends(require_auth)])
 async def seed(
     importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     imported: list[dict[str, Any]] = []
     for doc in SEED_DOCS:
@@ -120,9 +144,24 @@ async def seed(
             imported.append(
                 {"title": doc["title"], "error": str(e), "status": "failed"}
             )
+    seeded_count = len([x for x in imported if x.get("status") == "imported"])
+    failed_count = len([x for x in imported if x.get("status") == "failed"])
+    # M2-08：审计 seed
+    log_action(
+        action="seed",
+        target_type="document",
+        target_id="",
+        user=extract_user(payload),
+        meta={
+            "kind": "docs",
+            "total": len(SEED_DOCS),
+            "seeded": seeded_count,
+            "failed": failed_count,
+        },
+    )
     return {
-        "seeded": len([x for x in imported if x.get("status") == "imported"]),
-        "failed": len([x for x in imported if x.get("status") == "failed"]),
+        "seeded": seeded_count,
+        "failed": failed_count,
         "items": imported,
     }
 
@@ -130,10 +169,12 @@ async def seed(
 @router.post("/seed/recipes", dependencies=[Depends(require_auth)])
 async def seed_recipes(
     importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     """M3：导入 IBA 配方种子数据（幂等）。"""
     seeded = 0
     failed = 0
+    skipped = 0
     items: list[dict[str, Any]] = []
     for recipe in SEED_RECIPES:
         with get_session() as session:
@@ -148,6 +189,7 @@ async def seed_recipes(
                         "doc_id": existing.doc_id,
                     }
                 )
+                skipped += 1
                 continue
         try:
             # P2-3: category 随 doc 原子落库（消除两阶段非原子）
@@ -165,4 +207,18 @@ async def seed_recipes(
             items.append(
                 {"title": recipe["title"], "error": str(e), "status": "failed"}
             )
+    # M2-08：审计 seed recipes
+    log_action(
+        action="seed",
+        target_type="recipe",
+        target_id="",
+        user=extract_user(payload),
+        meta={
+            "kind": "recipes",
+            "total": len(SEED_RECIPES),
+            "seeded": seeded,
+            "skipped": skipped,
+            "failed": failed,
+        },
+    )
     return {"seeded": seeded, "failed": failed, "items": items}

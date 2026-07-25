@@ -165,3 +165,22 @@ class RecipeVariant(SQLModel, table=True):
     )  # 变体配方
     variant_note: str = Field(default="", max_length=200)  # 变体说明
     created_at: datetime = Field(default_factory=_now_utc)
+
+
+class AuditLog(SQLModel, table=True):
+    """M2-08：审计日志。
+
+    记录关键写操作（login / import / delete / seed / ask 采样 10%），
+    供管理员查询。设计要点：
+    - meta_json 用 Text 存 JSON 字符串，避免 schema 演进时迁移成本
+    - user 从 JWT payload.sub 解析，未启用认证时为 "anonymous"
+    - 写入失败不影响主业务（吞异常 + log warning）
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    action: str = Field(index=True, max_length=32)  # login/import/delete/seed/ask/...
+    target_type: str = Field(default="", max_length=32, index=True)  # document/user/recipe/query
+    target_id: str = Field(default="", max_length=128)  # doc_id / user_id / log_id
+    user: str = Field(default="anonymous", max_length=64, index=True)
+    meta_json: str = Field(default="{}", sa_column=Column("meta_json", Text))
+    created_at: datetime = Field(default_factory=_now_utc, index=True)

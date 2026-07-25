@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import select
 
 from hermes_kb.api.deps import get_importer, require_auth
+from hermes_kb.audit import extract_user, log_action
 from hermes_kb.config import get_settings
 from hermes_kb.database import get_session
 from hermes_kb.models import Chunk, Document, DocumentTag, Tag
@@ -109,7 +110,9 @@ async def list_documents(
 
 @router.post("/import-text", dependencies=[Depends(require_auth)])
 async def import_text(
-    req: ImportTextReq, importer: ImportService = Depends(get_importer)
+    req: ImportTextReq,
+    importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     # P2-3: category 随 doc 原子落库（消除两阶段非原子）
     result = importer.import_text(
@@ -121,6 +124,19 @@ async def import_text(
     )
     if req.category:
         result["category"] = req.category
+    # M2-08：审计 import
+    log_action(
+        action="import",
+        target_type="document",
+        target_id=result.get("doc_id", ""),
+        user=extract_user(payload),
+        meta={
+            "source": "import-text",
+            "title": req.title,
+            "file_type": req.file_type,
+            "chunk_count": result.get("chunk_count", 0),
+        },
+    )
     return result
 
 
@@ -129,6 +145,7 @@ async def upload_file(
     file: UploadFile = File(...),
     title: str | None = None,
     importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     settings = get_settings()
     if not file.filename:
@@ -153,7 +170,21 @@ async def upload_file(
         )
     tmp_path.write_bytes(content)
     try:
-        return importer.import_file(tmp_path, title=title or file.filename)
+        result = importer.import_file(tmp_path, title=title or file.filename)
+        # M2-08：审计 upload
+        log_action(
+            action="import",
+            target_type="document",
+            target_id=result.get("doc_id", ""),
+            user=extract_user(payload),
+            meta={
+                "source": "upload",
+                "filename": file.filename,
+                "file_type": suffix,
+                "chunk_count": result.get("chunk_count", 0),
+            },
+        )
+        return result
     except HTTPException:
         raise
     except Exception as e:
@@ -171,11 +202,21 @@ async def upload_file(
 
 @router.delete("/{doc_id}", dependencies=[Depends(require_auth)])
 async def delete_document(
-    doc_id: str, importer: ImportService = Depends(get_importer)
+    doc_id: str,
+    importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     ok = importer.delete_document(doc_id)
     if not ok:
         raise HTTPException(status_code=404, detail="文档不存在")
+    # M2-08：审计 delete
+    log_action(
+        action="delete",
+        target_type="document",
+        target_id=doc_id,
+        user=extract_user(payload),
+        meta={},
+    )
     return {"doc_id": doc_id, "status": "deleted"}
 
 
@@ -271,7 +312,11 @@ async def get_document_raw(doc_id: str):
 
 # M2-06：文档元信息更新
 @router.put("/{doc_id}/metadata", dependencies=[Depends(require_auth)])
-async def update_doc_metadata(doc_id: str, req: DocMetadataReq) -> dict[str, Any]:
+async def update_doc_metadata(
+    doc_id: str,
+    req: DocMetadataReq,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
     """M2-06：更新文档元信息（title/category/tags）。"""
     with get_session() as session:
         doc = session.get(Document, doc_id)
@@ -299,6 +344,19 @@ async def update_doc_metadata(doc_id: str, req: DocMetadataReq) -> dict[str, Any
                 session.add(DocumentTag(doc_id=doc_id, tag_id=tid))
         session.add(doc)
         session.commit()
+        # M2-08：审计 metadata update
+        log_action(
+            action="metadata",
+            target_type="document",
+            target_id=doc_id,
+            user=extract_user(payload),
+            meta={
+                "title_updated": req.title is not None,
+                "category_updated": req.category is not None,
+                "tags_updated": req.tag_ids is not None,
+                "skipped_tag_ids": skipped,
+            },
+        )
         return {"doc_id": doc_id, "status": "updated", "skipped_tag_ids": skipped}
 
 
@@ -307,6 +365,7 @@ async def update_doc_metadata(doc_id: str, req: DocMetadataReq) -> dict[str, Any
 async def upload_batch(
     files: list[UploadFile] = File(...),
     importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
     """批量上传（≤ 20 文件）。"""
     settings = get_settings()
@@ -366,6 +425,20 @@ async def upload_batch(
             except Exception:
                 pass
     ok = sum(1 for r in results if r["status"] == "imported")
+    # M2-08：审计批量导入（聚合一条记录，避免审计表爆炸）
+    log_action(
+        action="import",
+        target_type="document",
+        target_id="",
+        user=extract_user(payload),
+        meta={
+            "source": "upload-batch",
+            "total": len(files),
+            "imported": ok,
+            "failed": len(files) - ok,
+            "filenames": [r.get("filename", "") for r in results],
+        },
+    )
     return {
         "total": len(files),
         "imported": ok,

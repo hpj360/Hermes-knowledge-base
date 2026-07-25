@@ -28,7 +28,7 @@ from sqlalchemy import event, text as sa_text
 from sqlmodel import Session, SQLModel, create_engine
 
 from hermes_kb.config import get_settings
-from hermes_kb.models import Chunk, Document, QueryLog  # noqa: F401  # 注册表
+from hermes_kb.models import AuditLog, Chunk, Document, QueryLog  # noqa: F401  # 注册表
 
 log = logging.getLogger("hermes_kb.database")
 
