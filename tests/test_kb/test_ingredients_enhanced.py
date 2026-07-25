@@ -161,3 +161,266 @@ def test_specific_spirit_abv_resolution():
     assert get_ingredient_abv("triple sec") == 0.30
     # 通用 rum 仍查到朗姆酒 0.40
     assert get_ingredient_abv("rum") == 0.40
+
+
+# ===========================================================================
+# P2-A 新增字段查询函数：get_tags / get_origin / get_abv_range
+# ===========================================================================
+class TestTagsOriginAbvRange:
+    """覆盖 P2-A 新增的 tags/origin/abv_range 字段查询函数。"""
+
+    def test_get_tags_known_ingredient(self):
+        """已知材料的 tags 返回（含金酒的 juniper/botanical）。"""
+        from hermes_kb.ingredients import get_tags
+
+        gin_tags = get_tags("金酒")
+        assert isinstance(gin_tags, list)
+        assert "juniper" in gin_tags
+        assert "botanical" in gin_tags
+
+    def test_get_tags_no_tags_returns_empty(self):
+        """无 tags 字段的材料返回空列表。"""
+        from hermes_kb.ingredients import get_tags
+
+        # 柠檬汁这类果汁通常无 tags
+        result = get_tags("柠檬汁")
+        assert result == []
+
+    def test_get_tags_unknown_returns_empty(self):
+        """未知材料返回空列表。"""
+        from hermes_kb.ingredients import get_tags
+
+        assert get_tags("不存在的材料") == []
+        assert get_tags("") == []
+
+    def test_get_tags_returns_copy_not_reference(self):
+        """返回的列表是副本，外部修改不影响注册表。"""
+        from hermes_kb.ingredients import get_tags
+
+        tags = get_tags("金酒")
+        tags.append("HACK_TAG")
+        assert "HACK_TAG" not in get_tags("金酒")
+
+    def test_get_origin_known(self):
+        """已知材料返回产地。"""
+        from hermes_kb.ingredients import get_origin
+
+        gin_origin = get_origin("金酒")
+        assert isinstance(gin_origin, str)
+        # 金酒产地包含 Netherlands 或 UK
+        assert "Netherlands" in gin_origin or "UK" in gin_origin
+
+    def test_get_origin_no_origin_returns_empty(self):
+        """无 origin 字段的材料返回空字符串。"""
+        from hermes_kb.ingredients import get_origin
+
+        # 柠檬汁这类通常无产地
+        result = get_origin("柠檬汁")
+        assert result == ""
+
+    def test_get_origin_unknown_returns_empty(self):
+        """未知材料返回空字符串。"""
+        from hermes_kb.ingredients import get_origin
+
+        assert get_origin("不存在的材料") == ""
+        assert get_origin("") == ""
+
+    def test_get_abv_range_known(self):
+        """已知材料返回 (min, max) 范围。"""
+        from hermes_kb.ingredients import get_abv_range
+
+        gin_range = get_abv_range("金酒")
+        assert gin_range is not None
+        assert isinstance(gin_range, tuple)
+        assert len(gin_range) == 2
+        min_v, max_v = gin_range
+        assert min_v == 0.37
+        assert max_v == 0.47
+        assert min_v < max_v
+
+    def test_get_abv_range_unknown_returns_none(self):
+        """未知材料返回 None。"""
+        from hermes_kb.ingredients import get_abv_range
+
+        assert get_abv_range("不存在的材料") is None
+        assert get_abv_range("") is None
+
+    def test_get_abv_range_no_range_field_returns_none(self):
+        """无 abv_range 字段的材料返回 None。"""
+        from hermes_kb.ingredients import get_abv_range
+
+        # 柠檬汁通常无 abv_range
+        result = get_abv_range("柠檬汁")
+        assert result is None
+
+
+# ===========================================================================
+# find_by_tags / find_by_origin
+# ===========================================================================
+class TestFindByTagsAndOrigin:
+    """覆盖按 tags/origin 反查材料的函数。"""
+
+    def test_find_by_tags_or_match(self):
+        """OR 匹配：任一标签命中即返回。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        result = find_by_tags(["juniper"])
+        assert isinstance(result, list)
+        assert "金酒" in result
+
+    def test_find_by_tags_multiple_or(self):
+        """OR 匹配多个标签。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        result = find_by_tags(["juniper", "citrus"])
+        assert "金酒" in result  # juniper 命中
+        # citrus 命中的材料也应在结果中
+
+    def test_find_by_tags_and_match(self):
+        """AND 匹配：必须全部命中。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        # 金酒有 juniper + botanical + herbal + dry
+        result = find_by_tags(["juniper", "botanical"], match_all=True)
+        assert "金酒" in result
+
+    def test_find_by_tags_and_no_match(self):
+        """AND 匹配无命中返回空。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        # 不可能同时存在的标签组合
+        result = find_by_tags(["juniper", "nonexistent_tag_xyz"], match_all=True)
+        assert result == []
+
+    def test_find_by_tags_empty_input(self):
+        """空 tags 列表返回空。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        assert find_by_tags([]) == []
+
+    def test_find_by_tags_case_insensitive(self):
+        """标签大小写不敏感。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        result_upper = find_by_tags(["JUNIPER"])
+        result_lower = find_by_tags(["juniper"])
+        assert result_upper == result_lower
+        assert "金酒" in result_upper
+
+    def test_find_by_tags_no_match(self):
+        """无命中的标签返回空列表。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        assert find_by_tags(["nonexistent_tag_xyz"]) == []
+
+    def test_find_by_tags_skips_empty_tags_items(self):
+        """无 tags 字段的材料被跳过（不报错）。"""
+        from hermes_kb.ingredients import find_by_tags
+
+        # 柠檬汁无 tags，搜索任何标签都不应包含它
+        result = find_by_tags(["citrus", "sweet", "juniper"])
+        assert "柠檬汁" not in result
+
+    def test_find_by_origin_known(self):
+        """按已知产地查询返回材料。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        # Netherlands 应匹配金酒（origin=Netherlands/UK）
+        result = find_by_origin("Netherlands")
+        assert "金酒" in result
+
+    def test_find_by_origin_case_insensitive(self):
+        """产地关键词大小写不敏感。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        result_upper = find_by_origin("NETHERLANDS")
+        result_lower = find_by_origin("netherlands")
+        assert result_upper == result_lower
+        assert "金酒" in result_upper
+
+    def test_find_by_origin_partial_match(self):
+        """产地部分匹配（关键词是 origin 子串）。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        # "Scot" 应匹配 Scotland
+        result = find_by_origin("Scot")
+        assert "威士忌" in result or "苏格兰威士忌" in result
+
+    def test_find_by_origin_empty_input(self):
+        """空产地关键词返回空。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        assert find_by_origin("") == []
+
+    def test_find_by_origin_no_match(self):
+        """无命中返回空。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        assert find_by_origin("不存在的国家XYZ") == []
+
+    def test_find_by_origin_skips_empty_origin(self):
+        """无 origin 字段的材料被跳过。"""
+        from hermes_kb.ingredients import find_by_origin
+
+        # 柠檬汁无 origin，搜索任何产地都不应包含
+        result = find_by_origin("Netherlands")
+        assert "柠檬汁" not in result
+
+
+# ===========================================================================
+# all_tags / all_origins
+# ===========================================================================
+class TestAllTagsAndOrigins:
+    """覆盖 all_tags / all_origins 列表函数。"""
+
+    def test_all_tags_returns_sorted_unique(self):
+        """all_tags 返回排序去重的标签列表。"""
+        from hermes_kb.ingredients import all_tags
+
+        tags = all_tags()
+        assert isinstance(tags, list)
+        assert len(tags) > 0
+        # 排序
+        assert tags == sorted(tags)
+        # 去重
+        assert len(tags) == len(set(tags))
+        # 包含已知标签
+        assert "juniper" in tags
+        assert "botanical" in tags
+
+    def test_all_tags_lowercase(self):
+        """all_tags 所有标签为小写。"""
+        from hermes_kb.ingredients import all_tags
+
+        for tag in all_tags():
+            assert tag == tag.lower()
+
+    def test_all_origins_returns_sorted_unique(self):
+        """all_origins 返回排序去重的产地列表。"""
+        from hermes_kb.ingredients import all_origins
+
+        origins = all_origins()
+        assert isinstance(origins, list)
+        assert len(origins) > 0
+        # 排序
+        assert origins == sorted(origins)
+        # 去重
+        assert len(origins) == len(set(origins))
+        # 包含已知产地（Netherlands 来自金酒）
+        assert "Netherlands" in origins
+
+    def test_all_origins_splits_multi_origin(self):
+        """多产地字符串（如 Netherlands/UK）被拆分为独立项。"""
+        from hermes_kb.ingredients import all_origins
+
+        origins = all_origins()
+        # 金酒 origin=Netherlands/UK，应拆分为 Netherlands 和 UK
+        assert "Netherlands" in origins
+        assert "UK" in origins
+
+    def test_all_origins_no_empty_strings(self):
+        """all_origins 不含空字符串。"""
+        from hermes_kb.ingredients import all_origins
+
+        origins = all_origins()
+        assert "" not in origins
