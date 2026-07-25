@@ -220,6 +220,48 @@ async def delete_document(
     return {"doc_id": doc_id, "status": "deleted"}
 
 
+# M2-09：单文档 Markdown 导出
+# 注：必须注册在 GET /{doc_id} 之前，否则 /{doc_id} 会先匹配 /foo.md（doc_id="foo.md"）
+@router.get("/{doc_id}.md", dependencies=[Depends(require_auth)])
+async def get_document_as_markdown(doc_id: str):
+    """M2-09：单文档以 Markdown 格式下载。
+
+    与 ``/{doc_id}/raw`` 的区别：
+    - 始终返回 ``text/markdown``（无论原始 file_type）
+    - 标题作为 H1 头部前置（``# {title}\\n\\n``）
+    - 文件名固定 ``.md`` 扩展名，便于在 MD 编辑器中打开
+    - 适合用于：知识库内容外发、单篇文档归档、跨系统迁移
+    """
+    with get_session() as session:
+        doc = session.get(Document, doc_id)
+        if not doc:
+            raise HTTPException(status_code=404, detail="文档不存在")
+        # 组装 Markdown：H1 标题 + 空行 + 正文
+        title = doc.title or "untitled"
+        body = doc.content or ""
+        # 防御：若 content 已经以 ``# `` 开头则不重复添加 H1（避免双标题）
+        if body.lstrip().startswith("# "):
+            md_content = body
+        else:
+            md_content = f"# {title}\n\n{body}"
+        filename = f"{title}.md"
+        filename_star = quote(filename)
+        # ASCII 兜底：纯中文标题 strip 后只剩 ".md"——保留扩展名但补 basename
+        ascii_fallback = filename.encode("ascii", "ignore").decode("ascii").strip()
+        if not ascii_fallback or ascii_fallback.startswith("."):
+            ascii_fallback = "document.md"
+        return Response(
+            content=md_content,
+            media_type="text/markdown; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename=\"{ascii_fallback}\"; "
+                    f"filename*=UTF-8''{filename_star}"
+                )
+            },
+        )
+
+
 # M2-03：文档详情
 @router.get("/{doc_id}", dependencies=[Depends(require_auth)])
 async def get_document(

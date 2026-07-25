@@ -33,6 +33,7 @@ from hermes_kb.api.deps import (
     jwt_encode,  # noqa: F401
 )
 from hermes_kb.api.documents import router as documents_router
+from hermes_kb.api.export import router as export_router
 from hermes_kb.api.health import router as health_router
 from hermes_kb.api.lab import router as lab_router
 from hermes_kb.api.stats import router as stats_router
@@ -105,6 +106,7 @@ def create_app() -> FastAPI:
     app.include_router(lab_router)
     app.include_router(audit_router)
     app.include_router(stats_router)
+    app.include_router(export_router)
 
     # -----------------------------------------------------------------------
     # 静态文件挂载（单进程部署，必须最后）
