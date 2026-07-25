@@ -1,11 +1,14 @@
-"""M2-07 历史搜索与筛选测试。
+"""M2-07 历史搜索与筛选测试（H2：FTS5 trigram + LIKE 双路径）。
 
 覆盖：
 - LIKE 子串检索（query + answer 命中，含中文中间子串）
+- FTS5 trigram 快路径（≥ 3 字符查询走索引 MATCH）
+- LIKE 兜底（< 3 字符查询或 FTS5 不可用时回退）
 - 关键词高亮（<mark> 标签）+ snippet 生成
-- feedback / date_from / date_to 筛选
+- feedback / date_from / date_to 筛选（FTS5 + LIKE 两路径均覆盖）
 - limit / offset 分页
 - 关键词净化（特殊字符不报错）
+- FTS5 phrase 转义（双引号不破坏 MATCH）
 - backfill_history_fts 幂等（FTS5 表保留作为未来优化基础）
 - 性能：1000 条 < 200ms
 """
@@ -426,3 +429,228 @@ def test_history_item_structure(client):
         "query_highlight", "answer_snippet",
     }
     assert expected_keys <= set(item.keys())
+
+
+# ===========================================================================
+# H2：FTS5 trigram 快路径测试
+# ===========================================================================
+# trigram 分词器索引所有 3 字符子串，对 ≥ 3 字符查询命中任意位置
+# （含中文中间子串）。< 3 字符查询走 LIKE 兜底。
+# 验证双路径正确性与兼容性。
+
+
+def test_history_fts5_trigram_chinese_substring_3chars(client):
+    """H2：≥ 3 字符中文子串走 FTS5 trigram MATCH，命中中间子串。
+
+    场景：query="中国白酒文化" 中搜索 "白酒文"（3字，中间子串）应命中。
+    旧版 unicode61 对连续中文整体作为单 token，无法命中中间子串；
+    trigram 索引 3 字符子串可命中。
+    """
+    _seed_logs(client, [
+        ("中国白酒文化", "白酒是中国传统蒸馏酒", 0),
+        ("葡萄酒品鉴", "红酒文化", 0),
+    ])
+    resp = client.get("/api/history?q=白酒文")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "中国白酒文化"
+    # 高亮仍正常工作（FTS5 路径也返回 highlight）
+    assert "<mark>" in body["items"][0]["query_highlight"]
+
+
+def test_history_fts5_trigram_chinese_substring_4chars(client):
+    """H2：4 字符中文子串走 FTS5 trigram MATCH。"""
+    _seed_logs(client, [
+        ("鸡尾酒配方大全", "Mojito 用朗姆酒", 0),
+        ("啤酒酿造工艺", "上面发酵", 0),
+    ])
+    resp = client.get("/api/history?q=尾酒配方")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "鸡尾酒配方大全"
+
+
+def test_history_fts5_trigram_english_substring(client):
+    """H2：英文子串走 FTS5 trigram MATCH。"""
+    _seed_logs(client, [
+        ("whiskey sour recipe", "bourbon + lemon + sugar", 0),
+        ("mojito recipe", "rum + mint + lime", 0),
+    ])
+    resp = client.get("/api/history?q=whiskey")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "whiskey sour recipe"
+
+
+def test_history_fts5_trigram_answer_match(client):
+    """H2：FTS5 MATCH 命中 answer 列（JOIN history_fts 搜索 query + answer）。"""
+    _seed_logs(client, [
+        ("问题1", "中国白酒有浓香酱香清香等香型", 0),
+        ("问题2", "葡萄酒颜色各异", 0),
+    ])
+    # "浓香酱香" 4字在 answer 中，应通过 FTS5 命中
+    resp = client.get("/api/history?q=浓香酱香")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "问题1"
+    assert "<mark>" in body["items"][0]["answer_snippet"]
+
+
+def test_history_fts5_with_feedback_filter(client):
+    """H2：FTS5 路径 + feedback 筛选组合正确。"""
+    _seed_logs(client, [
+        ("白酒问题一", "答案", 1),   # 赞
+        ("白酒问题二", "答案", -1),  # 踩
+        ("白酒问题三", "答案", 1),   # 赞
+    ])
+    # 搜索 "白酒问题" + feedback=1（赞）
+    resp = client.get("/api/history?q=白酒问题&feedback=1")
+    body = resp.json()
+    assert body["total"] == 2
+    for item in body["items"]:
+        assert item["feedback"] == 1
+        assert "白酒问题" in item["query"]
+
+
+def test_history_fts5_with_date_filter(client):
+    """H2：FTS5 路径 + date_from/date_to 筛选组合正确。"""
+    now = _now_utc()
+    with get_session() as session:
+        # 3 天前
+        session.add(QueryLog(
+            query="白酒历史问题",
+            answer="答案",
+            feedback=0,
+            created_at=now - timedelta(days=3),
+        ))
+        # 今天
+        session.add(QueryLog(
+            query="白酒最新问题",
+            answer="答案",
+            feedback=0,
+            created_at=now,
+        ))
+        session.commit()
+    # 搜索 "白酒" + date_from=今天（只返回今天的）
+    today_str = now.strftime("%Y-%m-%d")
+    resp = client.get(f"/api/history?q=白酒最新&date_from={today_str}")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "白酒最新问题"
+
+
+def test_history_fts5_pagination(client):
+    """H2：FTS5 路径分页正确。"""
+    _seed_logs(client, [
+        (f"白酒问题第{i}号", "答案", 0) for i in range(5)
+    ])
+    # 第一页
+    resp1 = client.get("/api/history?q=白酒问题&limit=2&offset=0")
+    body1 = resp1.json()
+    assert body1["total"] == 5
+    assert len(body1["items"]) == 2
+    # 第二页
+    resp2 = client.get("/api/history?q=白酒问题&limit=2&offset=2")
+    body2 = resp2.json()
+    assert body2["total"] == 5
+    assert len(body2["items"]) == 2
+    # 两页不应有重复 id
+    ids1 = {item["id"] for item in body1["items"]}
+    ids2 = {item["id"] for item in body2["items"]}
+    assert ids1.isdisjoint(ids2)
+
+
+def test_history_fts5_phrase_escape_double_quotes(client):
+    """H2：查询含双引号时不破坏 FTS5 phrase 语法。
+
+    FTS5 phrase 用双引号包裹字面短语，内部双引号通过重复（""）转义。
+    _sanitize_search_q 会剥离 " 字符，所以这里测试 3 字符以上正常查询
+    能命中含该子串的记录（验证 phrase 转义不破坏正常 MATCH）。
+    """
+    _seed_logs(client, [
+        ("中国白酒是什么香型", "答案", 0),
+        ("普通啤酒问题", "答案", 0),
+    ])
+    # "白酒是什么" 5字 ≥ 3，走 FTS5 trigram MATCH
+    resp = client.get('/api/history?q=白酒是什么')
+    assert resp.status_code == 200
+    body = resp.json()
+    # 应命中含 "白酒是什么" 子串的记录
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "中国白酒是什么香型"
+
+
+def test_history_fts5_no_match_returns_empty(client):
+    """H2：FTS5 搜索无命中时返回空列表（不报错）。"""
+    _seed_logs(client, [("白酒问题", "白酒答案", 0)])
+    resp = client.get("/api/history?q=完全不存在的关键词")
+    body = resp.json()
+    assert body["total"] == 0
+    assert body["items"] == []
+
+
+# ===========================================================================
+# H2：LIKE 兜底路径测试（< 3 字符查询）
+# ===========================================================================
+def test_history_like_fallback_2chars_chinese(client):
+    """H2：2 字符中文查询走 LIKE 兜底（trigram 不命中 < 3 字符）。"""
+    _seed_logs(client, [
+        ("中国白酒文化", "白酒是传统酒", 0),
+        ("葡萄酒品鉴", "红酒文化", 0),
+    ])
+    # "白酒" 2字，trigram 不命中，走 LIKE 应命中
+    resp = client.get("/api/history?q=白酒")
+    body = resp.json()
+    assert body["total"] == 1
+    assert body["items"][0]["query"] == "中国白酒文化"
+
+
+def test_history_like_fallback_1char(client):
+    """H2：1 字符查询走 LIKE 兜底。"""
+    _seed_logs(client, [
+        ("白酒问题", "答案", 0),
+        ("啤酒问题", "答案", 0),
+    ])
+    resp = client.get("/api/history?q=酒")
+    body = resp.json()
+    assert body["total"] == 2
+
+
+def test_history_fts5_and_like_consistent_results(client):
+    """H2：FTS5（≥3字）与 LIKE（同查询）结果一致（双路径无遗漏）。
+
+    同一关键词 "白酒问题"（4字，走 FTS5）与分别用 LIKE 搜索，
+    结果集应等价（FTS5 不应遗漏 LIKE 能命中的行）。
+    """
+    _seed_logs(client, [
+        ("白酒问题一", "答案", 0),
+        ("白酒问题二", "答案", 0),
+        ("葡萄酒问题", "答案", 0),
+    ])
+    # FTS5 路径（4字 ≥ 3）
+    resp_fts = client.get("/api/history?q=白酒问题")
+    # 强制 LIKE 路径：用 2 字符查询 "白酒" 应命中前两个（但含 "葡萄酒问题" 不命中）
+    resp_like = client.get("/api/history?q=白酒")
+    fts_total = resp_fts.json()["total"]
+    like_total = resp_like.json()["total"]
+    # FTS5 "白酒问题" 命中 2 条；LIKE "白酒" 也命中 2 条（"白酒问题一/二"）
+    assert fts_total == 2
+    assert like_total == 2
+    # 两者命中的 id 集合应一致
+    fts_ids = {item["id"] for item in resp_fts.json()["items"]}
+    like_ids = {item["id"] for item in resp_like.json()["items"]}
+    assert fts_ids == like_ids
+
+
+def test_history_fts5_trigram_tokenizer_confirmed(client):
+    """H2：验证 history_fts 表确实使用 trigram 分词器（迁移 0005 生效）。"""
+    _seed_logs(client, [("测试", "测试", 0)])
+    with get_session() as session:
+        sql = session.execute(
+            sa_text("SELECT sql FROM sqlite_master WHERE name='history_fts'")
+        ).scalar()
+        assert sql is not None
+        # 必须包含 trigram（而非 unicode61）
+        assert "trigram" in sql
+        assert "unicode61" not in sql

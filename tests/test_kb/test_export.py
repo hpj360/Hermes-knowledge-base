@@ -733,3 +733,284 @@ class TestExportE2E:
         ][0]
         assert target2["title"] == "🍷 鸡尾酒"
         assert target2["content"] == content
+
+
+# ===========================================================================
+# M5：导入未知字段过滤测试
+# ===========================================================================
+class TestImportUnknownFields:
+    """M5：导出 JSON 含未知字段时静默丢弃并报告。"""
+
+    def _upload_json(self, client, payload: dict):
+        files = {
+            "file": (
+                "export.json",
+                io.BytesIO(json.dumps(payload).encode("utf-8")),
+                "application/json",
+            )
+        }
+        return client.post("/api/export/import", files=files)
+
+    def test_import_unknown_fields_silently_dropped(self, client):
+        """M5：导出 JSON 含未来版本字段时静默丢弃，不阻塞导入。"""
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [
+                    {
+                        "doc_id": "doc_m5_test_001",
+                        "title": "M5 未知字段测试",
+                        "content": "内容",
+                        "source_type": "local",
+                        "file_type": "txt",
+                        "chunk_count": 0,
+                        "category": "",
+                        "created_at": "2026-07-25T12:00:00",
+                        # 未来版本字段（当前 schema 不存在）
+                        "future_column_v2": "value",
+                        "ai_summary": "AI 生成的摘要",
+                    }
+                ],
+                "tags": [],
+                "query_logs": [],
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        resp = self._upload_json(client, payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "imported"
+        assert body["counts"]["documents"] == 1
+        # unknown_fields 应报告被丢弃的字段
+        assert "documents" in body["unknown_fields"]
+        assert "future_column_v2" in body["unknown_fields"]["documents"]
+        assert "ai_summary" in body["unknown_fields"]["documents"]
+        # 验证文档确实导入了（未知字段被丢弃，已知字段保留）
+        export = client.get("/api/export/all.json").json()
+        docs = [d for d in export["tables"]["documents"] if d["doc_id"] == "doc_m5_test_001"]
+        assert len(docs) == 1
+        assert docs[0]["title"] == "M5 未知字段测试"
+
+    def test_import_missing_fields_uses_defaults(self, client):
+        """M5：导出 JSON 缺少字段时由 SQLModel 默认值兜底。"""
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [
+                    {
+                        "doc_id": "doc_m5_defaults",
+                        "title": "缺字段测试",
+                        # 缺少 content / source_type / file_type / category 等
+                        "created_at": "2026-07-25T12:00:00",
+                    }
+                ],
+                "tags": [],
+                "query_logs": [],
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        resp = self._upload_json(client, payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["counts"]["documents"] == 1
+        # 验证默认值生效
+        export = client.get("/api/export/all.json").json()
+        doc = [d for d in export["tables"]["documents"] if d["doc_id"] == "doc_m5_defaults"][0]
+        assert doc["content"] == ""  # 默认值
+        assert doc["source_type"] == "local"  # 默认值
+        assert doc["file_type"] == "txt"  # 默认值
+
+    def test_import_no_unknown_fields_returns_empty_dict(self, client):
+        """M5：无未知字段时 unknown_fields 为空 dict。"""
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [
+                    {
+                        "doc_id": "doc_m5_clean",
+                        "title": "无未知字段",
+                        "content": "x",
+                        "source_type": "local",
+                        "file_type": "txt",
+                        "chunk_count": 0,
+                        "category": "",
+                        "created_at": "2026-07-25T12:00:00",
+                    }
+                ],
+                "tags": [],
+                "query_logs": [],
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        resp = self._upload_json(client, payload)
+        body = resp.json()
+        assert body["unknown_fields"] == {}
+
+    def test_import_unknown_fields_in_audit_log(self, client):
+        """M5：未知字段报告写入审计日志 meta。"""
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [
+                    {
+                        "doc_id": "doc_m5_audit",
+                        "title": "审计测试",
+                        "content": "x",
+                        "source_type": "local",
+                        "file_type": "txt",
+                        "chunk_count": 0,
+                        "category": "",
+                        "created_at": "2026-07-25T12:00:00",
+                        "future_field": "val",
+                    }
+                ],
+                "tags": [],
+                "query_logs": [],
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        self._upload_json(client, payload)
+        with get_session() as session:
+            from sqlmodel import select
+
+            audit = session.exec(
+                select(AuditLog).where(AuditLog.action == "import")
+            ).first()
+            assert audit is not None
+            meta = json.loads(audit.meta_json)
+            assert "unknown_fields" in meta
+            assert "documents" in meta["unknown_fields"]
+            assert "future_field" in meta["unknown_fields"]["documents"]
+
+
+# ===========================================================================
+# H3：导入分批 commit 测试
+# ===========================================================================
+class TestImportBatchCommit:
+    """H3：大量数据导入时分批 commit 不报错且数据完整。"""
+
+    def _upload_json(self, client, payload: dict):
+        files = {
+            "file": (
+                "export.json",
+                io.BytesIO(json.dumps(payload).encode("utf-8")),
+                "application/json",
+            )
+        }
+        return client.post("/api/export/import", files=files)
+
+    def test_import_large_batch_over_1000_rows(self, client):
+        """H3：导入 > 1000 行 query_logs，分批 commit 不报错。"""
+        # 构造 1500 条 query_logs（超过 batch_size=1000）
+        query_logs = []
+        for i in range(1500):
+            query_logs.append({
+                "id": 10000 + i,  # 避免与 seed 数据 id 冲突
+                "query": f"批量导入问题{i}",
+                "answer": f"答案{i}",
+                "citations": "[]",
+                "model_used": "test",
+                "latency_ms": 10,
+                "feedback": 0,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "cost_cny": 0.0,
+                "created_at": "2026-07-25T12:00:00",
+            })
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [],
+                "tags": [],
+                "query_logs": query_logs,
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        resp = self._upload_json(client, payload)
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["counts"]["query_logs"] == 1500
+        assert body["total"] == 1500
+        # 验证数据完整（抽查首尾）
+        export = client.get("/api/export/all.json").json()
+        all_queries = [q["query"] for q in export["tables"]["query_logs"]]
+        assert "批量导入问题0" in all_queries
+        assert "批量导入问题1499" in all_queries
+
+    def test_import_batch_idempotent_large(self, client):
+        """H3：大批量导入幂等（重复导入不重复行）。"""
+        query_logs = []
+        for i in range(1200):
+            query_logs.append({
+                "id": 20000 + i,
+                "query": f"幂等测试{i}",
+                "answer": "答案",
+                "citations": "[]",
+                "model_used": "test",
+                "latency_ms": 10,
+                "feedback": 0,
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "cost_cny": 0.0,
+                "created_at": "2026-07-25T12:00:00",
+            })
+        payload = {
+            "version": "1.0",
+            "exported_at": "2026-07-25T12:00:00Z",
+            "tables": {
+                "documents": [],
+                "tags": [],
+                "query_logs": query_logs,
+                "missing_ingredient_stats": [],
+                "ingredient_substitutes": [],
+                "chunks": [],
+                "document_tags": [],
+                "recipe_stats": [],
+                "recipe_variants": [],
+            },
+        }
+        # 第一次导入
+        r1 = self._upload_json(client, payload)
+        assert r1.status_code == 200
+        assert r1.json()["counts"]["query_logs"] == 1200
+        # 第二次导入（幂等）
+        r2 = self._upload_json(client, payload)
+        assert r2.status_code == 200
+        assert r2.json()["counts"]["query_logs"] == 1200
+        # 验证不重复
+        export = client.get("/api/export/all.json").json()
+        idempotent_queries = [
+            q for q in export["tables"]["query_logs"]
+            if q["query"].startswith("幂等测试")
+        ]
+        assert len(idempotent_queries) == 1200
