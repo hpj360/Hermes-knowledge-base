@@ -17,6 +17,68 @@ def test_health(client):
     assert "embedding_available" in body
 
 
+def test_health_readiness_ok(client):
+    """Readiness 探针：DB 就绪时返回 200 + checks.db=up。"""
+    r = client.get("/api/health/ready")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["checks"]["db"]["status"] == "up"
+    assert body["checks"]["db"]["error"] == ""
+    assert "version" in body
+    assert "time" in body
+
+
+def test_health_readiness_db_down(monkeypatch):
+    """Readiness 探针：DB 故障时返回 503 + checks.db=down。"""
+    import contextlib
+
+    from hermes_kb.api import health as health_mod
+
+    @contextlib.contextmanager
+    def _fake_cm():
+        raise RuntimeError("simulated db down")
+        yield  # pragma: no cover - 不可达
+
+    monkeypatch.setattr(health_mod, "get_session", _fake_cm)
+
+    from fastapi.testclient import TestClient
+
+    from hermes_kb.app import create_app
+
+    app = create_app()
+    client = TestClient(app)
+    r = client.get("/api/health/ready")
+    assert r.status_code == 503
+    body = r.json()
+    assert body["status"] == "degraded"
+    assert body["checks"]["db"]["status"] == "down"
+    assert body["checks"]["db"]["error"] == "RuntimeError"
+
+
+def test_access_log_correlation_id(client):
+    """结构化日志中间件：响应头应携带 X-Correlation-ID。"""
+    # 透传客户端提供的 correlation id
+    r = client.get("/api/health", headers={"X-Correlation-ID": "abc12345"})
+    assert r.status_code == 200
+    assert r.headers.get("X-Correlation-ID") == "abc12345"
+
+    # 未提供时由服务端生成 8 位 hex
+    r2 = client.get("/api/health")
+    assert r2.status_code == 200
+    cid = r2.headers.get("X-Correlation-ID")
+    assert cid is not None
+    assert len(cid) == 8
+
+
+def test_access_log_skips_non_api(client):
+    """非 /api/ 路径不写入 correlation_id（避免静态资源噪声）。"""
+    # 根路径无前端构建产物时返回 404，不应注入 X-Correlation-ID
+    r = client.get("/")
+    # 静态文件挂载不存在时为 404，但仍不应注入 cid
+    assert "X-Correlation-ID" not in r.headers
+
+
 def test_documents_empty(client):
     """空库下列文档应返回 total=0。"""
     r = client.get("/api/documents")

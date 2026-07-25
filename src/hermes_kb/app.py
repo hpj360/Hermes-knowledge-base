@@ -1,11 +1,12 @@
 """FastAPI 应用：知识库 API + 静态前端托管。
 
-本模块只负责应用装配：CORS 中间件、全局异常处理器、APIRouter 注册与静态
-文件挂载。端点实现按功能域拆分到 :mod:`hermes_kb.api` 下的各 router 模块，
-共享依赖（认证、年龄门、JWT 工具、RAG/Import 服务）位于
+本模块只负责应用装配：CORS 中间件、结构化请求日志、全局异常处理器、APIRouter
+注册与静态文件挂载。端点实现按功能域拆分到 :mod:`hermes_kb.api` 下的各 router
+模块，共享依赖（认证、年龄门、JWT 工具、RAG/Import 服务）位于
 :mod:`hermes_kb.api.deps`。
 
-- /api/health 健康检查
+- /api/health        liveness 探针
+- /api/health/ready  readiness 探针（DB 连通性，失败返回 503）
 - /api/documents 文档管理
 - /api/ask 问答；/api/ask/stream SSE 流式问答
 - /api/history 问答历史；/api/feedback 反馈
@@ -17,6 +18,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import uuid
 from pathlib import Path
 
@@ -40,6 +42,9 @@ from hermes_kb.api.stats import router as stats_router
 from hermes_kb.api.tags import router as tags_router
 from hermes_kb.config import get_settings
 from hermes_kb.rag import ImportService, RAGEngine
+
+# 请求日志器（与 uvicorn access log 解耦，便于独立调整级别 / 格式）
+_access_log = logging.getLogger("hermes_kb.access")
 
 
 def create_app() -> FastAPI:
@@ -67,6 +72,46 @@ def create_app() -> FastAPI:
     # 应用级服务实例：每个 app 独立持有，避免跨测试 settings/engine 复位互相污染。
     app.state.rag = RAGEngine()
     app.state.importer = ImportService()
+
+    # -----------------------------------------------------------------------
+    # 结构化请求日志中间件：method/path/status/latency_ms/correlation_id
+    # - 仅记录 /api/ 开头的请求，避免静态资源噪声
+    # - 5xx 单独 warning 级别，便于告警
+    # - correlation_id 同时写入响应头，方便客户端上报问题
+    # -----------------------------------------------------------------------
+    @app.middleware("http")
+    async def access_log_middleware(request: Request, call_next):
+        if not request.url.path.startswith("/api/"):
+            return await call_next(request)
+
+        correlation_id = request.headers.get("X-Correlation-ID") or uuid.uuid4().hex[:8]
+        start = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception:
+            latency_ms = int((time.perf_counter() - start) * 1000)
+            _access_log.warning(
+                "access method=%s path=%s status=500 latency_ms=%d cid=%s error=unhandled",
+                request.method,
+                request.url.path,
+                latency_ms,
+                correlation_id,
+            )
+            raise
+
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        response.headers["X-Correlation-ID"] = correlation_id
+        level = logging.WARNING if response.status_code >= 500 else logging.INFO
+        _access_log.log(
+            level,
+            "access method=%s path=%s status=%d latency_ms=%d cid=%s",
+            request.method,
+            request.url.path,
+            response.status_code,
+            latency_ms,
+            correlation_id,
+        )
+        return response
 
     # -----------------------------------------------------------------------
     # 全局异常处理（必须注册在 app 级别）
