@@ -63,7 +63,7 @@ class HashEmbeddingBackend:
     @staticmethod
     def _tokenize(text: str) -> list[str]:
         """字符 bigram + trigram，中文友好（去掉单字降低噪声）。"""
-        segments = re.split(r"[\s,，。！？、；：""''（）()【】\[\]{}]+", text)
+        segments = re.split(r"[\s,，。！？、；：\u201c\u201d\u2018\u2019（）()【】\[\]{}]+", text)
         segments = [s for s in segments if s]
         if not segments:
             return []
