@@ -6,6 +6,7 @@ import type {
   LabDailyRecipe,
   LabMatchItem,
   LabMatchResult,
+  LabTranslateResult,
 } from "../types";
 import { Modal } from "./Modal";
 import { showToast } from "./Toast";
@@ -25,6 +26,9 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
   // B6: IMA 知识库同步入口
   const [showImaModal, setShowImaModal] = useState(false);
+
+  // P1: LLM 翻译配方标题入口
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
 
   // 加载今日推荐
   useEffect(() => {
@@ -132,7 +136,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         >
           选择手头的材料，发现你能调的鸡尾酒
         </p>
-        <div className="mt-4">
+        <div className="mt-4 flex gap-3 justify-center">
           <button
             type="button"
             className="btn-ghost text-xs"
@@ -140,6 +144,14 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
             aria-label="从 IMA 知识库同步内容"
           >
             📚 从 IMA 知识库同步
+          </button>
+          <button
+            type="button"
+            className="btn-ghost text-xs"
+            onClick={() => setShowTranslateModal(true)}
+            aria-label="翻译英文配方标题为中文"
+          >
+            🌐 翻译配方标题
           </button>
         </div>
       </div>
@@ -362,6 +374,17 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           onClose={() => setShowImaModal(false)}
           onSynced={() => {
             // 同步后清空结果，让用户重新匹配
+            setResult(null);
+          }}
+        />
+      )}
+
+      {/* P1: 翻译配方标题 Modal */}
+      {showTranslateModal && (
+        <TranslateDialog
+          onClose={() => setShowTranslateModal(false)}
+          onTranslated={() => {
+            // 翻译后清空匹配结果，让用户重新匹配以拿到新标题
             setResult(null);
           }}
         />
@@ -925,6 +948,207 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
                 className="text-xs"
                 style={{ color: "var(--ink-400)" }}
               >
+                失败
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// P1: 批量翻译英文配方标题为中文
+// ---------------------------------------------------------------------------
+interface TranslateDialogProps {
+  onClose: () => void;
+  onTranslated?: () => void;
+}
+
+const TRANSLATE_SOURCE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "全部配方源" },
+  { value: "iba", label: "IBA 官方" },
+  { value: "thecocktaildb", label: "TheCocktailDB" },
+  { value: "ugc", label: "UGC 用户投稿" },
+  { value: "local", label: "本地导入" },
+];
+
+function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
+  const [source, setSource] = useState("");
+  const [limit, setLimit] = useState(50);
+  const [translating, setTranslating] = useState(false);
+  const [lastResult, setLastResult] = useState<LabTranslateResult | null>(null);
+  const [error, setError] = useState("");
+
+  const handleTranslate = async () => {
+    setTranslating(true);
+    setError("");
+    try {
+      const r = await api.labTranslateTitles({
+        source: source || undefined,
+        limit,
+      });
+      setLastResult(r);
+      const msg = `翻译完成：新增 ${r.translated}，跳过 ${r.skipped}，失败 ${r.failed}（${r.model_used}）`;
+      showToast(msg, r.failed > 0 ? "warning" : "success");
+      onTranslated?.();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      showToast(`翻译失败：${msg}`, "danger");
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="翻译英文配方标题为中文"
+      maxWidth={520}
+      footer={
+        <>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={onClose}
+            disabled={translating}
+          >
+            关闭
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleTranslate}
+            disabled={translating}
+          >
+            {translating ? "翻译中..." : "开始翻译"}
+          </button>
+        </>
+      }
+    >
+      <p
+        className="text-sm mb-4"
+        style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
+      >
+        将英文配方标题（IBA / TheCocktailDB）批量翻译为中文。已含中文的标题自动跳过。
+        LLM 后端可用时使用 AI 翻译，否则回退到内置鸡尾酒词典。
+      </p>
+
+      <div className="mb-4">
+        <label
+          className="eyebrow block mb-2"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          htmlFor="translate-source"
+        >
+          数据源筛选
+        </label>
+        <select
+          id="translate-source"
+          className="input"
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+          disabled={translating}
+        >
+          {TRANSLATE_SOURCE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label
+          className="eyebrow block mb-2"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          htmlFor="translate-limit"
+        >
+          翻译上限（1-500）
+        </label>
+        <input
+          id="translate-limit"
+          className="input"
+          type="number"
+          min={1}
+          max={500}
+          value={limit}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            setLimit(Number.isFinite(v) ? Math.max(1, Math.min(500, v)) : 50);
+          }}
+          disabled={translating}
+        />
+      </div>
+
+      {error && (
+        <div
+          className="text-xs mb-3 p-2 rounded"
+          style={{
+            background: "rgba(179, 38, 30, 0.08)",
+            color: "var(--danger)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {lastResult && (
+        <div
+          className="p-3 rounded"
+          style={{
+            background: "var(--gold-100)",
+            borderLeft: "3px solid var(--gold-500)",
+          }}
+        >
+          <p
+            className="eyebrow mb-2"
+            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
+          >
+            上次翻译结果 · {lastResult.model_used}
+          </p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: "var(--success)",
+                }}
+              >
+                {lastResult.translated}
+              </div>
+              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
+                翻译
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: "var(--ink-400)",
+                }}
+              >
+                {lastResult.skipped}
+              </div>
+              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
+                跳过
+              </div>
+            </div>
+            <div>
+              <div
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "var(--fs-xl)",
+                  color: lastResult.failed > 0 ? "var(--danger)" : "var(--ink-400)",
+                }}
+              >
+                {lastResult.failed}
+              </div>
+              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
                 失败
               </div>
             </div>

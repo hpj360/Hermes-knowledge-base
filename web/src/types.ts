@@ -269,3 +269,12 @@ export interface IMASyncResult {
     status: "imported" | "skipped";
   }>;
 }
+
+/** /api/lab/translate-titles 批量翻译结果 */
+export interface LabTranslateResult {
+  status: string;
+  translated: number;
+  skipped: number;
+  failed: number;
+  model_used: string;
+}

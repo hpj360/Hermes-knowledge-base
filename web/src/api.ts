@@ -18,6 +18,7 @@ import type {
   LabRecipeInput,
   LabRecipeVariant,
   LabSyncResult,
+  LabTranslateResult,
   RAGAnswer,
   SSEEvent,
   SeedResult,
@@ -557,5 +558,21 @@ export const api = {
     if (kbId) sp.set("kb_id", kbId);
     if (limit !== undefined) sp.set("limit", String(limit));
     return request(`/api/lab/ima/search?${sp.toString()}`);
+  },
+
+  // P1: POST /api/lab/translate-titles — 批量翻译英文配方标题为中文
+  async labTranslateTitles(params: {
+    doc_ids?: string[];
+    source?: string;
+    limit?: number;
+  }): Promise<LabTranslateResult> {
+    return request("/api/lab/translate-titles", {
+      method: "POST",
+      body: JSON.stringify({
+        doc_ids: params.doc_ids || [],
+        source: params.source || "",
+        limit: params.limit ?? 50,
+      }),
+    });
   },
 };

@@ -8,6 +8,7 @@ vi.mock("../api", () => ({
   api: {
     labDaily: vi.fn(),
     labMatch: vi.fn(),
+    labTranslateTitles: vi.fn(),
   },
 }));
 
@@ -208,5 +209,153 @@ describe("LabPanel", () => {
     const dailyCard = screen.getByText("Daiquiri").closest('[role="button"]') as HTMLElement;
     // 无 onJumpToDoc 时按 Enter 不应抛错
     expect(() => fireEvent.keyDown(dailyCard, { key: "Enter" })).not.toThrow();
+  });
+});
+
+describe("LabPanel: P1 翻译配方标题 UI", () => {
+  it("入口按钮渲染：点击「翻译配方标题」打开对话框", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    const btn = screen.getByRole("button", { name: "翻译英文配方标题为中文" });
+    expect(btn).toBeInTheDocument();
+    await user.click(btn);
+
+    // 对话框打开
+    await waitFor(() => {
+      expect(screen.getByText("翻译英文配方标题为中文")).toBeInTheDocument();
+      expect(screen.getByLabelText("数据源筛选")).toBeInTheDocument();
+      expect(screen.getByLabelText(/翻译上限/)).toBeInTheDocument();
+    });
+  });
+
+  it("成功翻译：调用 API 并展示结果数字与 model_used", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    vi.mocked(api.labTranslateTitles).mockResolvedValue({
+      status: "ok",
+      translated: 8,
+      skipped: 3,
+      failed: 0,
+      model_used: "mock-llm",
+    });
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "翻译英文配方标题为中文" }));
+    await user.click(screen.getByRole("button", { name: "开始翻译" }));
+
+    await waitFor(() =>
+      expect(api.labTranslateTitles).toHaveBeenCalledWith({ source: undefined, limit: 50 }),
+    );
+    await waitFor(() => {
+      // 「上次翻译结果 · mock-llm」标题区可见
+      expect(screen.getByText(/上次翻译结果/)).toBeInTheDocument();
+      // 三栏数字（translated=8 / skipped=3 / failed=0）渲染
+      expect(screen.getByText("8")).toBeInTheDocument();
+      expect(screen.getByText("3")).toBeInTheDocument();
+      expect(screen.getByText("0")).toBeInTheDocument();
+    });
+  });
+
+  it("数据源筛选：选择 IBA 后随请求一并提交", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    vi.mocked(api.labTranslateTitles).mockResolvedValue({
+      status: "ok",
+      translated: 5,
+      skipped: 0,
+      failed: 0,
+      model_used: "gpt-4o-mini",
+    });
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "翻译英文配方标题为中文" }));
+    await user.selectOptions(screen.getByLabelText("数据源筛选"), "iba");
+    await user.click(screen.getByRole("button", { name: "开始翻译" }));
+
+    await waitFor(() =>
+      expect(api.labTranslateTitles).toHaveBeenCalledWith({ source: "iba", limit: 50 }),
+    );
+  });
+
+  it("limit 输入被夹紧到 1-500 区间", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    vi.mocked(api.labTranslateTitles).mockResolvedValue({
+      status: "ok",
+      translated: 0,
+      skipped: 0,
+      failed: 0,
+      model_used: "mock-llm",
+    });
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "翻译英文配方标题为中文" }));
+    const limitInput = screen.getByLabelText(/翻译上限/);
+    await user.clear(limitInput);
+    await user.type(limitInput, "9999");
+    await user.click(screen.getByRole("button", { name: "开始翻译" }));
+
+    await waitFor(() =>
+      expect(api.labTranslateTitles).toHaveBeenCalledWith({ source: undefined, limit: 500 }),
+    );
+  });
+
+  it("翻译失败：展示错误信息且不渲染结果区", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    vi.mocked(api.labTranslateTitles).mockRejectedValue(new Error("LLM 服务不可用"));
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "翻译英文配方标题为中文" }));
+    await user.click(screen.getByRole("button", { name: "开始翻译" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("LLM 服务不可用")).toBeInTheDocument();
+    });
+    // 无结果区（应不出现「上次翻译结果」标题）
+    expect(screen.queryByText(/上次翻译结果/)).not.toBeInTheDocument();
+  });
+
+  it("翻译期间禁用提交与关闭按钮，避免重复触发", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    // 让 promise 悬挂，保持 translating 状态
+    let resolveFn!: (v: unknown) => void;
+    vi.mocked(api.labTranslateTitles).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFn = resolve;
+        }) as Promise<any>,
+    );
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "翻译英文配方标题为中文" }));
+    const submitBtn = screen.getByRole("button", { name: "开始翻译" });
+    const closeBtn = screen.getByRole("button", { name: "关闭" });
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(submitBtn).toBeDisabled();
+      expect(closeBtn).toBeDisabled();
+      expect(screen.getByText("翻译中...")).toBeInTheDocument();
+    });
+
+    // 释放悬挂的 promise，避免后续测试泄漏
+    resolveFn({
+      status: "ok",
+      translated: 1,
+      skipped: 0,
+      failed: 0,
+      model_used: "mock-llm",
+    });
+    await waitFor(() => expect(submitBtn).not.toBeDisabled());
   });
 });
