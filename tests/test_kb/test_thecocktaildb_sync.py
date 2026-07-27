@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """TheCocktailDB 同步器测试（B2）。"""
 from __future__ import annotations
 
@@ -204,3 +205,159 @@ def test_sync_thecocktaildb_network_failure(monkeypatch):
     result = sync_thecocktaildb(limit=10, letters="a")
     assert result["imported"] == 0
     assert result["failed"] >= 1
+
+
+# ===========================================================================
+# Task 5.2 新增：验证 midori/galliano/drambuie 已能归一化
+# ===========================================================================
+def test_parse_recipe_known_ingredients_normalized():
+    """Task 5.2: midori/galliano/drambuie 已注册到 INGREDIENT_REGISTRY，
+    parse_recipe 应能归一化这些材料，unknown_ingredients 列表大幅减少（应为空）。
+    """
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "99001",
+        "strDrink": "Known Ingredients Test",
+        "strInstructions": "Stir all ingredients with ice.",
+        "strDrinkThumb": "",
+        "strIngredient1": "Gin",
+        "strMeasure1": "1 oz",
+        "strIngredient2": "midori",
+        "strMeasure2": "0.5 oz",
+        "strIngredient3": "galliano",
+        "strMeasure3": "0.25 oz",
+        "strIngredient4": "drambuie",
+        "strMeasure4": "0.5 oz",
+        "strIngredient5": None,
+    }
+    recipe = parse_recipe(api_data)
+
+    # midori/galliano/drambuie 已能归一化（在 _INGREDIENT_OVERRIDES 或
+    # INGREDIENT_REGISTRY 中），故 unknown_ingredients 应为空列表
+    assert recipe["unknown_ingredients"] == [], (
+        f"未归一化材料列表非空: {recipe['unknown_ingredients']}"
+    )
+
+    # ingredients 应全部为中文标准名（不含原英文 midori/galliano/drambuie）
+    ingredients_str = "|".join(recipe["ingredients"])
+    assert "midori" not in ingredients_str.lower()
+    assert "galliano" not in ingredients_str.lower()
+    assert "drambuie" not in ingredients_str.lower()
+
+    # 抽样验证归一化结果命中（金酒 + midori→哈密瓜利口酒 / galliano→加利亚诺）
+    assert "金酒" in recipe["ingredients"]
+    # midori 的 override 值为 "哈密瓜利口酒"
+    assert "哈密瓜利口酒" in recipe["ingredients"]
+    # galliano 的 override 值为 "加利亚诺"
+    assert "加利亚诺" in recipe["ingredients"]
+    # drambuie 的 override 值为 "威士忌利口酒"
+    assert "威士忌利口酒" in recipe["ingredients"]
+
+
+# ---------- Task 6: 元数据推断（technique/glassware/flavor_profile） ----------
+
+MOCK_MOJITO = {
+    "idDrink": "11000",
+    "strDrink": "Mojito",
+    "strInstructions": (
+        "Build in a highball glass with ice. Add rum, lime juice, sugar, "
+        "and mint leaves. Top with soda water."
+    ),
+    "strDrinkThumb": "https://example.com/mojito.jpg",
+    "strIngredient1": "Light Rum",
+    "strMeasure1": "2-3 oz",
+    "strIngredient2": "Lime",
+    "strMeasure2": "Juice of 1",
+    "strIngredient3": "Sugar",
+    "strMeasure3": "2 tsp",
+    "strIngredient4": "Mint",
+    "strMeasure4": "2-4",
+    "strIngredient5": "Soda Water",
+    "strMeasure5": "Top",
+}
+
+
+def test_parse_recipe_infers_technique():
+    """Task 6: instructions 含 'shake well' 应推断 technique='shake'。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "11010",
+        "strDrink": "Shaken Drink",
+        "strInstructions": "Shake well with ice and strain into a glass.",
+        "strDrinkThumb": "https://example.com/shaken.jpg",
+        "strIngredient1": "Gin",
+        "strMeasure1": "2 oz",
+        "strIngredient2": "Lime Juice",
+        "strMeasure2": "0.5 oz",
+        "strIngredient3": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["technique"] == "shake"
+
+
+def test_parse_recipe_infers_glassware():
+    """Task 6: instructions 含 'highball glass' 应推断 glassware='高球杯'。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "11011",
+        "strDrink": "Highball Drink",
+        "strInstructions": "Pour into a highball glass filled with ice.",
+        "strDrinkThumb": "",
+        "strIngredient1": "Whiskey",
+        "strMeasure1": "2 oz",
+        "strIngredient2": "Soda Water",
+        "strMeasure2": "4 oz",
+        "strIngredient3": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["glassware"] == "高球杯"
+
+
+def test_parse_recipe_infers_mojito():
+    """Task 6: Mojito mock（build + highball）应推断 technique='build'、glassware='高球杯'。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    recipe = parse_recipe(MOCK_MOJITO)
+    assert recipe["technique"] == "build"
+    assert recipe["glassware"] == "高球杯"
+    # 同时验证基本字段未被破坏
+    assert recipe["title"] == "Mojito"
+    assert recipe["source_id"] == "11000"
+    assert recipe["source"] == "thecocktaildb"
+
+
+def test_parse_recipe_flavor_profile():
+    """Task 6: 含 rum/mint/lime juice 的配方 flavor_profile 应非空。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    recipe = parse_recipe(MOCK_MOJITO)
+    # 朗姆酒/薄荷叶/青柠汁均带 tags，flavor_profile 应非空
+    assert recipe["flavor_profile"]
+    # 至少应包含朗姆酒带来的某个风味标签（如 sweet/tropical/molasses/caramel）
+    assert any(
+        tag in recipe["flavor_profile"]
+        for tag in ("sweet", "tropical", "molasses", "caramel", "light", "clean")
+    )
+
+
+def test_parse_recipe_no_inference():
+    """Task 6: 无关键词的 mock 应返回空 technique/glassware（不报错）。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "11012",
+        "strDrink": "Plain Drink",
+        "strInstructions": "Mix everything together.",  # 不含任何技法/载杯关键词
+        "strDrinkThumb": "",
+        "strIngredient1": "Water",  # 不在 registry，无 tags
+        "strMeasure1": "1 oz",
+        "strIngredient2": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["technique"] == ""
+    assert recipe["glassware"] == ""
+    # 不应抛异常，且新字段存在
+    assert "flavor_profile" in recipe

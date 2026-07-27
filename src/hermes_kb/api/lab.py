@@ -7,12 +7,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from hermes_kb.api.deps import get_importer, require_age_gate
-from hermes_kb.database import get_session
-from hermes_kb.rag import ImportService
 from hermes_kb.daily_recipe import daily_recipe
+from hermes_kb.database import get_session
 from hermes_kb.ingredients import canonicalize
 from hermes_kb.lab_dashboard import get_lab_dashboard
 from hermes_kb.missing_stats import batch_increment_missing, get_top_missing
+from hermes_kb.rag import ImportService
 from hermes_kb.recipe_crud import (
     approve_recipe,
     create_recipe,
@@ -407,14 +407,57 @@ async def lab_recipes_list(
     verified: bool | None = None,
     hidden: bool | None = None,
     status: str | None = None,
+    technique: str = "",
+    glassware: str = "",
+    iba_category: str = "",
+    flavor_profile: str = "",
+    difficulty: str = "",
+    abv_bucket: str = "",
+    season: str = "",
     limit: int = 100,
 ) -> dict[str, Any]:
-    """配方列表（支持按 source/verified/hidden/status 筛选）。"""
+    """配方列表（支持按 source/verified/hidden/status/technique/glassware/iba_category/flavor_profile/difficulty/abv_bucket/season 筛选）。"""
     limit = max(1, min(limit, 500))
     items = filter_recipes(
-        source=source, verified=verified, hidden=hidden, status=status, limit=limit
+        source=source,
+        verified=verified,
+        hidden=hidden,
+        status=status,
+        technique=technique or None,
+        glassware=glassware or None,
+        iba_category=iba_category or None,
+        flavor_profile=flavor_profile or None,
+        difficulty=difficulty or None,
+        abv_bucket=abv_bucket or None,
+        season=season or None,
+        limit=limit,
     )
     return {"items": items}
+
+
+@router.get("/recipes/by-ingredients", dependencies=[Depends(require_age_gate)])
+async def lab_recipes_by_ingredients(
+    ingredients: str,
+    min_match: int = 1,
+    limit: int = 20,
+) -> dict[str, Any]:
+    """按材料交集检索配方。
+
+    传入材料列表，返回按命中数排序的配方（支持 full/partial 分组）。
+    """
+    from hermes_kb.recipe_filter import find_recipes_by_ingredients
+
+    if not ingredients or not ingredients.strip():
+        raise HTTPException(status_code=400, detail="ingredients 必填")
+
+    raw_names = [s.strip() for s in ingredients.split(",") if s.strip()]
+    if not raw_names:
+        raise HTTPException(status_code=400, detail="ingredients 不能全为空")
+
+    limit = max(1, min(limit, 100))
+    min_match = max(1, min(min_match, 20))
+
+    return find_recipes_by_ingredients(raw_names, min_match=min_match, limit=limit)
 
 
 @router.post("/recipes/{doc_id}/verify", dependencies=[Depends(require_age_gate)])

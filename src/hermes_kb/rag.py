@@ -630,21 +630,32 @@ class ImportService:
         status: str | None = None,
         image_url: str | None = None,
         season: str | None = None,
+        glassware: str = "",
+        technique: str = "",
+        iba_category: str = "",
+        flavor_profile: str = "",
+        difficulty: str = "",
+        abv_bucket: str = "",
     ) -> dict[str, Any]:
         """导入纯文本。
 
         allow_empty=True 时允许空内容（chunk_count=0），用于文件解析为空的场景。
 
         治理字段（P2-3 原子化）：``category``/``source``/``source_id``/``verified``
-        /``status``/``image_url``/``season`` 与 doc+chunks+vectors 在**同一事务**内
-        一并写入并 commit，消除"先导入再单独 session 改治理字段"的两阶段非原子
-        （避免崩溃残留 verified=True/status=published 绕过治理意图）。
+        /``status``/``image_url``/``season``/``glassware``/``technique``
+        /``iba_category``/``flavor_profile``/``difficulty``/``abv_bucket`` 与
+        doc+chunks+vectors 在**同一事务**内一并写入并 commit，消除"先导入再单独
+        session 改治理字段"的两阶段非原子（避免崩溃残留 verified=True/status=published
+        绕过治理意图）。
 
         Args:
             doc_id: 可选预生成 doc_id（用于 source_id 依赖 doc_id 的场景，如 UGC）。
                     为 None 时由模型 default_factory 生成。
             source/verified/status: 为 None 时保留模型默认（local/True/published），
                 显式传入则覆盖。其余治理字段直接透传（均有模型默认值）。
+            glassware/technique/iba_category/flavor_profile: M3 配方结构化元数据，
+                默认空字符串（向后兼容非配方文档）。配方导入时由 seed_recipes 聚合填充。
+            difficulty/abv_bucket: M3+ 配方难度与强度档位，默认空字符串（向后兼容）。
         """
         from hermes_kb.models import Chunk, Document
 
@@ -669,7 +680,16 @@ class ImportService:
         vectors = self.embedding.embed(chunk_texts) if chunk_texts else []
 
         # 治理字段：仅收集显式传入的非 None 值，None 走模型默认
-        gov: dict[str, Any] = {"category": category, "image_url": image_url}
+        gov: dict[str, Any] = {
+            "category": category,
+            "image_url": image_url,
+            "glassware": glassware,
+            "technique": technique,
+            "iba_category": iba_category,
+            "flavor_profile": flavor_profile,
+            "difficulty": difficulty,
+            "abv_bucket": abv_bucket,
+        }
         if source is not None:
             gov["source"] = source
         if source_id is not None:

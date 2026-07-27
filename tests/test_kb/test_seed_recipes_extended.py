@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """阶段 A.5：seed_recipes 扩展测试。
 
 覆盖：
@@ -21,10 +22,10 @@ def test_seed_recipes_count_meets_iba_minimum():
 
 
 def test_seed_recipes_count_is_57_iba_full():
-    """当前 IBA 全量应为 57 款（23+24+10）。"""
+    """IBA 全量基线应不少于 57 款（23+24+10），向后兼容新增非 IBA 配方。"""
     from hermes_kb.seed_recipes import SEED_RECIPES
 
-    assert len(SEED_RECIPES) == 57, f"期望 57 款 IBA 全量，实际 {len(SEED_RECIPES)}"
+    assert len(SEED_RECIPES) >= 57, f"期望 >= 57 款（IBA 全量基线），实际 {len(SEED_RECIPES)}"
 
 
 def test_required_fields_present():
@@ -61,7 +62,7 @@ def test_titles_unique():
 
 
 def test_iba_category_distribution():
-    """IBA 三大分类覆盖且数量符合官方分布。"""
+    """IBA 三大分类覆盖且数量符合官方分布（向后兼容新增非 IBA 配方）。"""
     from hermes_kb.seed_recipes import SEED_RECIPES
 
     by_cat: dict[str, int] = {}
@@ -69,15 +70,11 @@ def test_iba_category_distribution():
         cat = r["iba_category"]
         by_cat[cat] = by_cat.get(cat, 0) + 1
 
-    assert set(by_cat.keys()) == {
-        "unforgettables",
-        "contemporary_classics",
-        "new_era_drinks",
-    }, f"出现非官方分类: {set(by_cat.keys())}"
-    # IBA 官方数量（2026 版本）
-    assert by_cat["unforgettables"] == 23
-    assert by_cat["contemporary_classics"] == 24
-    assert by_cat["new_era_drinks"] == 10
+    # IBA 三大分类必须存在且数量符合官方分布
+    assert by_cat.get("unforgettables") == 23
+    assert by_cat.get("contemporary_classics") == 24
+    assert by_cat.get("new_era_drinks") == 10
+    # 允许新增非 IBA 配方（iba_category="" 或 "non_iba"）
 
 
 def test_technique_distribution():
@@ -101,7 +98,7 @@ def test_base_spirit_distribution():
     """基酒分布合理。"""
     from hermes_kb.seed_recipes import SEED_RECIPES
 
-    valid_bases = {"gin", "whiskey", "rum", "tequila", "vodka", "brandy", "other"}
+    valid_bases = {"gin", "whiskey", "rum", "tequila", "vodka", "brandy", "wine", "liqueur", "mezcal", "none", "other"}
     by_base: dict[str, int] = {}
     for r in SEED_RECIPES:
         base = r["base_spirit"]
@@ -254,3 +251,202 @@ def test_seed_recipes_importable_without_db():
 
     assert isinstance(SEED_RECIPES, list)
     assert all(isinstance(r, dict) for r in SEED_RECIPES)
+
+
+# ===========================================================================
+# Task 3.2 新增：元数据字段完整性补强（语义断言）
+# ===========================================================================
+def test_all_recipes_have_technique():
+    """每款 SEED_RECIPES 都应有非空的 technique 字段。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    missing = [r["title"] for r in SEED_RECIPES if not r.get("technique")]
+    assert not missing, f"缺 technique 的配方: {missing}"
+
+
+def test_all_recipes_have_glassware():
+    """每款 SEED_RECIPES 都应有非空的 glassware 字段。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    missing = [r["title"] for r in SEED_RECIPES if not r.get("glassware")]
+    assert not missing, f"缺 glassware 的配方: {missing}"
+
+
+def test_all_recipes_have_iba_category():
+    """每款 SEED_RECIPES 都应有非空的 iba_category 字段。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    missing = [r["title"] for r in SEED_RECIPES if not r.get("iba_category")]
+    assert not missing, f"缺 iba_category 的配方: {missing}"
+
+
+def test_technique_values_valid():
+    """technique 值必须在合法集合内。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    valid_techniques = {"build", "stir", "shake", "blend", "layer", "muddle"}
+    invalid = [
+        (r["title"], r["technique"])
+        for r in SEED_RECIPES
+        if r["technique"] not in valid_techniques
+    ]
+    assert not invalid, f"非法 technique 值: {invalid}"
+
+
+def test_iba_category_values_valid():
+    """iba_category 值必须在 IBA 三大分类集合内。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    valid_categories = {
+        "unforgettables",
+        "contemporary_classics",
+        "new_era_drinks",
+        "non_iba",  # 新增非 IBA 配方
+        "",  # 兼容空值
+    }
+    invalid = [
+        (r["title"], r["iba_category"])
+        for r in SEED_RECIPES
+        if r["iba_category"] not in valid_categories
+    ]
+    assert not invalid, f"非法 iba_category 值: {invalid}"
+
+
+def test_glassware_distribution():
+    """至少有 3 种不同 glassware 值（如马天尼杯/古典杯/高球杯）。"""
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    glasses = {r["glassware"] for r in SEED_RECIPES}
+    assert len(glasses) >= 3, (
+        f"杯型多样性不足，仅 {len(glasses)} 种: {glasses}"
+    )
+    # 抽样验证常见杯型至少命中一个（语义断言）
+    common_glasses = {"马天尼杯", "古典杯", "高球杯"}
+    assert glasses & common_glasses, (
+        f"未覆盖常见杯型（马天尼杯/古典杯/高球杯）任一: {glasses}"
+    )
+
+
+# ===========================================================================
+# Task 4.2：新增元数据字段（difficulty/abv_bucket/season）覆盖验证
+# ===========================================================================
+class TestNewMetadataFields:
+    """Task 4: 验证种子配方的 difficulty/abv_bucket/season 字段。"""
+
+    def test_all_seed_recipes_have_difficulty(self):
+        """所有种子配方都应有 difficulty 字段（easy/medium/hard）。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        valid_difficulties = {"easy", "medium", "hard"}
+        for recipe in SEED_RECIPES:
+            assert recipe.get("difficulty", "") in valid_difficulties, \
+                f"Recipe '{recipe['title']}' has invalid difficulty: {recipe.get('difficulty')}"
+
+    def test_all_seed_recipes_have_season(self):
+        """所有种子配方都应有 season 字段。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        valid_seasons = {"spring", "summer", "autumn", "winter", ""}
+        for recipe in SEED_RECIPES:
+            assert recipe.get("season", "") in valid_seasons, \
+                f"Recipe '{recipe['title']}' has invalid season: {recipe.get('season')}"
+
+    def test_seed_recipes_count_at_least_77(self):
+        """种子配方规模 >= 77（57 IBA + 20 非 IBA）。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        assert len(SEED_RECIPES) >= 77, f"Expected >= 77 recipes, got {len(SEED_RECIPES)}"
+
+    def test_layer_technique_recipes_exist(self):
+        """layer 技法配方数 >= 2（覆盖原 layer=0 盲区）。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        layer_recipes = [r for r in SEED_RECIPES if r.get("technique") == "layer"]
+        assert len(layer_recipes) >= 2, f"Expected >= 2 layer recipes, got {len(layer_recipes)}"
+
+    def test_mocktail_recipes_exist(self):
+        """Mocktail 配方（abv_override=0.0）>= 3 款。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        mocktails = [r for r in SEED_RECIPES if r.get("abv_override") == 0.0]
+        assert len(mocktails) >= 3, f"Expected >= 3 mocktail recipes, got {len(mocktails)}"
+
+    def test_new_categories_covered(self):
+        """新增品类覆盖：Tiki/Hot/Flip/Punch/Mocktail/Layered。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        titles = [r["title"] for r in SEED_RECIPES]
+        # Tiki
+        assert any("Zombie" in t or "僵尸" in t for t in titles), "Missing Tiki recipe (Zombie)"
+        assert any("Painkiller" in t or "止痛药" in t for t in titles), "Missing Tiki recipe (Painkiller)"
+        # Hot Drinks
+        assert any("Hot Toddy" in t or "热托迪" in t for t in titles), "Missing Hot Drink (Hot Toddy)"
+        # Flip
+        assert any("Flip" in t for t in titles), "Missing Flip recipe"
+        # Punch
+        assert any("Punch" in t for t in titles), "Missing Punch recipe"
+        # Mocktail
+        assert any("Virgin" in t or "Shirley" in t for t in titles), "Missing Mocktail recipe"
+        # Layered
+        assert any("B-52" in t or "Pousse" in t for t in titles), "Missing Layered recipe"
+
+
+# ===========================================================================
+# Task 6：新增配方的具体内容校验（规模/技法/Mocktail 校验）
+# ===========================================================================
+class TestNewRecipesVerification:
+    """Task 6: 新增配方的具体内容校验。"""
+
+    def test_tiki_recipes_count(self):
+        """Tiki 配方数 >= 4。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        tiki_keywords = ["Zombie", "僵尸", "Painkiller", "止痛药", "Missionary", "Scorpion"]
+        tiki_count = sum(1 for r in SEED_RECIPES if any(k in r["title"] for k in tiki_keywords))
+        assert tiki_count >= 4, f"Expected >= 4 Tiki recipes, got {tiki_count}"
+
+    def test_hot_drinks_recipes_count(self):
+        """Hot Drinks 配方数 >= 2。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        hot_keywords = ["Hot Toddy", "热托迪", "Tom and Jerry"]
+        hot_count = sum(1 for r in SEED_RECIPES if any(k in r["title"] for k in hot_keywords))
+        assert hot_count >= 2, f"Expected >= 2 Hot Drink recipes, got {hot_count}"
+
+    def test_flip_recipes_count(self):
+        """Flip 配方数 >= 2。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        flip_count = sum(1 for r in SEED_RECIPES if "Flip" in r["title"] or "Alexander" in r["title"])
+        assert flip_count >= 2, f"Expected >= 2 Flip recipes, got {flip_count}"
+
+    def test_punch_recipes_count(self):
+        """Punch 配方数 >= 2。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        punch_count = sum(1 for r in SEED_RECIPES if "Punch" in r["title"])
+        assert punch_count >= 2, f"Expected >= 2 Punch recipes, got {punch_count}"
+
+    def test_layered_recipes_count(self):
+        """Layered 分层配方数 >= 2。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        layer_count = sum(1 for r in SEED_RECIPES if r.get("technique") == "layer")
+        assert layer_count >= 2, f"Expected >= 2 layer recipes, got {layer_count}"
+
+    def test_modern_classics_count(self):
+        """现代经典配方数 >= 3。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        modern_keywords = ["Paper Plane", "Gold Rush", "Naked and Famous"]
+        modern_count = sum(1 for r in SEED_RECIPES if any(k in r["title"] for k in modern_keywords))
+        assert modern_count >= 3, f"Expected >= 3 modern classics, got {modern_count}"
+
+    def test_new_recipes_have_non_iba_category(self):
+        """新增配方的 iba_category 应为空或 'non_iba'。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        # 跳过前 57 款 IBA 配方
+        for recipe in SEED_RECIPES[57:]:
+            iba_cat = recipe.get("iba_category", "")
+            assert iba_cat in ("", "non_iba"), \
+                f"New recipe '{recipe['title']}' has invalid iba_category: {iba_cat}"
+
+    def test_mocktail_ingredients_no_alcohol(self):
+        """Mocktail 配方的材料不含酒精（abv=0）。"""
+        from hermes_kb.seed_recipes import SEED_RECIPES
+        from hermes_kb.ingredients import get_abv
+        mocktails = [r for r in SEED_RECIPES if r.get("abv_override") == 0.0]
+        assert len(mocktails) >= 3
+        for recipe in mocktails:
+            for ing in recipe["ingredients"]:
+                abv = get_abv(ing)
+                assert abv == 0.0, \
+                    f"Mocktail '{recipe['title']}' ingredient '{ing}' has abv={abv}"

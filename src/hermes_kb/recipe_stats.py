@@ -163,3 +163,25 @@ def batch_increment_match_counts(doc_ids: list[str]) -> None:
             ],
         )
         session.commit()
+
+
+def classify_abv_bucket(abv: float) -> str:
+    """根据 ABV（0.0-1.0 的小数）分类强度档位。
+
+    规则：
+    - ABV == 0.0 → "low"（Mocktail）
+    - ABV < 0.15 → "low"
+    - 0.15 <= ABV < 0.25 → "medium"
+    - 0.25 <= ABV < 0.35 → "high"
+    - ABV >= 0.35 → "strong"
+    - 负数或 None → ""
+    """
+    if abv is None or abv < 0:
+        return ""
+    if abv < 0.15:
+        return "low"
+    if abv < 0.25:
+        return "medium"
+    if abv < 0.35:
+        return "high"
+    return "strong"

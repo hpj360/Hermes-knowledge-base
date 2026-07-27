@@ -2,6 +2,15 @@
 
 用于 M0/M1 开发测试与首次启动引导。覆盖六大基酒的代表酒种。
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from hermes_kb.ingredient_strength import estimate_recipe_stats
+from hermes_kb.recipe_stats import classify_abv_bucket
+
+if TYPE_CHECKING:
+    from hermes_kb.rag import ImportService
 
 SEED_DOCS: list[dict[str, str]] = [
     {
@@ -334,3 +343,130 @@ SEED_DOCS: list[dict[str, str]] = [
 """,
     },
 ]
+
+
+def _aggregate_flavor_profile(ingredients: list[str]) -> str:
+    """聚合配方的风味标签。
+
+    对每个材料名用 ``ingredients.canonicalize`` 归一化后查
+    ``INGREDIENT_REGISTRY`` 的 ``tags``，收集所有 tags，去重（保留首次
+    出现顺序），分号拼接。
+
+    例如 ``["金酒","味美思"]`` → 金酒 tags
+    ``["juniper","botanical","herbal","dry"]`` + 味美思 tags
+    ``["botanical","aromatic","herbal","wine-fortified"]`` → 去重后
+    ``"juniper;botanical;herbal;dry;aromatic;wine-fortified"``。
+
+    未知材料（未注册）跳过，不影响其余材料聚合。
+    """
+    from hermes_kb.ingredients import canonicalize, get_tags
+
+    tags: list[str] = []
+    seen: set[str] = set()
+    for name in ingredients:
+        canonical = canonicalize(name)
+        for tag in get_tags(canonical):
+            if tag not in seen:
+                seen.add(tag)
+                tags.append(tag)
+    return ";".join(tags)
+
+
+def seed_recipes(importer: ImportService | None = None) -> dict[str, Any]:
+    """导入 IBA 配方种子数据（幂等）。
+
+    遍历 ``seed_recipes.SEED_RECIPES``（57 款 IBA 配方），对每款：
+    1. 按标题查重，已存在则跳过（幂等，避免重复导入）
+    2. 聚合 ``flavor_profile``（从 ``ingredients`` 的 tags 推导）
+    3. 调用 ``ImportService.import_text`` 原子写入 doc + chunks + vectors
+       以及结构化元数据（``technique``/``glassware``/``iba_category``
+       /``flavor_profile``/``category="recipe"``/``source="iba"``）
+
+    content 头部的 ``<!-- ingredients: a|b|c -->`` frontmatter 保持不变
+    （RAG 解析兼容）。
+
+    Args:
+        importer: 可选的 ImportService 实例（用于测试注入）。为 None 时新建。
+
+    Returns:
+        汇总 dict：``{"seeded": int, "failed": int, "skipped": int,
+        "items": list[dict]}``。
+    """
+    from sqlmodel import select
+
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.rag import ImportService
+    from hermes_kb.seed_recipes import SEED_RECIPES
+
+    if importer is None:
+        importer = ImportService()
+
+    seeded = 0
+    failed = 0
+    skipped = 0
+    items: list[dict[str, Any]] = []
+
+    for recipe in SEED_RECIPES:
+        # 幂等：按标题查重
+        with get_session() as session:
+            existing = session.exec(
+                select(Document).where(Document.title == recipe["title"])
+            ).first()
+            if existing:
+                items.append(
+                    {
+                        "title": recipe["title"],
+                        "status": "skipped",
+                        "doc_id": existing.doc_id,
+                    }
+                )
+                skipped += 1
+                continue
+
+        try:
+            ingredients: list[str] = recipe.get("ingredients", [])
+            flavor_profile = _aggregate_flavor_profile(ingredients)
+            # 计算 ABV 档位：优先用 abv_override（Mocktail），否则估算
+            abv_override = recipe.get("abv_override")
+            if abv_override is not None:
+                abv_bucket_value = classify_abv_bucket(float(abv_override))
+            else:
+                try:
+                    stats = estimate_recipe_stats(ingredients)
+                    abv_bucket_value = classify_abv_bucket(stats.get("estimated_abv", 0.0))
+                except (KeyError, TypeError, ValueError):
+                    abv_bucket_value = ""
+            result = importer.import_text(
+                content=recipe["content"],
+                title=recipe["title"],
+                source_type="seed",
+                file_type="md",
+                category="recipe",
+                source="iba",
+                technique=recipe.get("technique", ""),
+                glassware=recipe.get("glassware", ""),
+                iba_category=recipe.get("iba_category", ""),
+                flavor_profile=flavor_profile,
+                difficulty=recipe.get("difficulty", ""),
+                abv_bucket=abv_bucket_value,
+                season=recipe.get("season") or "",
+            )
+            seeded += 1
+            items.append({**result, "status": "imported"})
+        except Exception as e:  # noqa: BLE001 — 单条失败不阻塞其余配方导入
+            failed += 1
+            items.append(
+                {
+                    "title": recipe["title"],
+                    "error": str(e),
+                    "status": "failed",
+                }
+            )
+
+    return {
+        "seeded": seeded,
+        "failed": failed,
+        "skipped": skipped,
+        "items": items,
+    }

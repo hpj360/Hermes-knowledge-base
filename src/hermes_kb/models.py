@@ -44,6 +44,14 @@ class Document(SQLModel, table=True):
     status: str = Field(default="published", max_length=16)  # draft/pending/published/rejected
     image_url: str | None = Field(default=None, max_length=512)  # B 新增：外部图片 URL
     meta: str = Field(default="{}", sa_column=Column("metadata", Text))  # B 新增：JSON 字符串（属性名避开 SQLAlchemy 保留字 metadata）
+    # M3：配方结构化元数据（向后兼容，默认空字符串）
+    glassware: str = Field(default="", max_length=64, index=True)  # 载杯类型（马天尼杯/古典杯/高球杯...）
+    technique: str = Field(default="", max_length=32, index=True)  # 调酒技法（build/stir/shake/blend/layer/muddle）
+    iba_category: str = Field(default="", max_length=32, index=True)  # IBA 分类（unforgettables/contemporary_classics/new_era_drinks）
+    flavor_profile: str = Field(default="", max_length=256)  # 风味标签（分号分隔，如 "苦甜;药草;干爽"）
+    # M3+：难度与强度档位（向后兼容，默认空字符串）
+    difficulty: str = Field(default="", max_length=16, index=True)  # 制作难度（easy/medium/hard）
+    abv_bucket: str = Field(default="", max_length=16, index=True)  # 强度档位（low/medium/high/strong）
     created_at: datetime = Field(default_factory=_now_utc)
 
     def __init__(self, **data: object) -> None:

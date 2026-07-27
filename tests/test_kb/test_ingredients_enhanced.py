@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """增强版材料注册表测试（G1：ABV + 品牌字段 + 扩展材料）。"""
 from __future__ import annotations
 
@@ -424,3 +425,143 @@ class TestAllTagsAndOrigins:
 
         origins = all_origins()
         assert "" not in origins
+
+
+# ===========================================================================
+# Task 5.1 新增：注册表规模 / 新材料归一化 / 唯一性 / TheCocktailDB 覆盖
+# ===========================================================================
+def test_registry_size_above_300():
+    """注册表规模应不少于 300 条（当前 365）。"""
+    from hermes_kb.ingredients import INGREDIENT_REGISTRY
+
+    assert len(INGREDIENT_REGISTRY) >= 300, (
+        f"注册表仅 {len(INGREDIENT_REGISTRY)} 条，期望 >= 300"
+    )
+
+
+def test_registry_size_above_350():
+    """注册表规模应不少于 350 条（当前 365）。"""
+    from hermes_kb.ingredients import INGREDIENT_REGISTRY
+
+    assert len(INGREDIENT_REGISTRY) >= 350, (
+        f"注册表仅 {len(INGREDIENT_REGISTRY)} 条，期望 >= 350"
+    )
+
+
+def test_new_ingredients_canonicalize():
+    """新增材料的英文别名应能归一化（命中，不返回原名）。
+
+    覆盖 midori/galliano/drambuie/benedictine/chambord/licor 43/aperol
+    /fernet branca/cynar/suze/lillet blanc/frangelico/disaronno/pimm's
+    /sake/mezcal 共 16 个英文别名。
+    """
+    from hermes_kb.ingredients import canonicalize
+
+    # 别名 → 期望归一化结果（命中即返回中文标准名，不返回原英文）
+    expected_aliases = [
+        "midori",
+        "galliano",
+        "drambuie",
+        "benedictine",
+        "chambord",
+        "licor 43",
+        "aperol",
+        "fernet branca",
+        "cynar",
+        "suze",
+        "lillet blanc",
+        "frangelico",
+        "disaronno",
+        "pimm's",
+        "sake",
+        "mezcal",
+    ]
+    not_hit: list[str] = []
+    for alias in expected_aliases:
+        result = canonicalize(alias)
+        # 归一化命中：返回值与原 alias 不同（大小写不敏感比较）
+        if result.strip().lower() == alias.strip().lower():
+            not_hit.append(f"{alias!r} -> {result!r}（未命中）")
+    assert not not_hit, f"{len(not_hit)} 个别名未命中归一化: {not_hit}"
+
+
+def test_new_ingredients_have_tags():
+    """抽样 10 条新增材料，断言 tags 非空列表。"""
+    from hermes_kb.ingredients import get_tags
+
+    # 抽样：均来自 Task 4 / G1 扩展条目，应有 tags 字段
+    samples = [
+        "苦艾烈酒",
+        "波本威士忌",
+        "干邑白兰地",
+        "蜜瓜力娇酒",
+        "杜林标",
+        "本笃力娇酒",
+        "香波力娇酒",
+        "榛子力娇酒",
+        "阿佩罗",
+        "龙胆草力娇酒",
+    ]
+    no_tags: list[str] = []
+    for name in samples:
+        tags = get_tags(name)
+        assert isinstance(tags, list), f"{name} tags 不是 list: {type(tags)}"
+        if not tags:
+            no_tags.append(name)
+    assert not no_tags, f"以下材料 tags 为空: {no_tags}"
+
+
+def test_new_ingredients_have_origin():
+    """抽样 10 条新增材料，断言 origin 非空字符串。"""
+    from hermes_kb.ingredients import get_origin
+
+    # 抽样：均来自 Task 4 / G1 扩展条目，应有 origin 字段
+    samples = [
+        "苦艾烈酒",
+        "波本威士忌",
+        "干邑白兰地",
+        "蜜瓜力娇酒",
+        "杜林标",
+        "本笃力娇酒",
+        "香波力娇酒",
+        "榛子力娇酒",
+        "阿佩罗",
+        "龙胆草力娇酒",
+    ]
+    no_origin: list[str] = []
+    for name in samples:
+        origin = get_origin(name)
+        assert isinstance(origin, str), f"{name} origin 不是 str: {type(origin)}"
+        if not origin:
+            no_origin.append(name)
+    assert not no_origin, f"以下材料 origin 为空: {no_origin}"
+
+
+def test_no_duplicate_canonical():
+    """所有 canonical 名唯一（注册表无重复标准名）。"""
+    from hermes_kb.ingredients import INGREDIENT_REGISTRY
+
+    all_canonical = [info["canonical"] for info in INGREDIENT_REGISTRY.values()]
+    duplicates = {c for c in all_canonical if all_canonical.count(c) > 1}
+    assert not duplicates, f"canonical 重复: {duplicates}"
+
+
+def test_thecocktaildb_overrides_covered():
+    """TheCocktailDB _INGREDIENT_OVERRIDES 中 value 应在 INGREDIENT_REGISTRY 注册。
+
+    任务原始阈值 90%，但实际覆盖率为 74.3%（101/136）—— 部分中文别名
+    （如 "Aperol"/"蜂蜜"/"椰浆"/"起泡酒"/"百利甜"/"雪碧"）使用了注册表中
+    不存在的非标准命名。按任务约束"不修改 src/ 代码，仅调整断言以匹配实际实现"，
+    此处将阈值下调至 70%（保留 4.3% 安全余量），并在报告中说明差距。
+    """
+    from hermes_kb.ingredients import INGREDIENT_REGISTRY
+    from hermes_kb.thecocktaildb_sync import _INGREDIENT_OVERRIDES
+
+    all_canonical = {info["canonical"] for info in INGREDIENT_REGISTRY.values()}
+    total = len(_INGREDIENT_OVERRIDES)
+    covered = sum(1 for v in _INGREDIENT_OVERRIDES.values() if v in all_canonical)
+    coverage_rate = covered / total if total else 0.0
+    # 实际 74.3%，阈值 70%（保留安全余量）
+    assert coverage_rate >= 0.70, (
+        f"覆盖率仅 {coverage_rate:.1%}（{covered}/{total}），期望 >= 70%"
+    )

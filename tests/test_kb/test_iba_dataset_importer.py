@@ -658,3 +658,182 @@ def test_diff_iba_official_handles_non_dict_items():
     assert result["official_count"] == 2
     assert "mojito" in result["matched"]
     assert "negroni" in result["missing_locally"]
+
+
+def test_parse_iba_recipe_maps_iba_category():
+    """Task 7.4: IBA dataset 的 type 字段映射为 iba_category。"""
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "TEST UNFORGETTABLES",
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},
+            {"name": "lemon juice", "quantity": 1.5},
+        ],
+        "type": "The Unforgettables",
+    }
+    recipe = parse_iba_recipe(raw)
+    assert recipe["iba_category"] == "unforgettables"
+
+    # Contemporary Classics
+    raw_contemporary = {
+        "name": "TEST CONTEMPORARY",
+        "ingredients": [{"name": "gin", "quantity": 4.5}],
+        "type": "Contemporary Classics",
+    }
+    assert parse_iba_recipe(raw_contemporary)["iba_category"] == "contemporary_classics"
+
+    # New Era Drinks
+    raw_new_era = {
+        "name": "TEST NEW ERA",
+        "ingredients": [{"name": "gin", "quantity": 4.5}],
+        "type": "New Era Drinks",
+    }
+    assert parse_iba_recipe(raw_new_era)["iba_category"] == "new_era_drinks"
+
+    # 未知 type 返回空字符串
+    raw_unknown = {
+        "name": "TEST UNKNOWN TYPE",
+        "ingredients": [{"name": "gin", "quantity": 4.5}],
+        "type": "Some Unknown Category",
+    }
+    assert parse_iba_recipe(raw_unknown)["iba_category"] == ""
+
+
+def test_parse_iba_recipe_infers_technique():
+    """Task 7.4: 当 content 含 shake 关键词时推断 technique='shake'。
+
+    IBA dataset 原始数据无 instructions，content 主要由材料列表 + 标题 + 分类构成。
+    本测试构造 title 含 "shake"（被拼入 content 的 H1 标题），触发 infer_technique。
+    """
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "SHAKE TEST RECIPE",  # 标题含 "shake"，content 包含 "# SHAKE TEST RECIPE"
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},
+            {"name": "lemon juice", "quantity": 1.5},
+        ],
+        "type": "Contemporary Classics",
+    }
+    recipe = parse_iba_recipe(raw)
+    assert recipe["technique"] == "shake"
+
+    # 普通配方（无技法关键词）technique 应为空
+    raw_no_technique = {
+        "name": "PLAIN RECIPE XYZ",
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},
+            {"name": "lemon juice", "quantity": 1.5},
+        ],
+        "type": "Contemporary Classics",
+    }
+    assert parse_iba_recipe(raw_no_technique)["technique"] == ""
+
+
+def test_parse_iba_recipe_infers_glassware():
+    """Task 7.4: 当 content 含 "martini glass" 时推断 glassware='马天尼杯'。
+
+    构造 title 含 "Martini Glass"（被拼入 content 的 H1 标题），触发 infer_glassware。
+    """
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "MARTINI GLASS TEST",
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},
+            {"name": "dry vermouth", "quantity": 1.5},
+        ],
+        "type": "The Unforgettables",
+    }
+    recipe = parse_iba_recipe(raw)
+    assert recipe["glassware"] == "马天尼杯"
+
+    # 普通 mock 配方（无载杯关键词）glassware 应为空
+    raw_no_glass = {
+        "name": "PLAIN RECIPE XYZ",
+        "ingredients": [{"name": "gin", "quantity": 4.5}],
+        "type": "Contemporary Classics",
+    }
+    assert parse_iba_recipe(raw_no_glass)["glassware"] == ""
+
+
+def test_parse_iba_recipe_returns_metadata():
+    """Task 7.4: 完整断言返回 dict 包含 technique/glassware/iba_category/flavor_profile 四字段。"""
+    from hermes_kb.iba_dataset_importer import parse_iba_recipe
+
+    raw = {
+        "name": "MARTINI GLASS SHAKE TEST",
+        "ingredients": [
+            {"name": "gin", "quantity": 4.5},
+            {"name": "lemon juice", "quantity": 1.5},
+            {"name": "sugar syrup", "quantity": 1.0},
+        ],
+        "type": "The Unforgettables",
+    }
+    recipe = parse_iba_recipe(raw)
+    # 四字段必须存在
+    assert "technique" in recipe
+    assert "glassware" in recipe
+    assert "iba_category" in recipe
+    assert "flavor_profile" in recipe
+    # 具体值断言
+    assert recipe["technique"] == "shake"  # title 含 "shake"
+    assert recipe["glassware"] == "马天尼杯"  # title 含 "martini glass"
+    assert recipe["iba_category"] == "unforgettables"
+    # flavor_profile：gin/lemon juice/sugar syrup 都有 tags（如 citrus/sweet）
+    assert recipe["flavor_profile"] != ""
+    # 向后兼容：旧字段仍存在
+    assert recipe["source"] == "iba"
+    assert recipe["verified"] is True
+    assert "content" in recipe
+    assert "ingredients" in recipe
+    assert "category_official" in recipe
+
+
+def test_sync_iba_dataset_skips_seed_recipes():
+    """Task 7.4: 同步时跳过种子已有的配方（基于 _is_duplicate_fuzzy 模糊匹配）。
+
+    场景：先调用 seed_recipes() 导入 57 款 IBA 种子（含 "莫吉托 Mojito"），
+    再调用 sync_iba_dataset 同步含 "Mojito" 的 mock 数据，应被识别为 duplicate。
+    """
+    from hermes_kb.iba_dataset_importer import sync_iba_dataset
+    from hermes_kb.seed import seed_recipes
+
+    # 1. 导入种子配方（含 "莫吉托 Mojito"）
+    seed_result = seed_recipes()
+    assert seed_result["seeded"] >= 1  # 至少导入了一些
+
+    # 2. 构造 mock IBA 数据：包含 "Mojito"（与种子 "莫吉托 Mojito" 模糊匹配）
+    #    以及一个虚构配方（确保 imported >= 1）
+    mock_data = [
+        {
+            "name": "Mojito",  # 种子已有 → 应被去重 skip
+            "ingredients": [
+                {"name": "white rum", "quantity": 4.5},
+                {"name": "lime juice", "quantity": 2.0},
+                {"name": "sugar syrup", "quantity": 1.5},
+            ],
+            "type": "Contemporary Classics",
+        },
+        {
+            # 完全虚构配方名，避免与 57 款 IBA 种子模糊匹配
+            "name": "TEST UNIQUE RECIPE XYZ",
+            "ingredients": [
+                {"name": "gin", "quantity": 4.5},
+                {"name": "lemon juice", "quantity": 2.0},
+                {"name": "sugar syrup", "quantity": 1.5},
+            ],
+            "type": "Contemporary Classics",
+        },
+    ]
+
+    result = sync_iba_dataset(data=mock_data)
+    # Mojito 应被去重 → skipped >= 1
+    assert result["skipped"] >= 1, (
+        f"应跳过种子已有的 Mojito，实际 skipped={result['skipped']}"
+    )
+    # 虚构配方应导入 → imported >= 1
+    assert result["imported"] >= 1, (
+        f"应导入虚构配方，实际 imported={result['imported']}"
+    )

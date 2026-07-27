@@ -22,6 +22,11 @@ from hermes_kb.database import get_session
 from hermes_kb.ingredients import canonicalize
 from hermes_kb.models import Document
 from hermes_kb.rag import ImportService
+from hermes_kb.recipe_metadata import (
+    infer_flavor_profile,
+    infer_glassware,
+    infer_technique,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -240,6 +245,11 @@ def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
         content_lines.append(f"\n## 未归一化材料\n{', '.join(unknown)}")
     content = "\n".join(content_lines)
 
+    # Task 6: 推断结构化元数据（technique/glassware/flavor_profile）
+    technique = infer_technique(content)
+    glassware = infer_glassware(content, title)
+    flavor_profile = infer_flavor_profile(ingredients)
+
     return {
         "title": title,
         "source_id": source_id,
@@ -249,6 +259,9 @@ def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
         "verified": False,
         "image_url": image_url,
         "unknown_ingredients": unknown,
+        "technique": technique,
+        "glassware": glassware,
+        "flavor_profile": flavor_profile,
     }
 
 
@@ -312,6 +325,9 @@ def sync_thecocktaildb(
                     source_id=recipe["source_id"],
                     verified=False,
                     image_url=recipe.get("image_url"),
+                    technique=recipe.get("technique", ""),
+                    glassware=recipe.get("glassware", ""),
+                    flavor_profile=recipe.get("flavor_profile", ""),
                 )
                 doc_id = result.get("doc_id") if isinstance(result, dict) else result
                 if doc_id:

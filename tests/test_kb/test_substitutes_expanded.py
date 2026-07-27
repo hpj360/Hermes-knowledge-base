@@ -90,3 +90,57 @@ def test_bar_assistant_sync_no_data():
     result = sync_bar_assistant_substitutes(data=[])
     assert result["imported"] == 0
     assert result["skipped"] == 0
+
+
+# ===========================================================================
+# Task 8：替代关系表扩展测试
+# ===========================================================================
+class TestSubstitutesExpansion:
+    """Task 8: 替代关系表扩展测试。"""
+
+    def test_substitutes_preset_count_at_least_150(self):
+        """SUBSTITUTES_PRESET 规模 >= 150。"""
+        from hermes_kb.substitutes import SUBSTITUTES_PRESET
+        assert len(SUBSTITUTES_PRESET) >= 150, \
+            f"Expected >= 150 substitutes, got {len(SUBSTITUTES_PRESET)}"
+
+    def test_rum_variants_substitutes(self):
+        """白朗姆酒应有金朗姆酒/黑朗姆酒/陈年朗姆酒替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("白朗姆酒")
+        assert "金朗姆酒" in subs
+        assert "黑朗姆酒" in subs
+        assert "陈年朗姆酒" in subs
+
+    def test_whiskey_variants_substitutes(self):
+        """波本威士忌应有黑麦威士忌/田纳西威士忌替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("波本威士忌")
+        assert "黑麦威士忌" in subs
+        assert "田纳西威士忌" in subs
+
+    def test_tequila_variants_substitutes(self):
+        """银龙舌兰应有金龙舌兰/陈年龙舌兰替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("银龙舌兰")
+        assert "金龙舌兰" in subs
+
+    def test_vermouth_variants_substitutes(self):
+        """干味美思应有甜味美思/白味美思替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("干味美思")
+        assert "甜味美思" in subs
+        assert "白味美思" in subs
+
+    def test_bitters_variants_substitutes(self):
+        """安高天娜苦精应有佩肖德苦精/橙味苦精替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("安高天娜苦精")
+        assert "佩肖德苦精" in subs
+        assert "橙味苦精" in subs
+
+    def test_non_alcoholic_substitutes(self):
+        """无酒精金酒应有 Seedlip/苏打水替代。"""
+        from hermes_kb.substitutes import get_substitutes_preset
+        subs = get_substitutes_preset("无酒精金酒")
+        assert "Seedlip" in subs or "苏打水" in subs

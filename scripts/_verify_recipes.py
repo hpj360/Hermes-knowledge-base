@@ -4,8 +4,89 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from hermes_kb.recipe_metadata import infer_flavor_profile
 from hermes_kb.seed_recipes import SEED_RECIPES
 from hermes_kb.ingredients import INGREDIENT_REGISTRY, canonicalize
+
+
+# 校验失败累计（任一失败时以非零码退出）
+_FAILURES: list[str] = []
+
+
+def _record_failure(message: str) -> None:
+    _FAILURES.append(message)
+
+
+def verify_difficulty_season_abv_bucket() -> list[str]:
+    """Task 12: 校验所有种子配方的 difficulty/abv_bucket/season 字段完整性。
+
+    Returns:
+        错误消息列表，空列表表示通过。
+    """
+    from hermes_kb.seed_recipes import SEED_RECIPES
+    errors: list[str] = []
+    valid_difficulties = {"easy", "medium", "hard"}
+    valid_seasons = {"spring", "summer", "autumn", "winter"}
+    valid_abv_buckets = {"low", "medium", "high", "strong", ""}  # "" 兼容旧数据
+
+    for recipe in SEED_RECIPES:
+        title = recipe.get("title", "<unknown>")
+
+        # difficulty 校验
+        difficulty = recipe.get("difficulty", "")
+        if difficulty not in valid_difficulties:
+            errors.append(
+                f"Recipe '{title}' has invalid difficulty: '{difficulty}'. "
+                f"Expected one of {sorted(valid_difficulties)}."
+            )
+
+        # season 校验（新增配方必须有，旧配方允许空）
+        season = recipe.get("season", "")
+        if season and season not in valid_seasons:
+            errors.append(
+                f"Recipe '{title}' has invalid season: '{season}'. "
+                f"Expected one of {sorted(valid_seasons)} or empty."
+            )
+
+        # abv_override 校验（Mocktail 配方）
+        abv_override = recipe.get("abv_override")
+        if abv_override is not None:
+            if not isinstance(abv_override, (int, float)) or abv_override < 0:
+                errors.append(
+                    f"Recipe '{title}' has invalid abv_override: {abv_override}. "
+                    f"Expected non-negative number."
+                )
+            # Mocktail 配方 abv_override 应为 0
+            if abv_override != 0:
+                errors.append(
+                    f"Recipe '{title}' has abv_override={abv_override}. "
+                    f"Currently only 0.0 (Mocktail) is supported."
+                )
+
+    return errors
+
+
+def verify_mocktail_ingredients_no_alcohol() -> list[str]:
+    """Task 12: 校验 Mocktail 配方的材料不含酒精。
+
+    Returns:
+        错误消息列表，空列表表示通过。
+    """
+    from hermes_kb.ingredients import get_abv
+    from hermes_kb.seed_recipes import SEED_RECIPES
+    errors: list[str] = []
+
+    for recipe in SEED_RECIPES:
+        if recipe.get("abv_override") == 0.0:
+            title = recipe.get("title", "<unknown>")
+            for ing in recipe.get("ingredients", []):
+                abv = get_abv(ing)
+                if abv > 0:
+                    errors.append(
+                        f"Mocktail '{title}' contains alcoholic ingredient "
+                        f"'{ing}' (abv={abv})."
+                    )
+    return errors
 
 
 def main() -> None:
@@ -45,6 +126,7 @@ def main() -> None:
         print(f"❌ {len(missing_field_recipes)} 条字段缺失:")
         for title, field in missing_field_recipes:
             print(f"  - {title} 缺 {field}")
+            _record_failure(f"字段缺失: {title} 缺 {field}")
     else:
         print(f"✅ 所有 {len(SEED_RECIPES)} 款配方字段完整")
 
@@ -53,6 +135,7 @@ def main() -> None:
     duplicates = [t for t in titles if titles.count(t) > 1]
     if duplicates:
         print(f"❌ 标题重复: {set(duplicates)}")
+        _record_failure(f"标题重复: {sorted(set(duplicates))}")
     else:
         print("✅ 标题唯一")
 
@@ -100,8 +183,128 @@ def main() -> None:
         print(f"❌ {len(frontmatter_issues)} 条 frontmatter 问题:")
         for title, issue in frontmatter_issues:
             print(f"  - {title}: {issue}")
+            _record_failure(f"frontmatter 问题: {title}: {issue}")
     else:
         print("✅ 所有 frontmatter 正确")
+
+    # ============================================================
+    # Task 10.1 新增校验
+    # ============================================================
+
+    # --- 1. 元数据完整性校验 ---
+    print("\n=== 元数据完整性校验（iba_category→technique/glassware 非空 + flavor_profile 非空）===")
+    metadata_issues: list[tuple[str, str]] = []
+    for r in SEED_RECIPES:
+        title = r.get("title", "?")
+        iba = r.get("iba_category", "")
+        # iba_category 非空时，technique 与 glassware 必须非空
+        if iba:
+            if not r.get("technique"):
+                metadata_issues.append((title, "iba_category 非空但 technique 为空"))
+            if not r.get("glassware"):
+                metadata_issues.append((title, "iba_category 非空但 glassware 为空"))
+        # flavor_profile（基于 ingredients 聚合）必须非空
+        flavor = infer_flavor_profile(r.get("ingredients", []))
+        if not flavor:
+            metadata_issues.append((title, "flavor_profile 为空（ingredients 无法聚合出 tags）"))
+
+    if metadata_issues:
+        print(f"❌ {len(metadata_issues)} 条元数据完整性问题:")
+        for title, issue in metadata_issues:
+            print(f"  - {title}: {issue}")
+            _record_failure(f"元数据完整性: {title}: {issue}")
+    else:
+        print(f"✅ 所有 {len(SEED_RECIPES)} 款配方元数据完整（technique/glassware/flavor_profile 非空）")
+
+    # --- 2. 材料注册表 canonical 唯一性校验 ---
+    print("\n=== INGREDIENT_REGISTRY canonical 唯一性校验 ===")
+    canonical_list: list[str] = [
+        info.get("canonical", "") for info in INGREDIENT_REGISTRY.values()
+    ]
+    canonical_nonempty = [c for c in canonical_list if c]
+    seen: dict[str, int] = {}
+    for c in canonical_nonempty:
+        seen[c] = seen.get(c, 0) + 1
+    dup_canonical = sorted({c for c, n in seen.items() if n > 1})
+    # 也检查空 canonical
+    empty_canonical_count = len(canonical_list) - len(canonical_nonempty)
+
+    if dup_canonical or empty_canonical_count > 0:
+        if dup_canonical:
+            print(f"❌ {len(dup_canonical)} 个 canonical 重复:")
+            for c in dup_canonical:
+                print(f"  - {c}（出现 {seen[c]} 次）")
+                _record_failure(f"canonical 重复: {c}（{seen[c]} 次）")
+        if empty_canonical_count > 0:
+            print(f"❌ {empty_canonical_count} 条 registry 条目 canonical 为空")
+            _record_failure(f"canonical 为空条目数: {empty_canonical_count}")
+    else:
+        print(f"✅ {len(canonical_nonempty)} 个 canonical 全部唯一（len(set)==len(list)）")
+
+    # --- 3. technique 值合法性校验 ---
+    print("\n=== technique 值合法性校验 ===")
+    valid_techniques = {"build", "stir", "shake", "blend", "layer", "muddle", ""}
+    invalid_techniques: list[tuple[str, str]] = [
+        (r.get("title", "?"), r.get("technique", ""))
+        for r in SEED_RECIPES
+        if r.get("technique", "") not in valid_techniques
+    ]
+    if invalid_techniques:
+        print(f"❌ {len(invalid_techniques)} 条非法 technique:")
+        for title, tech in invalid_techniques:
+            print(f"  - {title}: technique={tech!r}")
+            _record_failure(f"非法 technique: {title}: {tech!r}")
+    else:
+        print(f"✅ 所有 {len(SEED_RECIPES)} 款配方 technique 值合法")
+
+    # --- 4. iba_category 值合法性校验 ---
+    print("\n=== iba_category 值合法性校验 ===")
+    valid_categories = {"unforgettables", "contemporary_classics", "new_era_drinks", ""}
+    invalid_categories: list[tuple[str, str]] = [
+        (r.get("title", "?"), r.get("iba_category", ""))
+        for r in SEED_RECIPES
+        if r.get("iba_category", "") not in valid_categories
+    ]
+    if invalid_categories:
+        print(f"❌ {len(invalid_categories)} 条非法 iba_category:")
+        for title, cat in invalid_categories:
+            print(f"  - {title}: iba_category={cat!r}")
+            _record_failure(f"非法 iba_category: {title}: {cat!r}")
+    else:
+        print(f"✅ 所有 {len(SEED_RECIPES)} 款配方 iba_category 值合法")
+
+    # ============================================================
+    # Task 12 新增校验：difficulty/season/abv_override 字段完整性 + Mocktail 无酒精
+    # ============================================================
+    print("\n=== Task 12: difficulty/season/abv_override 字段完整性校验 ===")
+    task12_field_errors = verify_difficulty_season_abv_bucket()
+    if task12_field_errors:
+        print(f"❌ {len(task12_field_errors)} 条字段完整性问题:")
+        for err in task12_field_errors:
+            print(f"  - {err}")
+            _record_failure(f"Task 12 字段完整性: {err}")
+    else:
+        print(f"✅ 所有 {len(SEED_RECIPES)} 款配方 difficulty/season/abv_override 合法")
+
+    print("\n=== Task 12: Mocktail 材料无酒精校验 ===")
+    task12_mocktail_errors = verify_mocktail_ingredients_no_alcohol()
+    if task12_mocktail_errors:
+        print(f"❌ {len(task12_mocktail_errors)} 条 Mocktail 含酒精问题:")
+        for err in task12_mocktail_errors:
+            print(f"  - {err}")
+            _record_failure(f"Task 12 Mocktail 含酒精: {err}")
+    else:
+        print("✅ 所有 Mocktail 配方材料均无酒精")
+
+    # ============================================================
+    # 汇总退出码
+    # ============================================================
+    print("\n=== 汇总 ===")
+    if _FAILURES:
+        print(f"❌ 共 {len(_FAILURES)} 条校验失败，详见上方输出。")
+        sys.exit(1)
+    else:
+        print(f"✅ 全部校验通过（共 {len(SEED_RECIPES)} 款种子配方，{len(INGREDIENT_REGISTRY)} 条材料注册）。")
 
 
 if __name__ == "__main__":

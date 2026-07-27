@@ -104,6 +104,9 @@ class TestIMAEndpoints:
 
     def test_ima_list_kbs_not_configured(self, client):
         """未配置 IMA 凭证 → 400。"""
+        from hermes_kb.config import override_settings
+
+        override_settings(ima_client_id="", ima_api_key="")
         resp = client.get("/api/lab/ima/knowledge-bases")
         assert resp.status_code == 400
         assert "IMA 未配置" in resp.json()["detail"]
@@ -166,6 +169,9 @@ class TestIMAEndpoints:
 
     def test_ima_sync_not_configured(self, client):
         """未配置 → 400。"""
+        from hermes_kb.config import override_settings
+
+        override_settings(ima_client_id="", ima_api_key="", ima_kb_id="")
         resp = client.post("/api/lab/ima/sync", json={"query": "鸡尾酒", "limit": 10})
         assert resp.status_code == 400
 
@@ -238,6 +244,9 @@ class TestIMAEndpoints:
 
     def test_ima_search_not_configured(self, client):
         """未配置 → 400。"""
+        from hermes_kb.config import override_settings
+
+        override_settings(ima_client_id="", ima_api_key="")
         resp = client.get("/api/lab/ima/search?query=gin")
         assert resp.status_code == 400
 

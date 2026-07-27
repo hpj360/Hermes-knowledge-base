@@ -19,6 +19,12 @@ from sqlmodel import select
 from hermes_kb.database import get_session
 from hermes_kb.models import Document
 from hermes_kb.rag import ImportService
+from hermes_kb.recipe_metadata import (
+    infer_flavor_profile,
+    infer_glassware,
+    infer_iba_category,
+    infer_technique,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -149,6 +155,14 @@ def parse_iba_recipe(
         content_lines.append(f"\n## 未归一化材料\n{', '.join(unknown)}")
     content = "\n".join(content_lines)
 
+    # 元数据回填：iba_category 基于 type 映射；technique/glassware 基于 content 推断；
+    # flavor_profile 基于 ingredients 聚合。IBA dataset 原始数据无 instructions，
+    # 故 technique 可能大多为空（预期行为）。
+    iba_category = infer_iba_category(category_official)
+    technique = infer_technique(content)
+    glassware = infer_glassware(content, title)
+    flavor_profile = infer_flavor_profile(ingredients)
+
     return {
         "title": title,
         "ingredients": ingredients,
@@ -159,6 +173,10 @@ def parse_iba_recipe(
         "unknown_ingredients": unknown,
         "abv": abv,
         "calories": calories,
+        "iba_category": iba_category,
+        "technique": technique,
+        "glassware": glassware,
+        "flavor_profile": flavor_profile,
     }
 
 
@@ -271,7 +289,7 @@ def sync_iba_dataset(
                 continue
 
             # P2-3: 治理字段（IBA 金标准 verified=True/status=published）原子落库，
-            # 消除两阶段非原子。
+            # 消除两阶段非原子。同时回填 parse_iba_recipe 推断的元数据字段。
             result = importer.import_text(
                 content=recipe["content"],
                 title=recipe["title"],
@@ -279,6 +297,10 @@ def sync_iba_dataset(
                 source="iba",
                 verified=True,  # IBA 金标准
                 status="published",
+                technique=recipe.get("technique", ""),
+                glassware=recipe.get("glassware", ""),
+                iba_category=recipe.get("iba_category", ""),
+                flavor_profile=recipe.get("flavor_profile", ""),
             )
             doc_id = result.get("doc_id") if isinstance(result, dict) else result
             if doc_id:

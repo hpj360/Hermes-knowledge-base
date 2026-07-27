@@ -384,7 +384,7 @@ def test_api_seed_recipes(client):
     resp = client.post("/api/seed/recipes")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["seeded"] == 57  # IBA 全量：23 Unforgettables + 24 Contemporary + 10 New Era
+    assert data["seeded"] >= 57  # 57 IBA + 新增非 IBA 配方
     assert data["failed"] == 0
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
@@ -393,7 +393,7 @@ def test_api_seed_recipes(client):
         recipes = session.exec(
             select(Document).where(Document.category == "recipe")
         ).all()
-        assert len(recipes) == 57
+        assert len(recipes) >= 57  # 57 IBA + 新增非 IBA 配方
         titles = [d.title for d in recipes]
         assert "马天尼 Martini" in titles
 
@@ -412,4 +412,175 @@ def test_api_seed_recipes_idempotent(client):
                 select(Document).where(Document.category == "recipe")
             ).all()
         )
-        assert count == 57
+        assert count >= 57  # 57 IBA + 新增非 IBA 配方
+
+
+# ============================================================
+# Task 9: 实验室筛选支持新字段（technique/glassware/iba_category/flavor_profile）
+# 注意：seeded_recipes fixture 不回填元数据，故各测试直接调用
+# seed_recipes() 以确保 technique/glassware/iba_category/flavor_profile 非空。
+# ============================================================
+
+
+def test_filter_by_technique(tmp_db):
+    """按 technique 精确筛选：返回配方全部 technique='shake'。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    result = seed_recipes()
+    assert result["seeded"] >= 57  # 57 IBA + 新增非 IBA 配方
+
+    items = filter_recipes(technique="shake")
+    assert len(items) > 0
+    for item in items:
+        assert item["technique"] == "shake"
+
+
+def test_filter_by_glassware(tmp_db):
+    """按 glassware 精确筛选：返回配方全部 glassware='马天尼杯'。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    items = filter_recipes(glassware="马天尼杯")
+    assert len(items) > 0
+    for item in items:
+        assert item["glassware"] == "马天尼杯"
+
+
+def test_filter_by_iba_category(tmp_db):
+    """按 iba_category 精确筛选：返回配方全部 iba_category='unforgettables'。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    items = filter_recipes(iba_category="unforgettables")
+    assert len(items) > 0
+    for item in items:
+        assert item["iba_category"] == "unforgettables"
+
+
+def test_filter_by_flavor_profile(tmp_db):
+    """按 flavor_profile 模糊筛选：返回配方 flavor_profile 包含查询词。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    items = filter_recipes(flavor_profile="juniper")
+    assert len(items) > 0
+    for item in items:
+        assert "juniper" in item["flavor_profile"]
+
+
+def test_filter_combined(tmp_db):
+    """组合筛选 technique='shake' + glassware='马天尼杯'：返回配方同时满足两条件。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    items = filter_recipes(technique="shake", glassware="马天尼杯")
+    assert len(items) > 0
+    for item in items:
+        assert item["technique"] == "shake"
+        assert item["glassware"] == "马天尼杯"
+
+
+def test_filter_empty_returns_all(tmp_db):
+    """不传筛选参数时返回全部 57 款。"""
+    from hermes_kb.recipe_filter import filter_recipes
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    items = filter_recipes()
+    assert len(items) >= 57  # 57 IBA + 新增非 IBA 配方
+
+
+def test_api_lab_recipes_with_filters(client):
+    """GET /api/lab/recipes 支持 technique 等筛选参数，响应结构正确。"""
+    from hermes_kb.seed import seed_recipes
+
+    seed_recipes()
+
+    resp = client.get("/api/lab/recipes", params={"technique": "shake"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "items" in data
+    assert len(data["items"]) > 0
+    for item in data["items"]:
+        assert item["technique"] == "shake"
+        # 响应应包含新字段
+        assert "glassware" in item
+        assert "iba_category" in item
+        assert "flavor_profile" in item
+
+
+# ============================================================
+# Task 10: 实验室筛选支持 difficulty/abv_bucket/season 参数
+# ============================================================
+
+
+class TestRecipeFilterNewFields:
+    """Task 10: 按难度/强度档位/季节筛选配方。"""
+
+    def test_filter_by_difficulty(self, client):
+        """按难度筛选。"""
+        resp = client.get("/api/lab/recipes?difficulty=easy")
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert all(item["difficulty"] == "easy" for item in items)
+
+    def test_filter_by_abv_bucket(self, client):
+        """按强度档位筛选。"""
+        resp = client.get("/api/lab/recipes?abv_bucket=low")
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert all(item["abv_bucket"] == "low" for item in items)
+
+    def test_filter_by_season(self, client):
+        """按季节筛选。"""
+        resp = client.get("/api/lab/recipes?season=summer")
+        assert resp.status_code == 200
+        items = resp.json()["items"]
+        assert all(item["season"] == "summer" for item in items)
+
+
+# ============================================================
+# Task 9: /api/lab/recipes/by-ingredients 端点 + find_recipes_by_ingredients
+# ============================================================
+
+
+class TestRecipesByIngredients:
+    """Task 9: 按材料交集检索配方端点。"""
+
+    def test_by_ingredients_full_match(self, client):
+        """金酒+味美思+橄榄 应返回马天尼为 full_match。"""
+        from hermes_kb.seed import seed_recipes
+
+        seed_recipes()
+        resp = client.get("/api/lab/recipes/by-ingredients?ingredients=金酒,味美思,橄榄")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "full_match" in body
+        assert "partial_match" in body
+        # full_match 中应含马天尼（已注入种子配方）
+        titles = [item["title"] for item in body["full_match"]]
+        assert any("马天尼" in t for t in titles)
+
+    def test_by_ingredients_empty(self, client):
+        """空 ingredients 应返回 400。"""
+        resp = client.get("/api/lab/recipes/by-ingredients?ingredients=")
+        assert resp.status_code == 400
+
+    def test_by_ingredients_min_match(self, client):
+        """min_match=2 过滤单材料配方。"""
+        resp = client.get("/api/lab/recipes/by-ingredients?ingredients=金酒&min_match=2")
+        assert resp.status_code == 200
+        body = resp.json()
+        # partial_match 中所有配方 hit_count >= 2
+        for item in body["partial_match"]:
+            assert item["hit_count"] >= 2

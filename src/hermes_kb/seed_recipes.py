@@ -1916,4 +1916,717 @@ SEED_RECIPES: list[dict] = [
 1960 年代牙买加 Trilogy 酒店创制，名字源自海地民歌「Yellow Bird」。配方载于 1985 年《Cocktail Companion》。
 """,
     },
+    # ============================================================
+    # 非 IBA 经典配方（Task 5 新增 20 款）
+    # ============================================================
+    # --- Tiki 热带（4 款）---
+    {
+        "title": "僵尸（Tiki 经典）Zombie",
+        "base_spirit": "rum",
+        "difficulty": "hard",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "飓风杯",
+        "ingredients": ["白朗姆酒", "金朗姆酒", "黑朗姆酒", "151朗姆酒", "青柠汁", "法勒纳姆糖浆", "杏花利口酒", "苦精"],
+        "history": "1934 年好莱坞 Don the Beachcomber 餐厅主理人 Donn Beach 创制的原版 Tiki 僵尸，用三种朗姆加 151 高度朗姆叠烈，法勒纳姆糖浆与杏花利口酒赋予加勒比风味。原版限制每人 2 杯。",
+        "content": """<!-- ingredients: 白朗姆酒|金朗姆酒|黑朗姆酒|151朗姆酒|青柠汁|法勒纳姆糖浆|杏花利口酒|苦精 -->
+# 僵尸（Tiki 经典）Zombie
+
+## 配方
+- 白朗姆酒 30ml
+- 金朗姆酒 30ml
+- 黑朗姆酒 30ml
+- 151朗姆酒 15ml
+- 青柠汁 15ml
+- 法勒纳姆糖浆 15ml
+- 杏花利口酒 7.5ml
+- 安高天娜苦精 2 滴
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入白朗姆酒、金朗姆酒、黑朗姆酒、151朗姆酒、青柠汁、法勒纳姆糖浆、杏花利口酒
+3. 加安高天娜苦精 2 滴
+4. 充分摇匀 20 秒
+5. 滤入装满碎冰的飓风杯
+6. 薄荷枝装饰
+
+## 风味
+三朗姆叠烈、法勒纳姆香料、杏花果香、烈度极高。Tiki 经典。
+
+## 历史
+1934 年好莱坞 Don the Beachcomber 餐厅主理人 Donn Beach 创制的原版 Tiki 僵尸，用三种朗姆加 151 高度朗姆叠烈，法勒纳姆糖浆与杏花利口酒赋予加勒比风味。原版限制每人 2 杯。
+""",
+    },
+    {
+        "title": "传教士的堕落 Missionary's Downfall",
+        "base_spirit": "rum",
+        "difficulty": "medium",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "blend",
+        "glassware": "飓风杯",
+        "ingredients": ["白朗姆酒", "桃子利口酒", "菠萝汁", "青柠汁", "薄荷叶", "香蕉", "蜂蜜糖浆"],
+        "history": "1930 年代波士顿调酒师 Donn Beach 创制，名字戏谑「传教士一经品尝便会堕落」。薄荷与香蕉打碎成绵密冰沙，是 Tiki 文化中少见的绿色饮品。",
+        "content": """<!-- ingredients: 白朗姆酒|桃子利口酒|菠萝汁|青柠汁|薄荷叶|香蕉|蜂蜜糖浆 -->
+# 传教士的堕落 Missionary's Downfall
+
+## 配方
+- 白朗姆酒 45ml
+- 桃子利口酒 15ml
+- 菠萝汁 30ml
+- 青柠汁 15ml
+- 薄荷叶 6-8 片
+- 香蕉 半根
+- 蜂蜜糖浆 10ml
+
+## 步骤
+1. 搅拌机加入白朗姆酒、桃子利口酒、菠萝汁、青柠汁、蜂蜜糖浆
+2. 放入薄荷叶与香蕉段
+3. 加碎冰搅打至绵密顺滑
+4. 倒入冰镇飓风杯
+5. 薄荷枝与香蕉片装饰
+
+## 风味
+薄荷清凉、香蕉绵密、桃香菠萝甜润。Tiki 绿色冰沙。
+
+## 历史
+1930 年代波士顿调酒师 Donn Beach 创制，名字戏谑「传教士一经品尝便会堕落」。薄荷与香蕉打碎成绵密冰沙，是 Tiki 文化中少见的绿色饮品。
+""",
+    },
+    {
+        "title": "止痛药 Painkiller",
+        "base_spirit": "rum",
+        "difficulty": "easy",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "飓风杯",
+        "ingredients": ["陈年朗姆酒", "菠萝汁", "橙汁", "椰奶", "肉桂粉", "肉豆蔻"],
+        "history": "1970 年代英属维尔京群岛 Soggy Dollar Bar 调酒师 Daphne Henderson 创制。因酒吧无码头，客须游泳而至，钞票浸湿得名「Soggy Dollar」。Pusser's Rum 曾因商标诉讼将配方标准化。",
+        "content": """<!-- ingredients: 陈年朗姆酒|菠萝汁|橙汁|椰奶|肉桂粉|肉豆蔻 -->
+# 止痛药 Painkiller
+
+## 配方
+- 陈年朗姆酒 60ml
+- 菠萝汁 60ml
+- 橙汁 30ml
+- 椰奶 30ml
+- 肉桂粉 少许
+- 肉豆蔻 少许（现刨）
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入陈年朗姆酒、菠萝汁、橙汁、椰奶
+3. 充分摇匀 15 秒
+4. 滤入装满碎冰的飓风杯
+5. 表面撒肉桂粉与现刨肉豆蔻
+
+## 风味
+椰香顺滑、菠萝橙汁甜润、陈年朗姆温润。加勒比海岛名饮。
+
+## 历史
+1970 年代英属维尔京群岛 Soggy Dollar Bar 调酒师 Daphne Henderson 创制。因酒吧无码头，客须游泳而至，钞票浸湿得名「Soggy Dollar」。Pusser's Rum 曾因商标诉讼将配方标准化。
+""",
+    },
+    {
+        "title": "蝎子碗 Scorpion Bowl",
+        "base_spirit": "rum",
+        "difficulty": "medium",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "宴会碗",
+        "ingredients": ["白朗姆酒", "金朗姆酒", "白兰地", "伏特加", "橙汁", "柠檬汁", "菠萝汁", "西柚汁"],
+        "history": "1950 年代波士顿 Polynesian 餐厅创制的大型 Tiki 宴会饮品，以火山造型宴会碗盛装，中心点燃 151 朗姆。美式波利尼西亚餐厅标志性分享饮品。",
+        "content": """<!-- ingredients: 白朗姆酒|金朗姆酒|白兰地|伏特加|橙汁|柠檬汁|菠萝汁|西柚汁 -->
+# 蝎子碗 Scorpion Bowl
+
+## 配方
+- 白朗姆酒 30ml
+- 金朗姆酒 30ml
+- 白兰地 30ml
+- 伏特加 30ml
+- 橙汁 60ml
+- 柠檬汁 30ml
+- 菠萝汁 60ml
+- 西柚汁 30ml
+
+## 步骤
+1. 宴会碗中加入冰块
+2. 依次倒入白朗姆酒、金朗姆酒、白兰地、伏特加
+3. 注入橙汁、柠檬汁、菠萝汁、西柚汁
+4. 长柄勺搅拌混合
+5. 中心可浮 151 朗姆酒点燃
+6. 插入长吸管供多人分享，菠萝角与樱桃装饰
+
+## 风味
+四烈合一、果汁丰盈、气泡清爽。Tiki 宴会分享碗。
+
+## 历史
+1950 年代波士顿 Polynesian 餐厅创制的大型 Tiki 宴会饮品，以火山造型宴会碗盛装，中心点燃 151 朗姆。美式波利尼西亚餐厅标志性分享饮品。
+""",
+    },
+    # --- Hot Drinks 热饮（2 款）---
+    {
+        "title": "热托迪 Hot Toddy",
+        "base_spirit": "whiskey",
+        "difficulty": "easy",
+        "season": "winter",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "热饮杯",
+        "ingredients": ["威士忌", "蜂蜜糖浆", "柠檬片", "肉桂棒", "丁香", "水"],
+        "history": "源自 18 世纪印度 toddy（棕榈汁发酵饮品），英国人引入威士忌与香料变体。苏格兰传统认为热托迪可驱寒治感冒，是冬季经典暖心饮品。",
+        "content": """<!-- ingredients: 威士忌|蜂蜜糖浆|柠檬片|肉桂棒|丁香|水 -->
+# 热托迪 Hot Toddy
+
+## 配方
+- 威士忌 45ml
+- 蜂蜜 15ml
+- 柠檬片 1 片
+- 肉桂棒 1 根
+- 丁香 2-3 粒
+- 热水 120ml
+
+## 步骤
+1. 热饮杯用热水温杯
+2. 倒入威士忌与蜂蜜
+3. 注入热水搅匀溶化蜂蜜
+4. 放入柠檬片、肉桂棒、丁香
+5. 静置 1 分钟出香
+
+## 风味
+蜂蜜甜润、威士忌暖身、香料袅袅。冬季驱寒经典。
+
+## 历史
+源自 18 世纪印度 toddy（棕榈汁发酵饮品），英国人引入威士忌与香料变体。苏格兰传统认为热托迪可驱寒治感冒，是冬季经典暖心饮品。
+""",
+    },
+    {
+        "title": "汤姆与杰瑞 Tom and Jerry",
+        "base_spirit": "rum",
+        "difficulty": "hard",
+        "season": "winter",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "马克杯",
+        "ingredients": ["白兰地", "白朗姆酒", "蛋黄", "蛋清", "糖浆", "肉豆蔻", "肉桂粉", "热牛奶"],
+        "history": "1820 年代美国调酒师 Jerry Thomas 推广，名字并非来自动画，而是源于其 circus 时代朋友。传统美式圣诞节日饮品，需提前制备蛋奶糊底。",
+        "content": """<!-- ingredients: 白兰地|白朗姆酒|蛋黄|蛋清|糖浆|肉豆蔻|肉桂粉|热牛奶 -->
+# 汤姆与杰瑞 Tom and Jerry
+
+## 配方
+- 白兰地 15ml
+- 白朗姆酒 15ml
+- 蛋黄 1 个
+- 蛋清 1 个
+- 糖浆 10ml
+- 肉豆蔻 少许
+- 肉桂粉 少许
+- 热牛奶 120ml
+
+## 步骤
+1. 蛋黄加糖浆打至浅黄浓稠
+2. 蛋清打至硬性发泡
+3. 蛋黄糊与蛋清轻柔翻拌成蛋奶糊底
+4. 马克杯中放入一勺蛋奶糊
+5. 倒入白兰地与白朗姆酒
+6. 缓缓注入热牛奶搅匀
+7. 表面撒肉豆蔻与肉桂粉
+
+## 风味
+蛋奶绵密、朗姆白兰地暖香、香料点缀。美式圣诞节日饮。
+
+## 历史
+1820 年代美国调酒师 Jerry Thomas 推广，名字并非来自动画，而是源于其 circus 时代朋友。传统美式圣诞节日饮品，需提前制备蛋奶糊底。
+""",
+    },
+    # --- Flip 蛋奶（2 款）---
+    {
+        "title": "波特菲利普 Port Flip",
+        "base_spirit": "wine",
+        "difficulty": "medium",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "白兰地杯",
+        "ingredients": ["波特酒", "白兰地", "蛋黄", "糖浆", "肉豆蔻"],
+        "history": "Flip 是 17 世纪英国酒馆热啤酒饮品演变而来的蛋酒类鸡尾酒。Port Flip 用波特酒替代啤酒，冷饮变体于 19 世纪美国流行，是秋季晚餐后经典。",
+        "content": """<!-- ingredients: 波特酒|白兰地|蛋黄|糖浆|肉豆蔻 -->
+# 波特菲利普 Port Flip
+
+## 配方
+- 波特酒 45ml
+- 白兰地 15ml
+- 蛋黄 1 个
+- 糖浆 5ml
+- 肉豆蔻 少许（现刨）
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入波特酒、白兰地、蛋黄、糖浆
+3. 干摇 15 秒乳化蛋黄
+4. 加冰摇 15 秒
+5. 滤冰倒入白兰地杯
+6. 表面现刨肉豆蔻
+
+## 风味
+波特甜润、蛋黄绵滑、白兰地暖韵。秋季蛋奶经典。
+
+## 历史
+Flip 是 17 世纪英国酒馆热啤酒饮品演变而来的蛋酒类鸡尾酒。Port Flip 用波特酒替代啤酒，冷饮变体于 19 世纪美国流行，是秋季晚餐后经典。
+""",
+    },
+    {
+        "title": "白兰地亚历山大 Brandy Alexander",
+        "base_spirit": "brandy",
+        "difficulty": "easy",
+        "season": "winter",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "白兰地杯",
+        "ingredients": ["白兰地", "咖啡力娇酒", "奶油", "肉豆蔻"],
+        "history": "1915 年纽约 Rector's 餐厅调酒师 Troy Alexander 为推广吉百利可可创制。1920 年代禁酒令时期因奶油掩盖劣质酒精而流行。列侬与麦卡特尼曾言「drank brandy alexander」之夜灵感涌现。",
+        "content": """<!-- ingredients: 白兰地|咖啡力娇酒|奶油|肉豆蔻 -->
+# 白兰地亚历山大 Brandy Alexander
+
+## 配方
+- 白兰地 30ml
+- 咖啡力娇酒 30ml
+- 奶油 30ml
+- 肉豆蔻 少许（现刨）
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入白兰地、咖啡力娇酒、奶油
+3. 充分摇匀 20 秒至绵密
+4. 滤冰倒入白兰地杯
+5. 表面现刨肉豆蔻
+
+## 风味
+咖啡甜香、奶油绵滑、白兰地暖韵。冬季餐后甜点饮。
+
+## 历史
+1915 年纽约 Rector's 餐厅调酒师 Troy Alexander 为推广吉百利可可创制。1920 年代禁酒令时期因奶油掩盖劣质酒精而流行。列侬与麦卡特尼曾言「drank brandy alexander」之夜灵感涌现。
+""",
+    },
+    # --- Punch 宴会（2 款）---
+    {
+        "title": "渔会潘趣 Fish House Punch",
+        "base_spirit": "rum",
+        "difficulty": "medium",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "宴会碗",
+        "ingredients": ["黑朗姆酒", "白兰地", "桃子利口酒", "柠檬汁", "糖浆", "苏打水", "肉豆蔻"],
+        "history": "1732 年宾夕法尼亚州 Schuylkill 渔业俱乐部（State in Schuylkill）创制，是美洲有记录最古老的潘趣配方。原为渔会聚会分享，桃子利口酒赋予殖民地特色。",
+        "content": """<!-- ingredients: 黑朗姆酒|白兰地|桃子利口酒|柠檬汁|糖浆|苏打水|肉豆蔻 -->
+# 渔会潘趣 Fish House Punch
+
+## 配方
+- 黑朗姆酒 60ml
+- 白兰地 30ml
+- 桃子利口酒 15ml
+- 柠檬汁 45ml
+- 糖浆 30ml
+- 苏打水 120ml
+- 肉豆蔻 少许（现刨）
+
+## 步骤
+1. 宴会碗中加入大冰块
+2. 倒入黑朗姆酒、白兰地、桃子利口酒、柠檬汁、糖浆
+3. 搅拌均匀
+4. 注入苏打水至满
+5. 表面现刨肉豆蔻
+6. 用长柄勺分入小杯
+
+## 风味
+朗姆白兰地叠烈、桃子果香、柠檬酸爽、气泡绵长。美洲最古老潘趣。
+
+## 历史
+1732 年宾夕法尼亚州 Schuylkill 渔业俱乐部（State in Schuylkill）创制，是美洲有记录最古老的潘趣配方。原为渔会聚会分享，桃子利口酒赋予殖民地特色。
+""",
+    },
+    {
+        "title": "朗姆潘趣 Rum Punch",
+        "base_spirit": "rum",
+        "difficulty": "easy",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "宴会碗",
+        "ingredients": ["金朗姆酒", "青柠汁", "糖浆", "红石榴糖浆", "苦精", "苏打水"],
+        "history": "加勒比海传统配方，遵循「一份酸、两份甜、三份烈、四份弱」的古老口诀。巴巴多斯与牙买加各有变体，是热带度假村与游艇派对标志性饮品。",
+        "content": """<!-- ingredients: 金朗姆酒|青柠汁|糖浆|红石榴糖浆|苦精|苏打水 -->
+# 朗姆潘趣 Rum Punch
+
+## 配方
+- 金朗姆酒 60ml
+- 青柠汁 20ml
+- 糖浆 20ml
+- 红石榴糖浆 5ml
+- 安高天娜苦精 2 滴
+- 苏打水 120ml
+
+## 步骤
+1. 宴会碗中加入冰块
+2. 倒入金朗姆酒、青柠汁、糖浆、红石榴糖浆、苦精
+3. 搅拌均匀
+4. 注入苏打水至满
+5. 青柠角与樱桃装饰
+6. 用长柄勺分入小杯
+
+## 风味
+金朗姆甜润、青柠酸爽、红石榴增色、气泡绵长。加勒比经典潘趣。
+
+## 历史
+加勒比海传统配方，遵循「一份酸、两份甜、三份烈、四份弱」的古老口诀。巴巴多斯与牙买加各有变体，是热带度假村与游艇派对标志性饮品。
+""",
+    },
+    # --- Mocktail 无酒精（3 款）---
+    {
+        "title": "无酒精莫吉托 Virgin Mojito",
+        "base_spirit": "none",
+        "difficulty": "easy",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "muddle",
+        "glassware": "高球杯",
+        "ingredients": ["苏打水", "青柠", "薄荷叶", "糖浆"],
+        "abv_override": 0.0,
+        "history": "莫吉托的无酒精版本，源自古巴哈瓦那 La Bodeguita del Medio 的经典去掉朗姆酒。海明威常客的莫吉托去掉烈酒即为 Virgin Mojito，是夏日清爽解渴首选。",
+        "content": """<!-- ingredients: 苏打水|青柠|薄荷叶|糖浆 -->
+# 无酒精莫吉托 Virgin Mojito
+
+## 配方
+- 苏打水 150ml
+- 青柠 1/2 个（切块）
+- 薄荷叶 8-10 片
+- 糖浆 15ml
+
+## 步骤
+1. 高球杯放入薄荷叶与青柠块
+2. 加糖浆轻轻捣压释放薄荷香气与青柠汁
+3. 装满碎冰
+4. 注入冰镇苏打水至满
+5. 长柄勺从底向上搅拌
+6. 薄荷枝装饰
+
+## 风味
+薄荷清凉、青柠酸爽、气泡解渴。无酒精夏日经典。
+
+## 历史
+莫吉托的无酒精版本，源自古巴哈瓦那 La Bodeguita del Medio 的经典去掉朗姆酒。海明威常客的莫吉托去掉烈酒即为 Virgin Mojito，是夏日清爽解渴首选。
+""",
+    },
+    {
+        "title": "雪莉邓波儿 Shirley Temple",
+        "base_spirit": "none",
+        "difficulty": "easy",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "高球杯",
+        "ingredients": ["红石榴糖浆", "姜汁汽水", "柠檬片", "樱桃"],
+        "abv_override": 0.0,
+        "history": "1930 年代好莱坞为童星 Shirley Temple 特调的无酒精鸡尾酒，因孩童不宜饮酒。常见于餐厅为儿童提供的「特别饮品」，是 Mocktail 文化鼻祖。",
+        "content": """<!-- ingredients: 红石榴糖浆|姜汁汽水|柠檬片|樱桃 -->
+# 雪莉邓波儿 Shirley Temple
+
+## 配方
+- 红石榴糖浆 15ml
+- 姜汁汽水 150ml
+- 柠檬片 1 片
+- 酒渍樱桃 1 颗
+
+## 步骤
+1. 高球杯加冰
+2. 倒入红石榴糖浆
+3. 注入冰镇姜汁汽水
+4. 轻轻搅拌
+5. 柠檬片与酒渍樱桃装饰
+
+## 风味
+红石榴甜润、姜汁汽水清爽、樱桃点缀。儿童 Mocktail 鼻祖。
+
+## 历史
+1930 年代好莱坞为童星 Shirley Temple 特调的无酒精鸡尾酒，因孩童不宜饮酒。常见于餐厅为儿童提供的「特别饮品」，是 Mocktail 文化鼻祖。
+""",
+    },
+    {
+        "title": "无龙舌兰日出 No-Tequila Sunrise",
+        "base_spirit": "none",
+        "difficulty": "easy",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "build",
+        "glassware": "高球杯",
+        "ingredients": ["橙汁", "红石榴糖浆", "柠檬汁"],
+        "abv_override": 0.0,
+        "history": "龙舌兰日出的无酒精版本，保留红石榴糖浆下沉形成日出渐层的视觉效果。1970 年代滚石乐队带火原版后，无酒精变体成为早午餐与家庭聚会的视觉系饮品。",
+        "content": """<!-- ingredients: 橙汁|红石榴糖浆|柠檬汁 -->
+# 无龙舌兰日出 No-Tequila Sunrise
+
+## 配方
+- 橙汁 150ml
+- 红石榴糖浆 15ml
+- 柠檬汁 5ml
+
+## 步骤
+1. 高球杯加冰
+2. 倒入橙汁与柠檬汁搅匀
+3. 沿杯壁缓缓注入红石榴糖浆
+4. 静置形成底部红色日出渐层
+5. 饮用时搅拌
+6. 橙片装饰
+
+## 风味
+橙汁甜美、红石榴增色、柠檬提酸。无酒精日出渐层。
+
+## 历史
+龙舌兰日出的无酒精版本，保留红石榴糖浆下沉形成日出渐层的视觉效果。1970 年代滚石乐队带火原版后，无酒精变体成为早午餐与家庭聚会的视觉系饮品。
+""",
+    },
+    # --- Layered 分层（2 款）---
+    {
+        "title": "B-52 轰炸机",
+        "base_spirit": "liqueur",
+        "difficulty": "medium",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "layer",
+        "glassware": "利口酒杯",
+        "ingredients": ["咖啡力娇酒", "百利甜酒", "君度"],
+        "history": "1970 年代加拿大 Banff Springs Hotel 调酒师 Peter Fich 创制，以 B-52 轰炸机命名。后因点燃饮法（Flaming B-52）风靡全球，是分层鸡尾酒的代表。",
+        "content": """<!-- ingredients: 咖啡力娇酒|百利甜酒|君度 -->
+# B-52 轰炸机
+
+## 配方
+- 咖啡力娇酒 20ml
+- 百利甜酒 20ml
+- 君度 20ml
+
+## 步骤
+1. 利口酒杯备用
+2. 先倒入咖啡力娇酒作底层
+3. 沿吧匙背面缓缓倒入百利甜酒形成层次
+4. 再沿吧匙背面缓缓倒入君度形成第三层
+5. 三层分明不混合
+6. 可选：表面浮少量 151 朗姆酒点燃
+
+## 风味
+咖啡苦甜、百利奶香、君度橙韵。分层烈度递增。
+
+## 历史
+1970 年代加拿大 Banff Springs Hotel 调酒师 Peter Fich 创制，以 B-52 轰炸机命名。后因点燃饮法（Flaming B-52）风靡全球，是分层鸡尾酒的代表。
+""",
+    },
+    {
+        "title": "彩虹酒 Pousse-café",
+        "base_spirit": "liqueur",
+        "difficulty": "hard",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "layer",
+        "glassware": "利口酒杯",
+        "ingredients": ["红石榴糖浆", "黑莓利口酒", "薄荷力娇酒", "君度", "白兰地"],
+        "history": "Pousse-café（法语「推咖啡」）源自 19 世纪法国餐后饮品，依各利口酒密度由高到低分层。19 世纪美国调酒师 Jerry Thomas 在《Bartender's Guide》收录多种变体，是调酒技艺的展示。",
+        "content": """<!-- ingredients: 红石榴糖浆|黑莓利口酒|薄荷力娇酒|君度|白兰地 -->
+# 彩虹酒 Pousse-café
+
+## 配方
+- 红石榴糖浆 10ml
+- 黑莓利口酒 10ml
+- 薄荷力娇酒 10ml
+- 君度 10ml
+- 白兰地 10ml
+
+## 步骤
+1. 利口酒杯备用
+2. 先倒入红石榴糖浆作底层（密度最大）
+3. 沿吧匙背面缓缓倒入黑莓利口酒形成第二层
+4. 沿吧匙背面缓缓倒入薄荷力娇酒形成第三层
+5. 沿吧匙背面缓缓倒入君度形成第四层
+6. 沿吧匙背面缓缓倒入白兰地形成顶层（密度最小）
+7. 五层分明如彩虹不混合
+
+## 风味
+五层各异、由甜至烈、视觉彩虹。分层技艺巅峰。
+
+## 历史
+Pousse-café（法语「推咖啡」）源自 19 世纪法国餐后饮品，依各利口酒密度由高到低分层。19 世纪美国调酒师 Jerry Thomas 在《Bartender's Guide》收录多种变体，是调酒技艺的展示。
+""",
+    },
+    # --- Sour 变体（2 款）---
+    {
+        "title": "纽约酸 New York Sour",
+        "base_spirit": "whiskey",
+        "difficulty": "medium",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "古典杯",
+        "ingredients": ["波本威士忌", "柠檬汁", "糖浆", "红葡萄酒", "蛋清", "橙皮"],
+        "history": "1880 年代纽约市调酒师创制，原称「Continental Sour」或「Southern Whiskey Sour」。顶部浮红葡萄酒形成渐层，是威士忌酸的视觉升级版。",
+        "content": """<!-- ingredients: 波本威士忌|柠檬汁|糖浆|红葡萄酒|蛋清|橙皮 -->
+# 纽约酸 New York Sour
+
+## 配方
+- 波本威士忌 60ml
+- 柠檬汁 25ml
+- 糖浆 15ml
+- 红葡萄酒 15ml（浮顶）
+- 蛋清 1 个
+- 橙皮 1 片（装饰）
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入波本威士忌、柠檬汁、糖浆、蛋清
+3. 干摇 15 秒乳化蛋清
+4. 加冰摇 15 秒
+5. 滤冰倒入装冰古典杯
+6. 沿吧匙背面缓缓倒入红葡萄酒形成顶部红色渐层
+7. 橙皮扭拧释放精油装饰
+
+## 风味
+波本酸甜、蛋清绵密、红酒单宁点缀。视觉渐层酸酒。
+
+## 历史
+1880 年代纽约市调酒师创制，原称「Continental Sour」或「Southern Whiskey Sour」。顶部浮红葡萄酒形成渐层，是威士忌酸的视觉升级版。
+""",
+    },
+    {
+        "title": "海明威代基里 Hemingway Daiquiri",
+        "base_spirit": "rum",
+        "difficulty": "medium",
+        "season": "summer",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "马天尼杯",
+        "ingredients": ["白朗姆酒", "青柠汁", "西柚汁", "黑樱桃力娇酒"],
+        "history": "1920 年代古巴哈瓦那 El Floridita 酒吧调酒师 Constantino Ribalaigua 为常客海明威特调。海明威不爱甜，故去糖加黑樱桃力娇酒与西柚汁，又称「Papa Doble」。",
+        "content": """<!-- ingredients: 白朗姆酒|青柠汁|西柚汁|黑樱桃力娇酒 -->
+# 海明威代基里 Hemingway Daiquiri
+
+## 配方
+- 白朗姆酒 60ml
+- 青柠汁 20ml
+- 西柚汁 15ml
+- 黑樱桃力娇酒 7.5ml
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入白朗姆酒、青柠汁、西柚汁、黑樱桃力娇酒
+3. 充分摇匀 15 秒
+4. 滤冰倒入冰镇马天尼杯
+5. 青柠轮装饰
+
+## 风味
+朗姆纯净、青柠酸爽、西柚微苦、黑樱桃回甘。海明威招牌。
+
+## 历史
+1920 年代古巴哈瓦那 El Floridita 酒吧调酒师 Constantino Ribalaigua 为常客海明威特调。海明威不爱甜，故去糖加黑樱桃力娇酒与西柚汁，又称「Papa Doble」。
+""",
+    },
+    # --- 现代经典（3 款）---
+    {
+        "title": "纸飞机 Paper Plane",
+        "base_spirit": "whiskey",
+        "difficulty": "easy",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "Coupe 杯",
+        "ingredients": ["波本威士忌", "阿佩罗", "金巴利", "柠檬汁"],
+        "history": "2008 年纽约 Milk & Honey 调酒师 Sam Ross 创制。原版用 Amaro Nonino，本变体以金巴利替代增添苦韵。等比四材料（各 22.5ml），名字源自「纸飞机」的轻盈与起飞感。",
+        "content": """<!-- ingredients: 波本威士忌|阿佩罗|金巴利|柠檬汁 -->
+# 纸飞机 Paper Plane
+
+## 配方
+- 波本威士忌 22.5ml
+- 阿佩罗 22.5ml
+- 金巴利 22.5ml
+- 柠檬汁 22.5ml
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入波本威士忌、阿佩罗、金巴利、柠檬汁
+3. 充分摇匀 15 秒
+4. 滤冰倒入冰镇 Coupe 杯
+5. 柠檬皮扭拧装饰
+
+## 风味
+波本甜润、阿佩罗橙苦、金巴利药草、柠檬提酸。现代等比经典。
+
+## 历史
+2008 年纽约 Milk & Honey 调酒师 Sam Ross 创制。原版用 Amaro Nonino，本变体以金巴利替代增添苦韵。等比四材料（各 22.5ml），名字源自「纸飞机」的轻盈与起飞感。
+""",
+    },
+    {
+        "title": "淘金热 Gold Rush",
+        "base_spirit": "whiskey",
+        "difficulty": "easy",
+        "season": "winter",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "古典杯",
+        "ingredients": ["波本威士忌", "蜂蜜糖浆", "柠檬汁"],
+        "history": "2000 年代初纽约 Milk & Honey 调酒师 T. J. Siegel 创制。是古典鸡尾酒与威士忌酸的简约结合，蜂蜜糖浆替代单糖浆赋予金黄光泽与暖冬风味，禁酒令风格酒吧标配。",
+        "content": """<!-- ingredients: 波本威士忌|蜂蜜糖浆|柠檬汁 -->
+# 淘金热 Gold Rush
+
+## 配方
+- 波本威士忌 60ml
+- 蜂蜜糖浆 22.5ml
+- 柠檬汁 22.5ml
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入波本威士忌、蜂蜜糖浆、柠檬汁
+3. 充分摇匀 15 秒
+4. 滤冰倒入装大冰块的古典杯
+5. 柠檬皮扭拧装饰
+
+## 风味
+蜂蜜金黄、波本甜润、柠檬提酸。简约冬季暖饮。
+
+## 历史
+2000 年代初纽约 Milk & Honey 调酒师 T. J. Siegel 创制。是古典鸡尾酒与威士忌酸的简约结合，蜂蜜糖浆替代单糖浆赋予金黄光泽与暖冬风味，禁酒令风格酒吧标配。
+""",
+    },
+    {
+        "title": "裸体与成名 Naked and Famous",
+        "base_spirit": "mezcal",
+        "difficulty": "medium",
+        "season": "autumn",
+        "iba_category": "non_iba",
+        "technique": "shake",
+        "glassware": "Coupe 杯",
+        "ingredients": ["梅斯卡尔", "黄查特酒", "金巴利", "青柠汁"],
+        "history": "2009 年伦敦 Nightjar 酒吧墨西哥调酒师 Joaquín Simó 创制。名字源自 1991 年 They Might Be Giants 同名歌曲。等比四材料，梅斯卡尔的烟熏与黄查特的草本、金巴利的苦甜精妙平衡。",
+        "content": """<!-- ingredients: 梅斯卡尔|黄查特酒|金巴利|青柠汁 -->
+# 裸体与成名 Naked and Famous
+
+## 配方
+- 梅斯卡尔 22.5ml
+- 黄查特酒 22.5ml
+- 金巴利 22.5ml
+- 青柠汁 22.5ml
+
+## 步骤
+1. 摇酒壶加冰
+2. 倒入梅斯卡尔、黄查特酒、金巴利、青柠汁
+3. 充分摇匀 15 秒
+4. 滤冰倒入冰镇 Coupe 杯
+5. 青柠皮扭拧装饰
+
+## 风味
+梅斯卡尔烟熏、黄查特草本、金巴利苦甜、青柠酸爽。现代等比经典。
+
+## 历史
+2009 年伦敦 Nightjar 酒吧墨西哥调酒师 Joaquín Simó 创制。名字源自 1991 年 They Might Be Giants 同名歌曲。等比四材料，梅斯卡尔的烟熏与黄查特的草本、金巴利的苦甜精妙平衡。
+""",
+    },
 ]
