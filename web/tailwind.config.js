@@ -35,7 +35,11 @@ export default {
       },
       fontFamily: {
         serif: ["var(--font-serif)"],
+        // R1 修复：--font-sans 现在是 --font-body 的别名（衬线杂志正文）
+        // 真正的无衬线用 font-ui 工具类（var(--font-ui)）或 inline style
         sans: ["var(--font-sans)"],
+        body: ["var(--font-body)"],
+        ui: ["var(--font-ui)"],
         mono: ["var(--font-mono)"],
       },
       boxShadow: {

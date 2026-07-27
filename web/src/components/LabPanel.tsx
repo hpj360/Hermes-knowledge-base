@@ -10,6 +10,7 @@ import type {
 } from "../types";
 import { Modal } from "./Modal";
 import { showToast } from "./Toast";
+import { EmptyState, MetaText, StatusBadge } from "./ui";
 
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
@@ -130,12 +131,9 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         <p className="eyebrow mb-2">LABORATORY</p>
         <h2 className="display-title">🧪 鸡尾酒实验室</h2>
         <hr className="divider-gold w-24 mx-auto mt-4" />
-        <p
-          className="text-sm mt-4"
-          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-        >
+        <MetaText className="text-sm mt-4">
           选择手头的材料，发现你能调的鸡尾酒
-        </p>
+        </MetaText>
         <div className="mt-4 flex gap-3 justify-center">
           <button
             type="button"
@@ -314,12 +312,9 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           </div>
           <p className="eyebrow mb-2">START</p>
           <p className="section-title mb-2">选择材料开始</p>
-          <p
-            className="text-sm mb-6"
-            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-          >
+          <MetaText className="text-sm mb-6">
             点击上方材料 chip，或试试这些：
-          </p>
+          </MetaText>
           <div className="flex gap-2 justify-center flex-wrap">
             <button
               type="button"

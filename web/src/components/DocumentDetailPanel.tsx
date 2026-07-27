@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import type { DocumentDetail, TagInfo } from "../types";
 import { Skeleton, SkeletonText } from "./Skeleton";
+import { showToast } from "./Toast";
+import { ErrorBanner, FormField, MetaText, MonoText } from "./ui";
 
 interface DocumentDetailPanelProps {
   docId: string;
@@ -78,7 +80,7 @@ export function DocumentDetailPanel({
       await load();
       onChange();
     } catch (err) {
-      alert(`保存失败：${err instanceof Error ? err.message : err}`);
+      showToast(`保存失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setSaving(false);
     }
@@ -88,7 +90,7 @@ export function DocumentDetailPanel({
     try {
       await api.downloadDocumentRaw(docId);
     } catch (err) {
-      alert(`下载失败：${err instanceof Error ? err.message : err}`);
+      showToast(`下载失败：${err instanceof Error ? err.message : err}`, "danger");
     }
   };
 
@@ -103,7 +105,7 @@ export function DocumentDetailPanel({
   if (error) {
     return (
       <div className="p-8 text-center">
-        <p className="mb-3" style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}>{error}</p>
+        <ErrorBanner>{error}</ErrorBanner>
         <button onClick={onBack} className="btn-secondary">返回</button>
       </div>
     );
@@ -133,17 +135,15 @@ export function DocumentDetailPanel({
       {editing && (
         <div className="px-6 py-4 bg-white border-b space-y-3" style={{ borderColor: "var(--ink-200)" }}>
           <p className="eyebrow">编辑元信息</p>
-          <div>
-            <label className="text-xs" style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>标题</label>
+          <FormField label="标题">
             <input
               className="input mt-1"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               disabled={saving}
             />
-          </div>
-          <div>
-            <label className="text-xs" style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>分类</label>
+          </FormField>
+          <FormField label="分类">
             <input
               className="input mt-1"
               value={editCategory}
@@ -151,9 +151,8 @@ export function DocumentDetailPanel({
               placeholder="如：烈酒 / 葡萄酒 / 中国白酒"
               disabled={saving}
             />
-          </div>
-          <div>
-            <label className="text-xs" style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>标签（多选）</label>
+          </FormField>
+          <FormField label="标签（多选）">
             <div className="flex flex-wrap gap-2 mt-1">
               {allTags.length === 0 && (
                 <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>暂无标签，请先在标签管理创建</span>
@@ -190,7 +189,7 @@ export function DocumentDetailPanel({
                 </button>
               ))}
             </div>
-          </div>
+          </FormField>
           <button
             onClick={handleSave}
             className="btn-primary text-sm"
@@ -254,9 +253,9 @@ export function DocumentDetailPanel({
         {/* 右侧：全文（按 chunk 渲染，带 rowid 锚点） */}
         <main className="flex-1 overflow-y-auto p-6">
           {chunks.length === 0 ? (
-            <div className="text-center mt-12" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+            <MetaText as="div" className="text-center mt-12">
               此文档无分片内容（可能为空文档）
-            </div>
+            </MetaText>
           ) : (
             <div className="space-y-4 max-w-3xl">
               {chunks.map((c) => (
@@ -268,7 +267,7 @@ export function DocumentDetailPanel({
                 >
                   <div className="flex items-center justify-between mb-3 pb-2 border-b" style={{ borderColor: "var(--ink-100)" }}>
                     <span className="numeral">片段 {String(c.idx + 1).padStart(2, "0")}</span>
-                    <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}>chars {c.char_start}-{c.char_end}</span>
+                    <MonoText className="text-xs">chars {c.char_start}-{c.char_end}</MonoText>
                   </div>
                   <div className="whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ink-900)", fontFamily: "var(--font-sans)", fontSize: "0.95rem" }}>
                     {c.text}

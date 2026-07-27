@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { TagInfo } from "../types";
 import { SkeletonList } from "./Skeleton";
+import { showToast } from "./Toast";
+import { useConfirm, MetaText } from "./ui";
 
 interface TagPanelProps {
   onChange: () => void;
@@ -20,6 +22,9 @@ export function TagPanel({ onChange }: TagPanelProps) {
   const [name, setName] = useState("");
   const [color, setColor] = useState(PRESET_COLORS[0]);
   const [creating, setCreating] = useState(false);
+
+  // R2: 替代 window.confirm 的异步确认对话框
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -47,20 +52,20 @@ export function TagPanel({ onChange }: TagPanelProps) {
       await load();
       onChange();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "创建失败");
+      showToast(err instanceof Error ? err.message : "创建失败", "danger");
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (tag: TagInfo) => {
-    if (!confirm(`确认删除标签「${tag.name}」？此操作会从所有文档中移除该标签。`)) return;
+    if (!(await confirm(`确认删除标签「${tag.name}」？此操作会从所有文档中移除该标签。`))) return;
     try {
       await api.deleteTag(tag.id);
       await load();
       onChange();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "删除失败");
+      showToast(err instanceof Error ? err.message : "删除失败", "danger");
     }
   };
 
@@ -102,7 +107,7 @@ export function TagPanel({ onChange }: TagPanelProps) {
         ) : tags.length === 0 ? (
           <div className="p-12 text-center">
             <div className="text-2xl mb-2" style={{ color: "var(--gold-500)" }}>◆</div>
-            <p className="text-sm" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>暂无标签，请在上方创建</p>
+            <MetaText className="text-sm">暂无标签，请在上方创建</MetaText>
           </div>
         ) : (
           <ul className="divide-y" style={{ borderColor: "var(--ink-100)" }}>
@@ -124,6 +129,9 @@ export function TagPanel({ onChange }: TagPanelProps) {
       <div className="mt-6 px-4 py-3 text-xs" style={{ background: "var(--ink-50)", borderLeft: "3px solid var(--gold-500)", color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>
         提示：标签为多选（一篇文档可有多个标签），分类为单选。在文档详情页可为文档设置标签。
       </div>
+
+      {/* R2: useConfirm 对话框 */}
+      {confirmDialog}
     </div>
   );
 }

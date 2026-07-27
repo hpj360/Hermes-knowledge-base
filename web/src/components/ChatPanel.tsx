@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CitationList } from "./CitationList";
+import { showToast } from "./Toast";
+import { MetaText, MonoText } from "./ui";
 import type { Citation, ExternalRef, SSEEvent } from "../types";
 
 interface ChatPanelProps {
@@ -135,10 +137,10 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
     setLoading(true);
     try {
       const r = await api.seed();
-      alert(`种子导入完成：成功 ${r.seeded} 篇，失败 ${r.failed} 篇`);
+      showToast(`种子导入完成：成功 ${r.seeded} 篇，失败 ${r.failed} 篇`, "success");
       refreshDocs();
     } catch (err) {
-      alert(`种子导入失败：${err instanceof Error ? err.message : err}`);
+      showToast(`种子导入失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setLoading(false);
     }
@@ -173,9 +175,9 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
               <p className="eyebrow mb-4">HERMES · 知识库</p>
               <h2 className="display-title mb-4">向 Hermes 知识库提问吧</h2>
               <hr className="divider-gold w-32 mx-auto mb-8" />
-              <p className="text-sm mb-8" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+              <MetaText className="text-sm mb-8">
                 选择下方问题，或直接输入你想了解的酒类知识
-              </p>
+              </MetaText>
               <div className="space-y-3">
                 {[
                   "金酒的核心风味是什么？",
@@ -321,16 +323,13 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                     </div>
                   )}
                   {m.latencyMs !== undefined && !m.streaming && (
-                    <div
+                    <MonoText
+                      as="div"
                       className="text-xs mt-2 pt-2 border-t"
-                      style={{
-                        color: "var(--ink-400)",
-                        fontFamily: "var(--font-mono)",
-                        borderColor: "var(--ink-100)",
-                      }}
+                      style={{ borderColor: "var(--ink-100)" }}
                     >
                       {m.modelUsed} · {m.latencyMs}ms
-                    </div>
+                    </MonoText>
                   )}
                 </>
               )}

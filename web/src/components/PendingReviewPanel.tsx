@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { DocumentDetail, LabRecipe } from "../types";
+import { showToast } from "./Toast";
+import { ErrorBanner, MetaText, MonoText } from "./ui";
 
 interface PendingReviewPanelProps {
   /** 外部传入的刷新信号：每次自增触发重新加载。 */
@@ -83,7 +85,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       await load();
       onResolved?.();
     } catch (err) {
-      alert(`通过失败：${err instanceof Error ? err.message : err}`);
+      showToast(`通过失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setBusyDocId(null);
     }
@@ -91,6 +93,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
 
   const handleReject = async (docId: string) => {
     // 浏览器原生 prompt 与 mockup recipe-editor 行为一致；测试环境 jsdom 可 stubGlobal prompt。
+    // TODO: R3 迁移到 usePrompt（当前 PendingReviewPanel.test.tsx stub prompt 并期望 window.prompt 被调用）
     const reason = typeof window !== "undefined" && typeof window.prompt === "function"
       ? window.prompt("驳回理由：") || ""
       : "";
@@ -106,7 +109,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       await load();
       onResolved?.();
     } catch (err) {
-      alert(`驳回失败：${err instanceof Error ? err.message : err}`);
+      showToast(`驳回失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setBusyDocId(null);
     }
@@ -131,7 +134,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       await load();
       onResolved?.();
       if (fail > 0) {
-        alert(`批量通过完成：成功 ${ok}，失败 ${fail}`);
+        showToast(`批量通过完成：成功 ${ok}，失败 ${fail}`, "warning");
       }
     } finally {
       setBusyDocId(null);
@@ -157,7 +160,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       await load();
       onResolved?.();
       if (fail > 0) {
-        alert(`批量驳回完成：成功 ${ok}，失败 ${fail}`);
+        showToast(`批量驳回完成：成功 ${ok}，失败 ${fail}`, "warning");
       }
     } finally {
       setBusyDocId(null);
@@ -180,24 +183,21 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
             📨 待审核配方
           </h3>
         </div>
-        <span
-          className="text-xs"
-          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-        >
+        <MetaText as="span" className="text-xs">
           {loading ? "加载中…" : items.length > 0 ? `共 ${items.length} 条 UGC 投稿待审` : "当前无 UGC 投稿待审"}
-        </span>
+        </MetaText>
       </div>
 
       {/* 审核进度统计 */}
       {items.length > 0 && (
         <div className="mb-3">
-          <div
+          <MetaText
+            as="div"
             className="flex items-center justify-between text-xs mb-1"
-            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
           >
             <span>待审 {items.length} / 已处理 {resolvedCount}</span>
             <span>{progressPct}%</span>
-          </div>
+          </MetaText>
           <div className="w-full h-1.5 bg-ink-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gold-500 transition-all"
@@ -223,7 +223,7 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
           </label>
           {selected.size > 0 && (
             <>
-              <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>已选 {selected.size}</span>
+              <MetaText as="span" className="text-xs">已选 {selected.size}</MetaText>
               <button
                 type="button"
                 onClick={handleBatchApprove}
@@ -248,21 +248,15 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
       )}
 
       {error && (
-        <div
-          className="text-sm py-2"
-          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
-        >
+        <ErrorBanner className="text-sm py-2">
           加载失败：{error}
-        </div>
+        </ErrorBanner>
       )}
 
       {!loading && items.length === 0 && !error && (
-        <div
-          className="text-sm py-4 text-center"
-          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-        >
+        <MetaText as="div" className="text-sm py-4 text-center">
           暂无待审核配方
-        </div>
+        </MetaText>
       )}
 
       {items.length > 0 && (
@@ -300,13 +294,10 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                       {expanded === r.doc_id ? "▼" : "▶"}
                     </span>
                   </div>
-                  <div
-                    className="text-xs truncate"
-                    style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
-                  >
+                  <MonoText as="div" className="text-xs truncate">
                     {r.doc_id}
                     {r.source ? ` · ${r.source}` : ""}
-                  </div>
+                  </MonoText>
                   {expanded === r.doc_id && detail && (
                     <div
                       className="mt-1 p-2 rounded text-xs max-h-40 overflow-y-auto"

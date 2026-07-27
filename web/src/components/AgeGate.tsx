@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { Logo } from "./ui";
 
 interface AgeGateProps {
   onConfirm: () => void;
@@ -52,7 +53,9 @@ export function AgeGate({ onConfirm }: AgeGateProps) {
         {/* 顶部金线 */}
         <hr className="divider-gold mb-8" />
 
-        <div className="text-5xl mb-4">🍷</div>
+        <div className="mb-4" style={{ color: "var(--gold-500)" }}>
+          <Logo size={56} />
+        </div>
 
         <p className="eyebrow mb-3" style={{ color: "var(--gold-300)" }}>AGE VERIFICATION</p>
 

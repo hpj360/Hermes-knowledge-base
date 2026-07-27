@@ -27,92 +27,13 @@
 }
 
 @layer components {
-  /* === UI 设计规范：杂志式按钮系统 ===
-   * 三级按钮层级：primary（深酒红实心）/ secondary（金线描边）/ ghost（无框）
-   * 杂志感：去除重阴影，用细线 + tracking 强化优雅 */
-  .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 font-medium
-      transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
-    border-radius: var(--r-sm);
-    letter-spacing: var(--tracking-medium);
-    font-size: var(--fs-sm);
-  }
-  .btn-primary {
-    @apply btn text-white;
-    background: var(--brand-700);
-    border: 1px solid var(--brand-700);
-  }
-  .btn-primary:hover {
-    background: var(--brand-900);
-    border-color: var(--brand-900);
-  }
-  .btn-secondary {
-    @apply btn;
-    background: transparent;
-    color: var(--brand-700);
-    border: 1px solid var(--gold-500);
-  }
-  .btn-secondary:hover {
-    background: var(--gold-100);
-    border-color: var(--gold-700);
-  }
-  .btn-danger {
-    @apply btn;
-    background: transparent;
-    color: var(--danger);
-    border: 1px solid var(--danger);
-  }
-  .btn-danger:hover {
-    background: var(--danger);
-    color: #fff;
-  }
-  .btn-ghost {
-    @apply btn;
-    background: transparent;
-    color: var(--ink-600);
-    border: 1px solid transparent;
-  }
-  .btn-ghost:hover {
-    background: var(--ink-100);
-    color: var(--ink-900);
-  }
-
-  /* === 杂志式输入框 === */
-  .input {
-    @apply w-full;
-    font-family: var(--font-sans);
-    font-size: var(--fs-sm);
-    padding: var(--sp-2) var(--sp-3);
-    border: 1px solid var(--ink-200);
-    border-radius: var(--r-sm);
-    background: #fff;
-    color: var(--ink-900);
-    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
-  }
-  .input:focus {
-    outline: none;
-    border-color: var(--gold-500);
-    box-shadow: 0 0 0 1px var(--gold-500);
-  }
-
-  /* === 杂志式卡片（克制阴影 + 细线） === */
-  .card {
-    background: #fff;
-    border: 1px solid var(--ink-200);
-    border-radius: var(--r-md);
-    box-shadow: 0 1px 3px rgba(31, 28, 24, 0.04);
-  }
-  .card-elevated {
-    background: #fff;
-    border: 1px solid var(--ink-200);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-md);
-  }
-
   /* === 杂志式编号系统 ===
-   * 大写小标题 + 金色 tracking，用于"来源/SOURCE"、"第 N 章"等 */
+   * 大写小标题 + 金色 tracking，用于"来源/SOURCE"、"第 N 章"等。
+   * R1 重构：.btn-* / .card / .input 已移至文件末尾非 layer 区域，
+   *          以覆盖 _components.css 的同名类（@layer 优先级低于非 layer）。
+   *          此处仅保留 _components.css 未定义的语义类。 */
   .eyebrow {
-    font-family: var(--font-sans);
+    font-family: var(--font-ui);
     font-size: var(--numeral-size);
     font-weight: 600;
     text-transform: uppercase;
@@ -290,4 +211,120 @@
 .shadow-gold-hover:hover {
   box-shadow: var(--shadow-gold);
   transition: box-shadow var(--duration-base) var(--ease-out);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * R1 重构：杂志式基础组件类（非 layer 区域，覆盖 _components.css 同名类）
+ *
+ * 原问题：_components.css 的 .btn-* / .card / .input 是非 layer 样式，
+ *         优先级高于 @layer components，导致 index.css 的杂志版本被覆盖。
+ * 修复：将这些类移到非 layer 区域（此处），后加载覆盖 _components.css。
+ * 设计宪法：杂志感（克制阴影 + 细线 + 金色描边），区别于 _components.css
+ *           的"实底金按钮/大圆角卡片"版本。
+ * ════════════════════════════════════════════════════════════════════ */
+
+/* === 杂志式按钮系统 ===
+ * 三级按钮层级：primary（深酒红实心）/ secondary（金线描边透明底）/ ghost（无框）/ danger（红描边）
+ * 区别于 _components.css：secondary 用透明底+金边（非金底深字），更克制 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: var(--tracking-medium);
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--brand-700);
+  color: #fff;
+  border-color: var(--brand-700);
+}
+.btn-primary:hover {
+  background: var(--brand-900);
+  border-color: var(--brand-900);
+}
+.btn-primary:disabled {
+  background: var(--ink-400);
+  border-color: var(--ink-400);
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--brand-700);
+  border-color: var(--gold-500);
+}
+.btn-secondary:hover {
+  background: var(--gold-100);
+  border-color: var(--gold-700);
+}
+.btn-secondary:disabled {
+  background: var(--ink-100);
+  border-color: var(--ink-200);
+  color: var(--ink-400);
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-600);
+  border-color: transparent;
+}
+.btn-ghost:hover {
+  background: var(--ink-100);
+  color: var(--ink-900);
+}
+
+/* === 杂志式输入框 ===
+ * 区别于 _components.css：focus 用金色（非品牌红），更克制 */
+.input {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--ink-200);
+  border-radius: var(--r-sm);
+  background: #fff;
+  color: var(--ink-900);
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 1px var(--gold-500);
+}
+.input::placeholder {
+  color: var(--ink-400);
+}
+
+/* === 杂志式卡片（克制阴影 + 细线，无默认 padding） ===
+ * 区别于 _components.css：r-md=8px（非 r-lg=14px），无默认 padding
+ * React 用 .card p-5 / .card p-4 / .card p-6 自行加 padding */
+.card {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--r-md);
+  box-shadow: 0 1px 3px rgba(31, 28, 24, 0.04);
+}
+.card-elevated {
+  background: #fff;
+  border: 1px solid var(--ink-200);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
 }

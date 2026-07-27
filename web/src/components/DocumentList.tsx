@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { CategoryInfo, DocumentItem, TagInfo } from "../types";
 import { SkeletonList } from "./Skeleton";
+import { showToast } from "./Toast";
+import { useConfirm, MetaText } from "./ui";
 
 interface DocumentListProps {
   refreshKey: number;
@@ -18,6 +20,9 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterTagId, setFilterTagId] = useState<number | undefined>(undefined);
+
+  // R2: 替代 window.confirm 的异步确认对话框
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -43,13 +48,13 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   }, [refreshKey, filterCategory, filterTagId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (docId: string, title: string) => {
-    if (!confirm(`确认删除文档「${title}」？此操作不可恢复。`)) return;
+    if (!(await confirm(`确认删除文档「${title}」？此操作不可恢复。`))) return;
     try {
       await api.deleteDocument(docId);
       await load();
       onChange();
     } catch (err) {
-      alert(`删除失败：${err instanceof Error ? err.message : err}`);
+      showToast(`删除失败：${err instanceof Error ? err.message : err}`, "danger");
     }
   };
 
@@ -59,17 +64,25 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   };
 
   if (loading && docs.length === 0) {
-    return <div className="p-4"><SkeletonList count={4} /></div>;
+    return (
+      <>
+        <div className="p-4"><SkeletonList count={4} /></div>
+        {confirmDialog}
+      </>
+    );
   }
 
   if (error) {
     return (
-      <div
-        className="p-4 text-center"
-        style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
-      >
-        {error}
-      </div>
+      <>
+        <div
+          className="p-4 text-center"
+          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
+        >
+          {error}
+        </div>
+        {confirmDialog}
+      </>
     );
   }
 
@@ -121,9 +134,9 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>◆</div>
           <p className="eyebrow mb-2">EMPTY</p>
           <p className="section-title mb-2">{filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}</p>
-          <p className="text-sm" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+          <MetaText className="text-sm">
             {filterCategory || filterTagId ? "尝试更换筛选条件" : "点击右上角导入或种子知识"}
-          </p>
+          </MetaText>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
@@ -180,6 +193,9 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           </div>
         </div>
       )}
+
+      {/* R2: useConfirm 对话框 */}
+      {confirmDialog}
     </div>
   );
 }

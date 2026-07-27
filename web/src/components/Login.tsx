@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api";
+import { Logo } from "./ui";
 
 interface LoginProps {
   onLogin: () => void;
@@ -46,7 +47,9 @@ export function Login({ onLogin }: LoginProps) {
         <hr className="divider-gold mb-8" />
 
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🍷</div>
+          <div className="mb-4" style={{ color: "var(--gold-500)" }}>
+            <Logo size={56} />
+          </div>
           <p className="eyebrow mb-3" style={{ color: "var(--gold-300)" }}>ACCESS</p>
           <h2
             className="text-gold-foil mb-3"

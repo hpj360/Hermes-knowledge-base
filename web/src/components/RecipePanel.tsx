@@ -3,6 +3,8 @@ import { api } from "../api";
 import type { LabRecipe, LabRecipeVariant } from "../types";
 import { PendingReviewPanel } from "./PendingReviewPanel";
 import { SkeletonList } from "./Skeleton";
+import { showToast } from "./Toast";
+import { EmptyState, HeadingText, MetaText, MonoText, StatusBadge } from "./ui";
 
 interface RecipePanelProps {
   /** 打开 UGC 编辑器（外部通过 tab 切换实现，组件本身只发请求）。 */
@@ -77,7 +79,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
       await load();
       setReviewTick((t) => t + 1);
     } catch (err) {
-      alert(`审核失败：${err instanceof Error ? err.message : err}`);
+      showToast(`审核失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setBusyDocId(null);
     }
@@ -89,7 +91,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
       await api.labHideRecipe(recipe.doc_id, !recipe.hidden);
       await load();
     } catch (err) {
-      alert(`操作失败：${err instanceof Error ? err.message : err}`);
+      showToast(`操作失败：${err instanceof Error ? err.message : err}`, "danger");
     } finally {
       setBusyDocId(null);
     }
@@ -113,12 +115,9 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
           <p className="eyebrow mb-1">RECIPES</p>
           <h2 className="display-title">📝 配方治理</h2>
         </div>
-        <span
-          className="text-xs"
-          style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-        >
+        <MetaText className="text-xs">
           外部数据源 / 审核 / 隐藏
-        </span>
+        </MetaText>
       </div>
 
       {/* 待审核队列（status=pending 自动加载） */}
@@ -227,19 +226,10 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
       {/* 空状态 — 杂志化 */}
       {!loading && filtered.length === 0 && !error && (
-        <div className="text-center py-16">
-          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>
-            ◆
-          </div>
-          <p className="eyebrow mb-2">EMPTY</p>
-          <p className="section-title mb-2">暂无配方</p>
-          <p
-            className="text-sm"
-            style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-          >
-            请先同步外部数据源或创作新配方
-          </p>
-        </div>
+        <EmptyState
+          title="暂无配方"
+          description="请先同步外部数据源或创作新配方"
+        />
       )}
 
       {/* 配方卡片网格 */}
@@ -331,17 +321,14 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         </div>
       )}
       <div className="flex items-start justify-between gap-2">
-        <h3
+        <HeadingText
+          size="1.05rem"
+          as="h3"
           className="font-semibold truncate flex-1"
-          style={{
-            fontFamily: "var(--font-serif)",
-            color: "var(--ink-900)",
-            fontSize: "1.05rem",
-          }}
           title={recipe.title}
         >
           {recipe.title || "(未命名)"}
-        </h3>
+        </HeadingText>
         <span
           className="text-xs px-2 py-0.5 rounded-full"
           style={statusStyle}
@@ -350,51 +337,36 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         </span>
       </div>
       <div className="flex gap-2 flex-wrap items-center text-xs">
-        <span
-          className="px-1.5 py-0.5 rounded"
-          style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
-        >
+        <StatusBadge variant="brand" pill={false}>
           {recipe.source || "local"}
-        </span>
+        </StatusBadge>
         {recipe.verified ? (
-          <span
-            className="px-1.5 py-0.5 rounded"
-            style={{ background: "rgba(46, 125, 91, 0.12)", color: "var(--success)" }}
-          >
+          <StatusBadge variant="success" pill={false}>
             ✓ 已审核
-          </span>
+          </StatusBadge>
         ) : (
-          <span
-            className="px-1.5 py-0.5 rounded"
-            style={{ background: "var(--ink-100)", color: "var(--ink-600)" }}
-          >
+          <StatusBadge variant="ink" pill={false}>
             待审核
-          </span>
+          </StatusBadge>
         )}
         {recipe.hidden && (
-          <span
-            className="px-1.5 py-0.5 rounded"
-            style={{ background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)" }}
-          >
+          <StatusBadge variant="danger" pill={false}>
             隐藏
-          </span>
+          </StatusBadge>
         )}
         {recipe.season && (
-          <span
-            className="px-1.5 py-0.5 rounded"
-            style={{ background: "var(--gold-100)", color: "var(--gold-700)" }}
-          >
+          <StatusBadge variant="gold" pill={false}>
             {recipe.season}
-          </span>
+          </StatusBadge>
         )}
       </div>
-      <div
+      <MonoText
         className="text-xs break-all"
-        style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
+        as="div"
         title={recipe.doc_id}
       >
         {recipe.doc_id}
-      </div>
+      </MonoText>
       <div className="flex gap-2 pt-2 border-t border-dashed border-ink-100">
         {!recipe.verified && (
           <button
