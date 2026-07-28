@@ -162,17 +162,42 @@ def search_knowledge(
     }
 
 
+_TYPE_LABELS = {
+    99: "文件夹", 11: "笔记", 7: "文档", 2: "网页",
+    6: "文章", 9: "图片",
+}
+
+
+def _clean_title(title: str) -> str:
+    """清理标题：去掉 .md/.txt 后缀，保留可读名。"""
+    t = title.strip()
+    for suffix in (".md", ".txt", ".markdown"):
+        if t.lower().endswith(suffix):
+            t = t[: -len(suffix)].strip()
+    return t or "未命名"
+
+
 def _build_content(item: dict[str, Any]) -> str:
     """把 IMA 检索片段构造为本地 Markdown content。
 
-    IMA search_knowledge 响应每条含 title / content / url（可能为空）。
+    IMA search_knowledge 响应每条含 title / highlight_content / media_type / media_id。
+    注意：IMA API 不返回完整文件内容，仅返回标题（和高亮片段，通常为空）。
+    故以标题为主体构造可检索的 Markdown。
     """
-    title = (item.get("title") or "").strip() or "未命名"
-    content = (item.get("content") or "").strip()
+    raw_title = (item.get("title") or "").strip() or "未命名"
+    title = _clean_title(raw_title)
+    highlight = (item.get("highlight_content") or "").strip()
     url = (item.get("url") or "").strip()
+    media_type = item.get("media_type")
+    type_label = _TYPE_LABELS.get(media_type, "未知")
     lines = [f"# {title}\n"]
-    if content:
-        lines.append(content)
+    if highlight:
+        lines.append(highlight)
+        lines.append("")
+    else:
+        # 无高亮内容时，以标题作为可检索文本主体
+        lines.append(f"本文档来自腾讯 IMA 知识库，标题为「{title}」。")
+    lines.append(f"\n> 来源类型：{type_label}（media_type={media_type}）")
     if url:
         lines.append(f"\n原文链接：{url}")
     return "\n".join(lines).strip()
@@ -199,92 +224,118 @@ def sync_knowledge_base(
     """
     kb_id = resolve_kb_id(kb_id)
     importer = importer or ImportService()
-    # 用 query 或 "*" 让 IMA 返回尽量多条目；分页拉满 limit
+    # IMA API 不支持 "*" 通配符；query 为空时用多关键词循环搜索
+    # 覆盖酒类主要品类 + 中文常见词，最大化召回
+    _DEFAULT_QUERIES = [
+        # 英文品类
+        "wine", "spirit", "cocktail", "whisky", "whiskey",
+        "rum", "gin", "vodka", "liqueur", "brandy",
+        "tequila", "beer", "sake", "champagne", "vermouth",
+        "bourbon", "scotch", "cognac", "port", "sherry",
+        # 中文品类
+        "酒", "白酒", "葡萄酒", "啤酒", "黄酒",
+        "清酒", "梅酒", "米酒", "洋酒", "烈酒",
+        "利口酒", "白兰地", "威士忌", "伏特加", "朗姆酒",
+        "金酒", "龙舌兰", "香槟", "味美思", "鸡尾酒",
+        # 通用词（高召回）
+        "的", "a",
+    ]
+    search_queries = [query] if query and query.strip() else _DEFAULT_QUERIES
+
     fetched = 0
-    cursor = ""
     imported = 0
     skipped = 0
     failed = 0
     items: list[dict[str, Any]] = []
+    seen_media_ids: set[str] = set()  # 跨关键词去重
     page_size = max(1, min(get_settings().ima_page_size, 50))
 
-    while fetched < limit:
-        page_limit = min(page_size, limit - fetched)
-        try:
-            page = search_knowledge(
-                query=query or "*",
-                kb_id=kb_id,
-                limit=page_limit,
-                cursor=cursor,
-            )
-        except IMAAPIError as e:
-            _logger.warning("IMA search_knowledge 失败: %s", e)
-            failed += 1
+    for sq in search_queries:
+        if fetched >= limit:
             break
-        info_list = page.get("info_list") or []
-        if not info_list:
-            break
-        for item in info_list:
-            fetched += 1
-            title = (item.get("title") or "").strip() or "未命名"
-            # IMA item_id：优先 item_id / doc_id / url hash 兜底
-            item_id = (
-                item.get("item_id")
-                or item.get("doc_id")
-                or item.get("id")
-                or str(hash(item.get("url") or title))
-            )
-            source_id = f"ima:{kb_id}:{item_id}"
-            # 去重
+        cursor = ""
+        while fetched < limit:
+            page_limit = min(page_size, limit - fetched)
             try:
-                with get_session() as session:
-                    existing = session.exec(
-                        select(Document).where(
-                            Document.source == "ima",
-                            Document.source_id == source_id,
-                        )
-                    ).first()
-                    if existing:
-                        skipped += 1
+                page = search_knowledge(
+                    query=sq,
+                    kb_id=kb_id,
+                    limit=page_limit,
+                    cursor=cursor,
+                )
+            except IMAAPIError as e:
+                _logger.warning("IMA search_knowledge 失败 (query=%s): %s", sq, e)
+                failed += 1
+                break
+            info_list = page.get("info_list") or []
+            if not info_list:
+                break
+            for item in info_list:
+                # 过滤文件夹（mt=99）和图片（mt=9），只导入文本类内容
+                if item.get("media_type") in (99, 9):
+                    continue
+                media_id = item.get("media_id") or ""
+                # 跨关键词去重
+                if media_id in seen_media_ids:
+                    continue
+                seen_media_ids.add(media_id)
+                fetched += 1
+                if fetched > limit:
+                    break
+                title = _clean_title((item.get("title") or "").strip() or "未命名")
+                # IMA item_id：优先 media_id（稳定唯一）
+                item_id = media_id or item.get("item_id") or item.get("doc_id") or item.get("id") or title
+                source_id = f"ima:{kb_id}:{item_id}"
+                # 去重
+                try:
+                    with get_session() as session:
+                        existing = session.exec(
+                            select(Document).where(
+                                Document.source == "ima",
+                                Document.source_id == source_id,
+                            )
+                        ).first()
+                        if existing:
+                            skipped += 1
+                            items.append({
+                                "title": title,
+                                "doc_id": existing.doc_id,
+                                "status": "skipped",
+                            })
+                            continue
+                except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
+                    _logger.warning("IMA 去重查询失败: %s", e)
+                    failed += 1
+                    continue
+                # 导入
+                try:
+                    content = _build_content(item)
+                    result = importer.import_text(
+                        content=content,
+                        title=title,
+                        category=category,
+                        source="ima",
+                        source_id=source_id,
+                        verified=False,  # 外部源默认待审核
+                        source_type="url" if item.get("url") else "local",
+                        file_type="md",
+                    )
+                    doc_id = result.get("doc_id") if isinstance(result, dict) else result
+                    if doc_id:
+                        imported += 1
                         items.append({
                             "title": title,
-                            "doc_id": existing.doc_id,
-                            "status": "skipped",
+                            "doc_id": doc_id,
+                            "status": "imported",
                         })
-                        continue
-            except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
-                _logger.warning("IMA 去重查询失败: %s", e)
-                failed += 1
-                continue
-            # 导入
-            try:
-                content = _build_content(item)
-                result = importer.import_text(
-                    content=content,
-                    title=title,
-                    category=category,
-                    source="ima",
-                    source_id=source_id,
-                    verified=False,  # 外部源默认待审核
-                    source_type="url" if item.get("url") else "local",
-                    file_type="md",
-                )
-                doc_id = result.get("doc_id") if isinstance(result, dict) else result
-                if doc_id:
-                    imported += 1
-                    items.append({
-                        "title": title,
-                        "doc_id": doc_id,
-                        "status": "imported",
-                    })
-                else:
+                    else:
+                        failed += 1
+                except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
+                    _logger.warning("IMA 导入失败 (%s): %s", title, e)
                     failed += 1
-            except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
-                _logger.warning("IMA 导入失败 (%s): %s", title, e)
-                failed += 1
-        cursor = page.get("cursor") or ""
-        if not page.get("has_more") or not cursor:
-            break
+            cursor = page.get("cursor") or ""
+            if not page.get("has_more") or not cursor:
+                break
 
     return {
         "kb_id": kb_id,
