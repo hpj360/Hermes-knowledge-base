@@ -3,7 +3,7 @@ import { api } from "../api";
 import type { TagInfo } from "../types";
 import { SkeletonList } from "./Skeleton";
 import { showToast } from "./Toast";
-import { useConfirm, MetaText } from "./ui";
+import { useConfirm, MetaText, BauhausSectionLabel, BauhausDisplay, BauhausCard, BauhausButton } from "./ui";
 
 interface TagPanelProps {
   onChange: () => void;
@@ -77,14 +77,14 @@ export function TagPanel({ onChange }: TagPanelProps) {
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <div className="mb-8">
-        <p className="eyebrow mb-2">TAGS</p>
-        <h2 className="display-title">标签管理</h2>
+        <BauhausSectionLabel className="mb-2">TAGS</BauhausSectionLabel>
+        <BauhausDisplay as="h2">标签管理</BauhausDisplay>
         <hr className="divider-gold w-24 mt-4" />
       </div>
 
       {/* 创建 */}
-      <div className="card mb-8 p-6">
-        <p className="eyebrow mb-4">创建新标签</p>
+      <BauhausCard className="mb-8 p-6">
+        <BauhausSectionLabel className="mb-4">创建新标签</BauhausSectionLabel>
         <div className="flex items-center gap-3 flex-wrap">
           <input className="input flex-1 min-w-[160px]" placeholder="标签名" value={name} onChange={(e) => setName(e.target.value)} maxLength={32} disabled={creating} />
           <div className="flex items-center gap-1">
@@ -102,16 +102,16 @@ export function TagPanel({ onChange }: TagPanelProps) {
               ))}
             </div>
           </div>
-          <button onClick={handleCreate} className="btn-primary text-sm" disabled={creating || !name.trim()}>
+          <BauhausButton variant="solid" onClick={handleCreate} className="text-sm" disabled={creating || !name.trim()}>
             {creating ? "创建中..." : "创建"}
-          </button>
+          </BauhausButton>
         </div>
-      </div>
+      </BauhausCard>
 
       {/* 列表 */}
-      <div className="card">
+      <BauhausCard>
         <div className="flex items-center justify-between p-5 border-b border-ink-200">
-          <p className="eyebrow">已有标签</p>
+          <BauhausSectionLabel>已有标签</BauhausSectionLabel>
           <MetaText className="text-xs">{tags.length} 个</MetaText>
         </div>
         {loading ? (
@@ -135,17 +135,18 @@ export function TagPanel({ onChange }: TagPanelProps) {
                   <span className="font-serif text-ink-900 font-medium">{t.name}</span>
                   <MetaText className="text-xs">关联 {t.doc_count ?? 0} 篇</MetaText>
                 </div>
-                <button
+                <BauhausButton
+                  variant="outline"
                   onClick={() => handleDelete(t)}
-                  className="btn-ghost text-xs text-[color:var(--danger)] opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="text-xs text-[color:var(--danger)] opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   删除
-                </button>
+                </BauhausButton>
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </BauhausCard>
 
       <div className="mt-6 px-4 py-3 text-xs bg-ink-50 border-l-[3px] border-gold-500 text-ink-600 font-ui">
         提示：标签为多选（一篇文档可有多个标签），分类为单选。在文档详情页可为文档设置标签。

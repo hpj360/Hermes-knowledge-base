@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../api";
-import { Logo } from "./ui";
+import { Logo, BauhausSectionLabel, BauhausButton } from "./ui";
 
 interface LoginProps {
   onLogin: () => void;
@@ -47,10 +47,10 @@ export function Login({ onLogin }: LoginProps) {
         <hr className="divider-gold mb-8" />
 
         <div className="text-center mb-8">
-          <div className="mb-4" style={{ color: "var(--gold-500)" }}>
+          <div className="mb-4" style={{ color: "var(--amber)" }}>
             <Logo size={56} />
           </div>
-          <p className="eyebrow mb-3" style={{ color: "var(--gold-300)" }}>ACCESS</p>
+          <BauhausSectionLabel className="mb-3" style={{ color: "var(--gold-300)" }}>ACCESS</BauhausSectionLabel>
           <h2
             className="text-gold-foil mb-3"
             style={{ fontFamily: "var(--font-serif)", fontSize: "1.75rem", fontWeight: 600 }}
@@ -92,13 +92,14 @@ export function Login({ onLogin }: LoginProps) {
               {error}
             </p>
           )}
-          <button
+          <BauhausButton
+            variant="solid"
             type="submit"
-            className="btn-primary w-full"
+            className="w-full"
             disabled={loading || !password}
           >
             {loading ? "登录中..." : "登录"}
-          </button>
+          </BauhausButton>
         </form>
 
         {/* 底部金线 */}

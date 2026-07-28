@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { Logo } from "./ui";
+import { Logo, BauhausSectionLabel, BauhausButton } from "./ui";
 
 interface AgeGateProps {
   onConfirm: () => void;
@@ -53,11 +53,11 @@ export function AgeGate({ onConfirm }: AgeGateProps) {
         {/* 顶部金线 */}
         <hr className="divider-gold mb-8" />
 
-        <div className="mb-4" style={{ color: "var(--gold-500)" }}>
+        <div className="mb-4" style={{ color: "var(--amber)" }}>
           <Logo size={56} />
         </div>
 
-        <p className="eyebrow mb-3" style={{ color: "var(--gold-300)" }}>AGE VERIFICATION</p>
+        <BauhausSectionLabel className="mb-3" style={{ color: "var(--gold-300)" }}>AGE VERIFICATION</BauhausSectionLabel>
 
         <h2
           className="text-gold-foil mb-4"
@@ -77,21 +77,23 @@ export function AgeGate({ onConfirm }: AgeGateProps) {
         </p>
 
         <div className="flex gap-3">
-          <button
-            className="btn-secondary flex-1"
+          <BauhausButton
+            variant="outline"
+            className="flex-1"
             onClick={() => handleConfirm(false)}
             disabled={loading}
             style={{ color: "rgba(250, 243, 220, 0.8)", borderColor: "rgba(250, 243, 220, 0.3)" }}
           >
             我未满 18 岁
-          </button>
-          <button
-            className="btn-primary flex-1"
+          </BauhausButton>
+          <BauhausButton
+            variant="solid"
+            className="flex-1"
             onClick={() => handleConfirm(true)}
             disabled={loading}
           >
             我已满 18 岁
-          </button>
+          </BauhausButton>
         </div>
 
         {/* 底部金线 */}

@@ -3,7 +3,17 @@ import { api } from "../api";
 import type { DocumentDetail, TagInfo } from "../types";
 import { Skeleton, SkeletonText } from "./Skeleton";
 import { showToast } from "./Toast";
-import { BodyText, ErrorBanner, FormField, HeadingText, MetaText, MonoText } from "./ui";
+import {
+  BauhausButton,
+  BauhausChip,
+  BauhausDisplay,
+  BauhausSectionLabel,
+  BodyText,
+  ErrorBanner,
+  FormField,
+  MetaText,
+  MonoText,
+} from "./ui";
 
 interface DocumentDetailPanelProps {
   docId: string;
@@ -106,7 +116,7 @@ export function DocumentDetailPanel({
     return (
       <div className="p-8 text-center">
         <ErrorBanner>{error}</ErrorBanner>
-        <button onClick={onBack} className="btn-secondary">返回</button>
+        <BauhausButton variant="outline" onClick={onBack}>返回</BauhausButton>
       </div>
     );
   }
@@ -116,28 +126,24 @@ export function DocumentDetailPanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white border-[color:var(--ink-200)]">
+      {/* 顶部工具栏 — 包豪斯：3px 粗底边 */}
+      <div className="flex items-center justify-between px-6 py-3" style={{ borderBottom: "var(--border-bold)", background: "var(--paper)" }}>
         <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-sm text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]"
-          >
-            <span>←</span>
-            <span>返回列表</span>
-          </button>
-          <span className="eyebrow">文档详情</span>
+          <BauhausButton variant="outline" onClick={onBack}>
+            返回列表
+          </BauhausButton>
+          <BauhausSectionLabel>文档详情</BauhausSectionLabel>
         </div>
         <div className="flex gap-2">
-          <button onClick={handleDownload} className="btn-secondary text-sm">下载</button>
-          <button onClick={() => setEditing(!editing)} className="btn-secondary text-sm">{editing ? "取消" : "编辑"}</button>
+          <BauhausButton variant="outline" onClick={handleDownload}>下载</BauhausButton>
+          <BauhausButton variant="solid" onClick={() => setEditing(!editing)}>{editing ? "取消" : "编辑"}</BauhausButton>
         </div>
       </div>
 
-      {/* 编辑区 */}
+      {/* 编辑区 — 包豪斯卡片 */}
       {editing && (
-        <div className="px-6 py-4 bg-white border-b space-y-3 border-[color:var(--ink-200)]">
-          <p className="eyebrow">编辑元信息</p>
+        <div className="px-6 py-4 space-y-3" style={{ borderBottom: "var(--border-medium)", background: "var(--paper)" }}>
+          <BauhausSectionLabel>编辑元信息</BauhausSectionLabel>
           <FormField label="标题">
             <input
               className="input mt-1"
@@ -171,11 +177,11 @@ export function DocumentDetailPanel({
                       setEditTagIds([...editTagIds, t.id]);
                     }
                   }}
-                  className="text-xs px-2 py-1 rounded border transition-colors font-[family-name:var(--font-ui)]"
+                  className="text-xs px-2 py-1 transition-colors"
                   style={
                     editTagIds.includes(t.id)
-                      ? { background: "var(--brand-700)", color: "#fff", borderColor: "var(--brand-700)" }
-                      : { background: "#fff", color: "var(--ink-600)", borderColor: t.color || "var(--ink-200)" }
+                      ? { background: "var(--ink-900)", color: "#fff", border: "2px solid var(--ink-900)", borderRadius: "var(--r-sm)" }
+                      : { background: "var(--paper)", color: "var(--ink-600)", border: "2px solid var(--ink-100)", borderRadius: "var(--r-sm)" }
                   }
                 >
                   {t.name}
@@ -183,25 +189,21 @@ export function DocumentDetailPanel({
               ))}
             </div>
           </FormField>
-          <button
-            onClick={handleSave}
-            className="btn-primary text-sm"
-            disabled={saving || !editTitle.trim()}
-          >
+          <BauhausButton variant="solid" onClick={handleSave} disabled={saving || !editTitle.trim()}>
             {saving ? "保存中..." : "保存"}
-          </button>
+          </BauhausButton>
         </div>
       )}
 
       {/* 主体：左目录 + 右全文 */}
       <div className="flex-1 flex overflow-hidden">
-        {/* 左侧：元信息 + chunk 目录 */}
-        <aside className="w-64 border-r bg-white overflow-y-auto p-6 flex-shrink-0 border-[color:var(--ink-200)]">
-          <p className="eyebrow mb-3">文档信息</p>
-          <HeadingText as="h2" size="1.125rem" className="font-bold mb-4 break-all">
+        {/* 左侧：元信息 + chunk 目录 — 包豪斯 */}
+        <aside className="w-64 overflow-y-auto p-6 flex-shrink-0" style={{ borderRight: "var(--border-medium)", background: "var(--paper)" }}>
+          <BauhausSectionLabel className="mb-3">文档信息</BauhausSectionLabel>
+          <BauhausDisplay as="h2" className="mb-4 break-all" >
             {doc.title}
-          </HeadingText>
-          <dl className="text-xs space-y-2 text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]">
+          </BauhausDisplay>
+          <dl className="text-xs space-y-2">
             <div><MetaText as="dt" className="font-medium">类型</MetaText><dd>{doc.file_type.toUpperCase()}</dd></div>
             <div><MetaText as="dt" className="font-medium">来源</MetaText><dd>{doc.source_type}</dd></div>
             <div><MetaText as="dt" className="font-medium">分类</MetaText><dd>{doc.category || "未分类"}</dd></div>
@@ -210,23 +212,17 @@ export function DocumentDetailPanel({
           </dl>
           {detail.tags.length > 0 && (
             <div className="mt-4">
-              <p className="eyebrow mb-2">标签</p>
+              <BauhausSectionLabel className="mb-2">标签</BauhausSectionLabel>
               <div className="flex flex-wrap gap-1">
                 {detail.tags.map((t) => (
-                  <span
-                    key={t.id}
-                    className="text-xs px-2 py-0.5 rounded-full text-white"
-                    style={{ backgroundColor: t.color }}
-                  >
-                    {t.name}
-                  </span>
+                  <BauhausChip key={t.id} variant="wine">{t.name}</BauhausChip>
                 ))}
               </div>
             </div>
           )}
           {chunks.length > 0 && (
             <div className="mt-6">
-              <p className="eyebrow mb-2">目录</p>
+              <BauhausSectionLabel className="mb-2">目录</BauhausSectionLabel>
               <ol className="space-y-1.5">
                 {chunks.map((c) => (
                   <li key={c.rowid}>
@@ -237,10 +233,11 @@ export function DocumentDetailPanel({
                         const el = chunkRefs.current[c.rowid];
                         el?.scrollIntoView({ behavior: "smooth", block: "center" });
                       }}
-                      className="block text-xs truncate text-[color:var(--brand-700)] font-[family-name:var(--font-ui)]"
+                      className="block text-xs truncate"
+                      style={{ color: "var(--wine)", fontFamily: "var(--font-mono)" }}
                       title={c.text.slice(0, 60)}
                     >
-                      <span className="numeral mr-2">{String(c.idx + 1).padStart(2, "0")}</span>
+                      <span className="mr-2">{String(c.idx + 1).padStart(2, "0")}</span>
                       {c.text.slice(0, 30)}...
                     </a>
                   </li>
@@ -250,7 +247,7 @@ export function DocumentDetailPanel({
           )}
         </aside>
 
-        {/* 右侧：全文（按 chunk 渲染，带 rowid 锚点） */}
+        {/* 右侧：全文（按 chunk 渲染，带 rowid 锚点） — 包豪斯卡片 */}
         <main className="flex-1 overflow-y-auto p-6">
           {chunks.length === 0 ? (
             <MetaText as="div" className="text-center mt-12">
@@ -263,10 +260,12 @@ export function DocumentDetailPanel({
                   key={c.rowid}
                   id={`chunk-${c.rowid}`}
                   ref={(el) => { chunkRefs.current[c.rowid] = el; }}
-                  className="card p-5 transition-all duration-300"
+                  className="bauhaus-card accent-ink transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-[color:var(--ink-100)]">
-                    <span className="numeral">片段 {String(c.idx + 1).padStart(2, "0")}</span>
+                  <div className="flex items-center justify-between mb-3 pb-2" style={{ borderBottom: "1px solid var(--ink-100)" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "var(--fs-xs)", color: "var(--ink-400)" }}>
+                      片段 {String(c.idx + 1).padStart(2, "0")}
+                    </span>
                     <MonoText className="text-xs">chars {c.char_start}-{c.char_end}</MonoText>
                   </div>
                   <BodyText as="div" className="whitespace-pre-wrap leading-relaxed text-[length:0.95rem]">

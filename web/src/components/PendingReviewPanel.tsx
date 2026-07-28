@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { DocumentDetail, LabRecipe } from "../types";
 import { showToast } from "./Toast";
-import { ErrorBanner, MetaText, MonoText, usePrompt } from "./ui";
+import { BauhausButton, BauhausCard, BauhausDisplay, BauhausSectionLabel, ErrorBanner, MetaText, MonoText, usePrompt } from "./ui";
 
 interface PendingReviewPanelProps {
   /** 外部传入的刷新信号：每次自增触发重新加载。 */
@@ -172,16 +172,11 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
   const progressPct = totalProcessed > 0 ? Math.round((resolvedCount / totalProcessed) * 100) : 0;
 
   return (
-    <div className="card p-4 mb-4">
+    <BauhausCard className="mb-4" accent="amber">
       <div className="flex items-baseline justify-between mb-3">
         <div>
-          <p className="eyebrow mb-0.5">REVIEW QUEUE</p>
-          <h3
-            className="section-title"
-            style={{ fontSize: "1.05rem" }}
-          >
-            📨 待审核配方
-          </h3>
+          <BauhausSectionLabel className="mb-0.5">REVIEW QUEUE</BauhausSectionLabel>
+          <BauhausDisplay as="h3">📨 待审核配方</BauhausDisplay>
         </div>
         <MetaText as="span" className="text-xs">
           {loading ? "加载中…" : items.length > 0 ? `共 ${items.length} 条 UGC 投稿待审` : "当前无 UGC 投稿待审"}
@@ -224,15 +219,15 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
           {selected.size > 0 && (
             <>
               <MetaText as="span" className="text-xs">已选 {selected.size}</MetaText>
-              <button
-                type="button"
+              <BauhausButton
+                variant="solid"
                 onClick={handleBatchApprove}
                 disabled={busyDocId !== null}
-                className="btn-primary text-xs"
+                className="text-xs"
                 style={{ padding: "2px 8px" }}
               >
                 批量通过
-              </button>
+              </BauhausButton>
               <button
                 type="button"
                 onClick={handleBatchReject}
@@ -323,15 +318,15 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
-                  <button
-                    type="button"
+                  <BauhausButton
+                    variant="solid"
                     onClick={() => handleApprove(r.doc_id)}
                     disabled={busyDocId === r.doc_id}
-                    className="btn-primary text-xs"
+                    className="text-xs"
                     style={{ padding: "2px 10px" }}
                   >
                     通过
-                  </button>
+                  </BauhausButton>
                   <button
                     type="button"
                     onClick={() => handleReject(r.doc_id)}
@@ -350,6 +345,6 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
 
       {/* R3: usePrompt 输入对话框（驳回理由） */}
       {dialog}
-    </div>
+    </BauhausCard>
   );
 }

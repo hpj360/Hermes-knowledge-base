@@ -9,6 +9,8 @@ import {
   HeadingText,
   ErrorBanner,
   EmptyState,
+  BauhausSectionLabel,
+  BauhausButton,
 } from "./ui";
 
 interface DocumentListProps {
@@ -95,7 +97,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
     <div className="flex flex-col h-full">
       {/* 筛选栏 */}
       <div className="flex items-center gap-3 px-6 py-3 border-b bg-white flex-wrap border-ink-200">
-        <span className="eyebrow">筛选</span>
+        <BauhausSectionLabel>筛选</BauhausSectionLabel>
         <select
           className="select text-sm rounded px-2 py-1"
           value={filterCategory}
@@ -121,12 +123,13 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           ))}
         </select>
         {(filterCategory || filterTagId) && (
-          <button
+          <BauhausButton
+            variant="outline"
             onClick={clearFilters}
-            className="btn-ghost text-xs"
+            className="text-xs"
           >
             清除
-          </button>
+          </BauhausButton>
         )}
         <MetaText className="ml-auto text-xs">共 {docs.length} 篇</MetaText>
       </div>
@@ -194,14 +197,15 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
                 {/* 操作 */}
                 <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onSelectDoc && (
-                    <button onClick={() => onSelectDoc(d.doc_id)} className="btn-ghost text-xs">详情</button>
+                    <BauhausButton variant="outline" onClick={() => onSelectDoc(d.doc_id)} className="text-xs">详情</BauhausButton>
                   )}
-                  <button
+                  <BauhausButton
+                    variant="outline"
                     onClick={() => handleDelete(d.doc_id, d.title)}
-                    className="btn-ghost text-xs text-[color:var(--danger)]"
+                    className="text-xs text-[color:var(--danger)]"
                   >
                     删除
-                  </button>
+                  </BauhausButton>
                 </div>
               </div>
             ))}

@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CitationList } from "./CitationList";
 import { showToast } from "./Toast";
-import { BodyText, MetaText, MonoText, StatusBadge } from "./ui";
+import {
+  BodyText,
+  MetaText,
+  MonoText,
+  BauhausSectionLabel,
+  BauhausDisplay,
+  BauhausChip,
+  BauhausButton,
+} from "./ui";
 import type { Citation, ExternalRef, SSEEvent } from "../types";
 
 interface ChatPanelProps {
@@ -151,26 +159,35 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       {/* 工具栏 */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-[color:var(--ink-50)] border-[color:var(--ink-200)]">
         <div className="flex items-baseline gap-3">
-          <p className="eyebrow">Q&amp;A</p>
+          <BauhausSectionLabel>Q&amp;A</BauhausSectionLabel>
           <h2 className="section-title text-base">问答</h2>
         </div>
-        <button
+        <BauhausButton
+          variant="outline"
           onClick={seed}
-          className="text-xs hover:opacity-75 text-[color:var(--brand-700)]"
           disabled={loading}
+          className="text-xs"
         >
           导入种子知识
-        </button>
+        </BauhausButton>
       </div>
 
       {/* 消息列表 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-            <div className="text-center max-w-lg reveal-stagger">
-              <p className="eyebrow mb-4">HERMES · 知识库</p>
-              <h2 className="display-title mb-4">向 Hermes 知识库提问吧</h2>
-              <hr className="divider-gold w-32 mx-auto mb-8" />
+            <div className="text-center max-w-lg">
+              <div className="mb-4 flex justify-center">
+                <BauhausSectionLabel>HERMES · 知识库</BauhausSectionLabel>
+              </div>
+              <BauhausDisplay as="h2" className="mb-4">
+                向 Hermes 知识库提问吧
+              </BauhausDisplay>
+              <div
+                className="mx-auto mb-8"
+                style={{ width: 44, height: 4, background: "var(--ink-900)" }}
+                aria-hidden="true"
+              />
               <MetaText className="text-sm mb-8">
                 选择下方问题，或直接输入你想了解的酒类知识
               </MetaText>
@@ -183,7 +200,8 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   <button
                     key={q}
                     onClick={() => setInput(q)}
-                    className="block w-full text-left card px-5 py-3 hover:shadow-md transition-shadow font-[family-name:var(--font-serif)] text-[color:var(--ink-900)]"
+                    className="block w-full text-left bauhaus-card px-5 py-3 transition-colors"
+                    style={{ color: "var(--ink-900)" }}
                   >
                     <span className="numeral mr-3">{String(i + 1).padStart(2, "0")}</span>
                     {q}
@@ -199,10 +217,9 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
             {/*
-              消息气泡：critical 修复
-              原实现 brand-700 深底 + 白字（颜色反了）
-              修复为 mockup ask.html .msg-user 规范：brand-100 浅底 + brand-700 深字
-              AI 气泡：白底 + gold-500 左边框 + shadow-sm
+              消息气泡：包豪斯几何风格
+              用户气泡：brand-100 浅底 + wine 深字
+              AI 气泡：白底 + amber 左边框 + shadow-sm
             */}
             <div
               className="max-w-3xl rounded-lg px-4 py-3"
@@ -210,13 +227,13 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                 m.role === "user"
                   ? {
                       background: "var(--brand-100)",
-                      color: "var(--brand-700)",
+                      color: "var(--wine)",
                       borderRadius: "var(--r-md)",
                     }
                   : {
                       background: "#fff",
                       border: "1px solid var(--ink-200)",
-                      borderLeft: "3px solid var(--gold-500)",
+                      borderLeft: "3px solid var(--amber)",
                       borderRadius: "var(--r-md)",
                       boxShadow: "var(--shadow-sm)",
                     }
@@ -243,7 +260,10 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   <BodyText as="p" className="whitespace-pre-wrap">
                     {m.content || (m.streaming ? "生成中..." : "")}
                     {m.streaming && (
-                      <span className="inline-block w-2 h-4 ml-1 align-middle animate-pulse bg-[color:var(--brand-500)]" />
+                      <span
+                        className="inline-block w-2 h-4 ml-1 align-middle animate-pulse"
+                        style={{ background: "var(--wine)" }}
+                      />
                     )}
                   </BodyText>
                   {m.citations && m.citations.length > 0 && (
@@ -252,7 +272,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   {m.externalRefs && m.externalRefs.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-[color:var(--ink-100)]">
                       <div className="text-xs mb-2 flex items-center gap-2 text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]">
-                        <StatusBadge variant="warning">外部参考</StatusBadge>
+                        <BauhausChip variant="amber">外部参考</BauhausChip>
                         <span>来自「酒博士」订阅知识库 · 仅供参考</span>
                       </div>
                       <ul className="space-y-1.5">
@@ -261,7 +281,10 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                             key={`${ref.title}-${idx}`}
                             className="text-sm flex items-start gap-2 font-[family-name:var(--font-ui)]"
                           >
-                            <span className="numeral flex-shrink-0 text-[color:var(--gold-500)] text-[0.75rem]">
+                            <span
+                              className="numeral flex-shrink-0 text-[0.75rem]"
+                              style={{ color: "var(--amber)" }}
+                            >
                               {String(idx + 1).padStart(2, "0")}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -270,7 +293,8 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                                   href={ref.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:underline text-[color:var(--brand-700)]"
+                                  className="hover:underline"
+                                  style={{ color: "var(--wine)" }}
                                 >
                                   {ref.title}
                                 </a>
@@ -328,13 +352,9 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
               取消
             </button>
           ) : (
-            <button
-              onClick={send}
-              className="btn-primary"
-              disabled={!input.trim()}
-            >
+            <BauhausButton variant="solid" onClick={send} disabled={!input.trim()}>
               发送
-            </button>
+            </BauhausButton>
           )}
         </div>
       </div>

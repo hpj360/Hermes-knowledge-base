@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../api";
 import type { BatchImportResult } from "../types";
 import { Modal } from "./Modal";
-import { ErrorBanner, FormField, MetaText } from "./ui";
+import { BauhausButton, ErrorBanner, FormField, MetaText } from "./ui";
 
 interface ImportDialogProps {
   onClose: () => void;
@@ -106,7 +106,7 @@ export function ImportDialog({ onClose, onImported }: ImportDialogProps) {
 
   return (
     <Modal open={true} onClose={onClose} title="导入文档" maxWidth={672}>
-      {/* 杂志式 tab 导航 */}
+      {/* tab 导航 */}
       <div className="flex gap-1 border-b border-[color:var(--ink-200)] mb-4">
         <button
           className={`nav-tab ${tab === "text" ? "nav-tab-active" : ""}`}
@@ -168,16 +168,16 @@ export function ImportDialog({ onClose, onImported }: ImportDialogProps) {
             </MetaText>
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="btn-secondary" disabled={loading}>
+            <BauhausButton variant="outline" onClick={onClose} disabled={loading}>
               取消
-            </button>
-            <button
+            </BauhausButton>
+            <BauhausButton
+              variant="solid"
               onClick={handleImportText}
-              className="btn-primary"
               disabled={loading}
             >
               {loading ? "导入中..." : "导入"}
-            </button>
+            </BauhausButton>
           </div>
         </div>
       ) : tab === "file" ? (
@@ -202,16 +202,16 @@ export function ImportDialog({ onClose, onImported }: ImportDialogProps) {
             />
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="btn-secondary" disabled={loading}>
+            <BauhausButton variant="outline" onClick={onClose} disabled={loading}>
               取消
-            </button>
-            <button
+            </BauhausButton>
+            <BauhausButton
+              variant="solid"
               onClick={handleUpload}
-              className="btn-primary"
               disabled={loading || !file}
             >
               {loading ? "上传中..." : "上传"}
-            </button>
+            </BauhausButton>
           </div>
         </div>
       ) : (
@@ -235,7 +235,7 @@ export function ImportDialog({ onClose, onImported }: ImportDialogProps) {
               拖拽文件到此处
             </p>
             <MetaText className="text-xs my-1">或</MetaText>
-            <label className="btn-secondary text-sm cursor-pointer">
+            <label className="bauhaus-btn variant-outline text-sm cursor-pointer">
               选择文件
               <input
                 type="file"
@@ -313,16 +313,16 @@ export function ImportDialog({ onClose, onImported }: ImportDialogProps) {
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onClose} className="btn-secondary" disabled={loading}>
+            <BauhausButton variant="outline" onClick={onClose} disabled={loading}>
               关闭
-            </button>
-            <button
+            </BauhausButton>
+            <BauhausButton
+              variant="solid"
               onClick={handleBatchUpload}
-              className="btn-primary"
               disabled={loading || batchFiles.length === 0}
             >
               {loading ? `上传中...` : `上传 ${batchFiles.length} 个文件`}
-            </button>
+            </BauhausButton>
           </div>
         </div>
       )}

@@ -10,7 +10,15 @@ import type {
 } from "../types";
 import { Modal } from "./Modal";
 import { showToast } from "./Toast";
-import { GoldFoilCard, LabMetric, MetaText } from "./ui";
+import {
+  BauhausButton,
+  BauhausCard,
+  BauhausDisplay,
+  BauhausMetric,
+  BauhausSectionLabel,
+  GoldFoilCard,
+  MetaText,
+} from "./ui";
 
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
@@ -126,31 +134,31 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      {/* 页面头部：杂志式 eyebrow + display-title + 金线 + IMA 入口 */}
+      {/* 页面头部：包豪斯章节标签 + 大标题 + IMA 入口 */}
       <div className="text-center mb-8">
-        <p className="eyebrow mb-2">LABORATORY</p>
-        <h2 className="display-title">🧪 鸡尾酒实验室</h2>
+        <BauhausSectionLabel className="mb-2">LABORATORY</BauhausSectionLabel>
+        <BauhausDisplay as="h2">🧪 鸡尾酒实验室</BauhausDisplay>
         <hr className="divider-gold w-24 mx-auto mt-4" />
         <MetaText className="text-sm mt-4">
           选择手头的材料，发现你能调的鸡尾酒
         </MetaText>
         <div className="mt-4 flex gap-3 justify-center">
-          <button
-            type="button"
-            className="btn-ghost text-xs"
+          <BauhausButton
+            variant="outline"
+            className="text-xs"
             onClick={() => setShowImaModal(true)}
             aria-label="从 IMA 知识库同步内容"
           >
             📚 从 IMA 知识库同步
-          </button>
-          <button
-            type="button"
-            className="btn-ghost text-xs"
+          </BauhausButton>
+          <BauhausButton
+            variant="outline"
+            className="text-xs"
             onClick={() => setShowTranslateModal(true)}
             aria-label="翻译英文配方标题为中文"
           >
             🌐 翻译配方标题
-          </button>
+          </BauhausButton>
         </div>
       </div>
 
@@ -193,7 +201,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
 
       {/* 材料选择器 — .material-selector 语义类（gap-analysis P1.1） */}
       <div className="material-selector mb-6">
-        <p className="eyebrow mb-4">选择材料</p>
+        <BauhausSectionLabel className="mb-4">选择材料</BauhausSectionLabel>
         <input
           className="input material-search"
           placeholder="搜索材料... 如 金酒"
@@ -206,7 +214,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           <div key={cat.id} className="material-category">
             <div className="flex items-baseline gap-2 mb-3">
               <span className="eyebrow">{cat.label}</span>
-              <span className="numeral">{cat.items.length}</span>
+              <span style={{ fontFamily: "var(--font-mono)" }}>{cat.items.length}</span>
             </div>
             <div className="chip-list">
               {cat.items.map((name) => {
@@ -242,20 +250,20 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
                 {name} ×
               </button>
             ))}
-            <button
-              type="button"
+            <BauhausButton
+              variant="outline"
               onClick={clearAll}
-              className="btn-ghost clear-btn text-xs ml-auto"
+              className="clear-btn text-xs ml-auto"
             >
               清空
-            </button>
+            </BauhausButton>
           </div>
         )}
 
-        <button
-          type="button"
+        <BauhausButton
+          variant="solid"
           onClick={doMatch}
-          className="btn-primary match-btn w-full mt-5"
+          className="match-btn w-full mt-5"
           disabled={matching || selectedNames.length === 0}
         >
           {matching
@@ -263,56 +271,57 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
             : selectedNames.length > 0
               ? `匹配配方 →（已选 ${selectedNames.length} 种）`
               : "匹配配方 →"}
-        </button>
+        </BauhausButton>
       </div>
 
-      {/* 错误 — 保留 1 处 inline：card 内文本色（无对应语义类，token 引用） */}
+      {/* 错误 — BauhausCard 包裹，保留 inline 文本色（无对应语义类，token 引用） */}
       {error && (
-        <div
-          className="card p-6 mb-6 text-center text-sm"
+        <BauhausCard
+          accent="ink"
+          className="p-6 mb-6 text-center text-sm"
           style={{ color: "var(--danger)" }}
         >
           匹配失败：{error}
-        </div>
+        </BauhausCard>
       )}
 
       {/* 空状态 — .lab-empty 语义类 */}
       {!result && !error && (
         <div className="lab-empty text-center py-16">
-          {/* 保留 1 处 inline：装饰符号 ◆ 的金色（无对应语义类） */}
+          {/* 保留 1 处 inline：装饰符号 ◆ 的领域色（无对应语义类） */}
           <div
             className="text-3xl mb-3"
-            style={{ color: "var(--gold-500)" }}
+            style={{ color: "var(--amber)" }}
           >
             ◆
           </div>
-          <p className="eyebrow mb-2">START</p>
+          <BauhausSectionLabel className="mb-2">START</BauhausSectionLabel>
           <p className="section-title mb-2">选择材料开始</p>
           <MetaText className="text-sm mb-6">
             点击上方材料 chip，或试试这些：
           </MetaText>
           <div className="flex gap-2 justify-center flex-wrap">
-            <button
-              type="button"
+            <BauhausButton
+              variant="outline"
+              className="text-xs"
               onClick={() => quickSelect(["金酒", "味美思", "橄榄"])}
-              className="btn-secondary text-xs"
             >
               马天尼套餐
-            </button>
-            <button
-              type="button"
+            </BauhausButton>
+            <BauhausButton
+              variant="outline"
+              className="text-xs"
               onClick={() => quickSelect(["朗姆酒", "青柠汁", "糖浆", "薄荷叶", "苏打水"])}
-              className="btn-secondary text-xs"
             >
               莫吉托套餐
-            </button>
-            <button
-              type="button"
+            </BauhausButton>
+            <BauhausButton
+              variant="outline"
+              className="text-xs"
               onClick={() => quickSelect(["龙舌兰", "橙汁", "糖浆"])}
-              className="btn-secondary text-xs"
             >
               龙舌兰日出套餐
-            </button>
+            </BauhausButton>
           </div>
         </div>
       )}
@@ -389,7 +398,9 @@ function MatchGroup({
   return (
     <div className="mb-8">
       <div className="flex items-baseline gap-3 mb-4">
-        <span className="numeral">{String(items.length).padStart(2, "0")}</span>
+        <span style={{ fontFamily: "var(--font-mono)" }}>
+          {String(items.length).padStart(2, "0")}
+        </span>
         <h3 className="section-title text-xl">{title}</h3>
         <hr className="divider-gold flex-1" />
       </div>
@@ -503,10 +514,10 @@ function RecipeMatchCard({
             <ol className="m-0 mt-2 px-4 pb-2 list-none">
               {item.steps!.map((step, i) => (
                 <li key={i} className="flex gap-3 mb-2 last:mb-0">
-                  {/* 保留 1 处 inline：步骤编号样式（serif + brand-700，无对应语义类） */}
+                  {/* 保留 1 处 inline：步骤编号样式（serif + wine，无对应语义类） */}
                   <span
                     className="font-serif font-bold text-sm min-w-[1.5rem] text-right"
-                    style={{ color: "var(--brand-700)" }}
+                    style={{ color: "var(--wine)" }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -633,22 +644,12 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
       maxWidth={560}
       footer={
         <>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={onClose}
-            disabled={syncing}
-          >
+          <BauhausButton variant="outline" onClick={onClose} disabled={syncing}>
             关闭
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleSync}
-            disabled={syncing}
-          >
+          </BauhausButton>
+          <BauhausButton variant="solid" onClick={handleSync} disabled={syncing}>
             {syncing ? "同步中..." : "同步到本地"}
-          </button>
+          </BauhausButton>
         </>
       }
     >
@@ -671,14 +672,13 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
           }}
           aria-label="IMA 检索关键词"
         />
-        <button
-          type="button"
-          className="btn-secondary"
+        <BauhausButton
+          variant="outline"
           onClick={handleSearch}
           disabled={searching || !query.trim()}
         >
           {searching ? "检索中..." : "预览"}
-        </button>
+        </BauhausButton>
       </div>
 
       {/* 保留 1 处 inline：错误横幅（rgba + var 混用，无对应语义类） */}
@@ -696,7 +696,9 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
 
       {searchHits && (
         <div className="mb-4">
-          <p className="eyebrow mb-2">检索预览 · {searchHits.length} 条</p>
+          <BauhausSectionLabel className="mb-2">
+            检索预览 · {searchHits.length} 条
+          </BauhausSectionLabel>
           {/* 保留 1 处 inline：搜索结果滚动容器（maxHeight + 多 token 边框/底色，无对应语义类） */}
           <div
             className="rounded-md"
@@ -745,17 +747,17 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
         </div>
       )}
 
-      {/* 上次同步结果 — .lab-sync-panel + LabMetric（gap-analysis P1.1） */}
+      {/* 上次同步结果 — .lab-sync-panel + BauhausMetric（gap-analysis P1.1） */}
       {lastResult && (
         <div className="lab-sync-panel">
-          <p className="eyebrow mb-2">上次同步结果</p>
+          <BauhausSectionLabel className="mb-2">上次同步结果</BauhausSectionLabel>
           <div className="lab-metrics">
-            <LabMetric label="新增" num={lastResult.imported} />
-            <LabMetric label="跳过" num={lastResult.skipped} />
-            <LabMetric
+            <BauhausMetric label="新增" num={lastResult.imported} variant="outline" />
+            <BauhausMetric label="跳过" num={lastResult.skipped} variant="outline" />
+            <BauhausMetric
               label="失败"
               num={lastResult.failed}
-              alert={lastResult.failed > 0}
+              variant={lastResult.failed > 0 ? "amber" : "outline"}
             />
           </div>
         </div>
@@ -816,22 +818,12 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
       maxWidth={520}
       footer={
         <>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={onClose}
-            disabled={translating}
-          >
+          <BauhausButton variant="outline" onClick={onClose} disabled={translating}>
             关闭
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleTranslate}
-            disabled={translating}
-          >
+          </BauhausButton>
+          <BauhausButton variant="solid" onClick={handleTranslate} disabled={translating}>
             {translating ? "翻译中..." : "开始翻译"}
-          </button>
+          </BauhausButton>
         </>
       }
     >
@@ -897,19 +889,19 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
         </div>
       )}
 
-      {/* 上次翻译结果 — .lab-sync-panel + LabMetric（gap-analysis P1.1） */}
+      {/* 上次翻译结果 — .lab-sync-panel + BauhausMetric（gap-analysis P1.1） */}
       {lastResult && (
         <div className="lab-sync-panel">
-          <p className="eyebrow mb-2">
+          <BauhausSectionLabel className="mb-2">
             上次翻译结果 · {lastResult.model_used}
-          </p>
+          </BauhausSectionLabel>
           <div className="lab-metrics">
-            <LabMetric label="翻译" num={lastResult.translated} />
-            <LabMetric label="跳过" num={lastResult.skipped} />
-            <LabMetric
+            <BauhausMetric label="翻译" num={lastResult.translated} variant="outline" />
+            <BauhausMetric label="跳过" num={lastResult.skipped} variant="outline" />
+            <BauhausMetric
               label="失败"
               num={lastResult.failed}
-              alert={lastResult.failed > 0}
+              variant={lastResult.failed > 0 ? "amber" : "outline"}
             />
           </div>
         </div>

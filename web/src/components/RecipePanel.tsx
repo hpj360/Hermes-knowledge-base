@@ -4,7 +4,19 @@ import type { LabRecipe, LabRecipeVariant } from "../types";
 import { PendingReviewPanel } from "./PendingReviewPanel";
 import { SkeletonList } from "./Skeleton";
 import { showToast } from "./Toast";
-import { EmptyState, ErrorBanner, HeadingText, MetaText, MonoText, StatusBadge } from "./ui";
+import {
+  BauhausButton,
+  BauhausCard,
+  BauhausChip,
+  BauhausDisplay,
+  BauhausSectionLabel,
+  EmptyState,
+  ErrorBanner,
+  HeadingText,
+  MetaText,
+  MonoText,
+  StatusBadge,
+} from "./ui";
 
 interface RecipePanelProps {
   /** 打开 UGC 编辑器（外部通过 tab 切换实现，组件本身只发请求）。 */
@@ -106,11 +118,11 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* 页面头部：杂志式 eyebrow + display-title + 细线分隔 */}
-      <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-[color:var(--ink-200)]">
+      {/* 页面头部：包豪斯 SectionLabel + Display + 3px 粗分隔 */}
+      <div className="flex items-baseline justify-between mb-6 pb-4" style={{ borderBottom: "var(--border-bold)" }}>
         <div>
-          <p className="eyebrow mb-1">RECIPES</p>
-          <h2 className="display-title">📝 配方治理</h2>
+          <BauhausSectionLabel className="mb-2">RECIPES</BauhausSectionLabel>
+          <BauhausDisplay as="h2">📝 配方治理</BauhausDisplay>
         </div>
         <MetaText className="text-xs">
           外部数据源 / 审核 / 隐藏
@@ -126,10 +138,10 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
         }}
       />
 
-      {/* 筛选栏 — 杂志式：eyebrow + 细线分隔 */}
-      <div className="card p-4 mb-6">
+      {/* 筛选栏 — 包豪斯卡片 */}
+      <BauhausCard accent="ink" className="mb-6">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="eyebrow">筛选</span>
+          <BauhausSectionLabel className="mr-2">筛选</BauhausSectionLabel>
           <select
             className="select min-w-[140px]"
             value={filterSource}
@@ -169,31 +181,20 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             aria-label="配方搜索"
           />
           {(filterSource || filterVerified || filterHidden || search) && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="btn-ghost text-xs"
-            >
+            <BauhausButton variant="outline" onClick={clearFilters}>
               清除
-            </button>
+            </BauhausButton>
           )}
-          <span className="ml-auto text-sm flex items-baseline gap-2 text-[color:var(--ink-600)]">
-            <span className="numeral text-[1.5rem] text-[color:var(--gold-500)]">
-              {filtered.length}
-            </span>
-            <span>款</span>
+          <span className="ml-auto flex items-baseline gap-2">
+            <BauhausChip variant="outline">{filtered.length} 款</BauhausChip>
           </span>
           {onCreateRecipe && (
-            <button
-              type="button"
-              onClick={onCreateRecipe}
-              className="btn-primary text-sm"
-            >
+            <BauhausButton variant="solid" onClick={onCreateRecipe}>
               + 创作配方
-            </button>
+            </BauhausButton>
           )}
         </div>
-      </div>
+      </BauhausCard>
 
       {/* 错误 — 用 ErrorBanner（role=alert + token 化） */}
       {error && (
@@ -270,9 +271,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
 
   return (
     <div
-      className={`card p-4 flex flex-col gap-2 hover:shadow-md transition-shadow ${
-        recipe.hidden ? "opacity-55" : ""
-      }`}
+      className={`bauhaus-card flex flex-col gap-2 ${recipe.hidden ? "opacity-55" : ""}`}
       data-doc-id={recipe.doc_id}
     >
       {recipe.image_url && !imgError ? (
@@ -281,18 +280,22 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           alt={recipe.title || "配方"}
           loading="lazy"
           onError={() => setImgError(true)}
-          className="w-full h-40 object-cover rounded-md mb-2"
+          className="w-full h-40 object-cover mb-2"
+          style={{ borderRadius: "var(--r-sm)" }}
         />
       ) : (
         <div
-          className="w-full h-40 rounded-md mb-2 flex flex-col items-center justify-center"
-          style={{ background: "linear-gradient(135deg, var(--ink-100) 0%, var(--ink-50) 100%)" }}
+          className="w-full h-40 mb-2 flex flex-col items-center justify-center"
+          style={{
+            background: "var(--ink-100)",
+            borderRadius: "var(--r-sm)",
+          }}
         >
-          <span className="text-2xl mb-1 text-[color:var(--gold-500)]">◆</span>
-          <span className="eyebrow text-[0.6rem]">NO IMAGE</span>
+          <span style={{ color: "var(--wine)", fontSize: "1.5rem" }}>◆</span>
+          <BauhausSectionLabel className="mt-1">NO IMAGE</BauhausSectionLabel>
         </div>
       )}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2 pl-[26px]">
         <HeadingText
           size="1.05rem"
           as="h3"
@@ -303,71 +306,46 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         </HeadingText>
         <StatusBadge variant={statusVariant}>{statusText}</StatusBadge>
       </div>
-      <div className="flex gap-2 flex-wrap items-center text-xs">
-        <StatusBadge variant="brand" pill={false}>
-          {recipe.source || "local"}
-        </StatusBadge>
+      <div className="flex gap-2 flex-wrap items-center text-xs pl-[26px]">
+        <BauhausChip variant="outline">{recipe.source || "local"}</BauhausChip>
         {recipe.verified ? (
-          <StatusBadge variant="success" pill={false}>
-            ✓ 已审核
-          </StatusBadge>
+          <BauhausChip variant="bronze">✓ 已审核</BauhausChip>
         ) : (
-          <StatusBadge variant="ink" pill={false}>
-            待审核
-          </StatusBadge>
+          <BauhausChip variant="outline">待审核</BauhausChip>
         )}
         {recipe.hidden && (
-          <StatusBadge variant="danger" pill={false}>
-            隐藏
-          </StatusBadge>
+          <BauhausChip variant="wine">隐藏</BauhausChip>
         )}
         {recipe.season && (
-          <StatusBadge variant="gold" pill={false}>
-            {recipe.season}
-          </StatusBadge>
+          <BauhausChip variant="amber">{recipe.season}</BauhausChip>
         )}
       </div>
       <MonoText
-        className="text-xs break-all"
+        className="text-xs break-all pl-[26px]"
         as="div"
         title={recipe.doc_id}
       >
         {recipe.doc_id}
       </MonoText>
-      <div className="flex gap-2 pt-2 border-t border-dashed border-[color:var(--ink-100)]">
+      <div className="flex gap-2 pt-2 pl-[26px]" style={{ borderTop: "1px dashed var(--ink-200)" }}>
         {!recipe.verified && (
-          <button
-            type="button"
-            onClick={onVerify}
-            disabled={busy}
-            className="btn-ghost text-xs"
-          >
+          <BauhausButton variant="outline" onClick={onVerify} disabled={busy}>
             审核通过
-          </button>
+          </BauhausButton>
         )}
-        <button
-          type="button"
-          onClick={onToggleHide}
-          disabled={busy}
-          className="btn-ghost text-xs"
-        >
+        <BauhausButton variant="outline" onClick={onToggleHide} disabled={busy}>
           {recipe.hidden ? "取消隐藏" : "隐藏"}
-        </button>
+        </BauhausButton>
         {onEdit && (recipe.status === "draft" || recipe.status === "rejected") && (
-          <button
-            type="button"
-            onClick={onEdit}
-            disabled={busy}
-            className="btn-ghost text-xs ml-auto"
-          >
+          <BauhausButton variant="solid" onClick={onEdit} disabled={busy} className="ml-auto">
             编辑
-          </button>
+          </BauhausButton>
         )}
       </div>
       {/* 配方变体 */}
-      <div>
-        <button
-          type="button"
+      <div className="pl-[26px]">
+        <BauhausButton
+          variant="outline"
           onClick={async () => {
             if (!showVariants && variants.length === 0) {
               setVariantLoading(true);
@@ -379,11 +357,10 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
             }
             setShowVariants(!showVariants);
           }}
-          className="btn-ghost text-xs text-[color:var(--ink-600)]"
         >
           {showVariants ? "▾" : "▸"} 变体
           {variants.length > 0 && ` (${variants.length})`}
-        </button>
+        </BauhausButton>
         {showVariants && (
           <div className="mt-2 space-y-1">
             {variantLoading ? (
@@ -394,10 +371,11 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
               variants.map((v) => (
                 <div
                   key={v.variant_doc_id}
-                  className="text-xs flex items-center gap-1 px-2 py-1 rounded bg-[color:var(--ink-50)]"
+                  className="text-xs flex items-center gap-1 px-2 py-1"
+                  style={{ background: "var(--ink-50)", borderRadius: "var(--r-sm)" }}
                 >
-                  <span className="text-[color:var(--brand-700)]">↳</span>
-                  <span className="truncate text-[color:var(--ink-900)]">
+                  <span style={{ color: "var(--wine)" }}>↳</span>
+                  <span className="truncate" style={{ color: "var(--ink-900)" }}>
                     {v.variant_title}
                   </span>
                   {v.variant_note && (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { BauhausCard, BauhausChip, BauhausButton, BauhausDisplay, BauhausSectionLabel } from "./ui";
 
 interface RecipeEditorPanelProps {
   /** 编辑模式：传入 docId 加载已有配方（仅 draft/rejected 可编辑）。 */
@@ -177,9 +178,9 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
   const bannerStyle = (() => {
     switch (status) {
       case "published":
-        return { background: "var(--brand-50)", color: "var(--brand-700)", borderColor: "var(--brand-500)" };
+        return { background: "var(--brand-50)", color: "var(--wine)", borderColor: "var(--brand-500)" };
       case "pending":
-        return { background: "var(--gold-100)", color: "var(--gold-700)", borderColor: "var(--gold-500)" };
+        return { background: "var(--gold-100)", color: "var(--amber)", borderColor: "var(--amber)" };
       case "rejected":
         return { background: "rgba(179, 38, 30, 0.08)", color: "var(--danger)", borderColor: "var(--danger)" };
       default:
@@ -190,14 +191,13 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="mb-6">
-        <p className="eyebrow mb-1">LAB · 调酒研究室</p>
-        <h2 className="display-title">
+        <BauhausSectionLabel className="mb-1">LAB · 调酒研究室</BauhausSectionLabel>
+        <BauhausDisplay as="h2">
           {currentDocId ? "编辑配方" : "创作新配方"}
-        </h2>
-        <hr className="divider-gold w-16 mt-3" />
+        </BauhausDisplay>
       </div>
 
-      <div className="card p-6 space-y-4">
+      <BauhausCard className="space-y-4">
         {/* 状态横幅 */}
         <div
           className="text-sm px-3 py-2 rounded border-l-4"
@@ -282,37 +282,37 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               disabled={!canEdit || saving}
               aria-label="材料输入"
             />
-            <button
-              type="button"
+            <BauhausButton
+              variant="outline"
               onClick={addIngredient}
               disabled={!canEdit || saving || !ingredientInput.trim()}
-              className="btn-secondary text-sm"
+              className="text-sm"
             >
               添加
-            </button>
+            </BauhausButton>
           </div>
           <div className="flex flex-wrap gap-2 min-h-[24px]">
             {ingredients.length === 0 ? (
               <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}>未选择材料</span>
             ) : (
               ingredients.map((name, idx) => (
-                <span
+                <BauhausChip
                   key={`${name}-${idx}`}
-                  className="text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1"
-                  style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
+                  variant="wine"
+                  className="gap-1"
                 >
                   {name}
                   <button
                     type="button"
                     onClick={() => removeIngredient(idx)}
                     aria-label={`移除 ${name}`}
-                    style={{ color: "var(--brand-700)" }}
+                    style={{ color: "#fff" }}
                     className="hover:opacity-70"
                     disabled={!canEdit || saving}
                   >
                     ×
                   </button>
-                </span>
+                </BauhausChip>
               ))
             )}
           </div>
@@ -332,7 +332,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
           />
           <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}>
             可在正文首行使用 frontmatter 注解材料：
-            <code className="font-mono px-1 rounded" style={{ background: "var(--ink-100)", color: "var(--gold-700)" }}>&lt;!-- ingredients: 金酒|柠檬汁|糖浆 --&gt;</code>
+            <code className="font-mono px-1 rounded" style={{ background: "var(--ink-100)", color: "var(--amber)" }}>&lt;!-- ingredients: 金酒|柠檬汁|糖浆 --&gt;</code>
           </p>
         </div>
 
@@ -340,51 +340,51 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
         <div className="flex gap-2 flex-wrap pt-2 border-t border-ink-100">
           {currentDocId ? (
             <>
-              <button
-                type="button"
+              <BauhausButton
+                variant="outline"
                 onClick={() => saveRecipe(false)}
                 disabled={!canEdit || saving}
-                className="btn-secondary text-sm"
+                className="text-sm"
               >
                 {saving ? "保存中..." : "保存草稿"}
-              </button>
-              <button
-                type="button"
+              </BauhausButton>
+              <BauhausButton
+                variant="solid"
                 onClick={() => saveRecipe(true)}
                 disabled={!canEdit || saving}
-                className="btn-primary text-sm"
+                className="text-sm"
               >
                 {saving ? "提交中..." : "提交审核"}
-              </button>
+              </BauhausButton>
             </>
           ) : (
-            <button
-              type="button"
+            <BauhausButton
+              variant="solid"
               onClick={() => saveRecipe(false)}
               disabled={saving}
-              className="btn-primary text-sm"
+              className="text-sm"
             >
               {saving ? "创建中..." : "创建草稿"}
-            </button>
+            </BauhausButton>
           )}
           {onCancel && (
-            <button
-              type="button"
+            <BauhausButton
+              variant="outline"
               onClick={onCancel}
               disabled={saving}
-              className="btn-ghost text-sm"
+              className="text-sm"
             >
               取消
-            </button>
+            </BauhausButton>
           )}
           {onSaved && (status === "draft" || status === "pending") && (
-            <button
-              type="button"
+            <BauhausButton
+              variant="outline"
               onClick={onSaved}
-              className="btn-ghost text-sm ml-auto"
+              className="text-sm ml-auto"
             >
               完成
-            </button>
+            </BauhausButton>
           )}
         </div>
 
@@ -402,7 +402,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
             {resultMsg.text}
           </div>
         )}
-      </div>
+      </BauhausCard>
     </div>
   );
 }

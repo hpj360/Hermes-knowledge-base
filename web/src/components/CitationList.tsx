@@ -67,7 +67,7 @@ export function CitationList({ citations, onJumpToDoc }: CitationListProps) {
                       as="span"
                       className="ml-auto font-medium text-[0.62rem]"
                       // 覆盖 MetaText 默认 ink-400，强调可点击动作
-                      style={{ color: "var(--brand-700)" }}
+                      style={{ color: "var(--wine)" }}
                     >
                       查看原文 →
                     </MetaText>
