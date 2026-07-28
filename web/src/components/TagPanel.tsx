@@ -9,13 +9,18 @@ interface TagPanelProps {
   onChange: () => void;
 }
 
+// 功能性色板：传给 input[type=color] 与预设色块按钮，非视觉装饰，保留 hex 字面量
 const PRESET_COLORS = [
   "#6b7280", "#ef4444", "#f97316", "#eab308",
   "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6",
   "#ec4899", "#78716c",
 ];
 
-/** M2-06 标签管理面板。 */
+/** M2-06 标签管理面板。
+ *
+ * R2 重构：元信息用 MetaText、计数用 MetaText、提示框用 Tailwind 工具类 + token。
+ * inline style 仅保留两处动态色板：PRESET_COLORS 色块与 tag.color 色点。
+ */
 export function TagPanel({ onChange }: TagPanelProps) {
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,10 +88,17 @@ export function TagPanel({ onChange }: TagPanelProps) {
         <div className="flex items-center gap-3 flex-wrap">
           <input className="input flex-1 min-w-[160px]" placeholder="标签名" value={name} onChange={(e) => setName(e.target.value)} maxLength={32} disabled={creating} />
           <div className="flex items-center gap-1">
-            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border" style={{ borderColor: "var(--ink-200)" }} disabled={creating} />
+            <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-ink-200" disabled={creating} />
             <div className="flex gap-1 ml-2">
               {PRESET_COLORS.map((c) => (
-                <button key={c} onClick={() => setColor(c)} className={`w-5 h-5 rounded-full border-2 ${color === c ? "border-ink-900" : "border-transparent"}`} style={{ backgroundColor: c }} aria-label={`颜色 ${c}`} />
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className={`w-5 h-5 rounded-full border-2 ${color === c ? "border-ink-900" : "border-transparent"}`}
+                  // 功能性色板：PRESET_COLORS hex 传给色块按钮，保留
+                  style={{ backgroundColor: c }}
+                  aria-label={`颜色 ${c}`}
+                />
               ))}
             </div>
           </div>
@@ -98,35 +110,44 @@ export function TagPanel({ onChange }: TagPanelProps) {
 
       {/* 列表 */}
       <div className="card">
-        <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "var(--ink-200)" }}>
+        <div className="flex items-center justify-between p-5 border-b border-ink-200">
           <p className="eyebrow">已有标签</p>
-          <span className="text-xs" style={{ color: "var(--ink-400)" }}>{tags.length} 个</span>
+          <MetaText className="text-xs">{tags.length} 个</MetaText>
         </div>
         {loading ? (
           <div className="p-5"><SkeletonList count={3} /></div>
         ) : tags.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="text-2xl mb-2" style={{ color: "var(--gold-500)" }}>◆</div>
+            <div className="text-2xl mb-2 text-gold-500">◆</div>
             <MetaText className="text-sm">暂无标签，请在上方创建</MetaText>
           </div>
         ) : (
-          <ul className="divide-y" style={{ borderColor: "var(--ink-100)" }}>
+          <ul className="divide-y border-ink-100">
             {tags.map((t, i) => (
               <li key={t.id} className="flex items-center justify-between px-5 py-3 group">
                 <div className="flex items-center gap-3">
                   <span className="numeral">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
-                  <span className="font-medium" style={{ fontFamily: "var(--font-serif)", color: "var(--ink-900)" }}>{t.name}</span>
-                  <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>关联 {t.doc_count ?? 0} 篇</span>
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    // 动态色板：tag.color 由用户自定义，无法用静态 token 表达
+                    style={{ backgroundColor: t.color }}
+                  />
+                  <span className="font-serif text-ink-900 font-medium">{t.name}</span>
+                  <MetaText className="text-xs">关联 {t.doc_count ?? 0} 篇</MetaText>
                 </div>
-                <button onClick={() => handleDelete(t)} className="btn-ghost text-xs opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--danger)" }}>删除</button>
+                <button
+                  onClick={() => handleDelete(t)}
+                  className="btn-ghost text-xs text-[color:var(--danger)] opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  删除
+                </button>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div className="mt-6 px-4 py-3 text-xs" style={{ background: "var(--ink-50)", borderLeft: "3px solid var(--gold-500)", color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>
+      <div className="mt-6 px-4 py-3 text-xs bg-ink-50 border-l-[3px] border-gold-500 text-ink-600 font-ui">
         提示：标签为多选（一篇文档可有多个标签），分类为单选。在文档详情页可为文档设置标签。
       </div>
 

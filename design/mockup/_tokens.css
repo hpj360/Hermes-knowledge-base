@@ -97,6 +97,7 @@
   --brand-gradient: linear-gradient(135deg, #4A0E1C 0%, #8B1A36 50%, #B8254A 100%);
   /* 杂志底纹（噪点 + 暖白渐变，用于 body 背景） */
   --paper-bg: linear-gradient(180deg, #F7F5F3 0%, #FFFFFF 260px);
+  --paper: #FFFFFF;  /* 纯白纸色（卡片背景等，区别于 --paper-bg 渐变） */
 
   /* === 动效 === */
   --duration-fast: 150ms;

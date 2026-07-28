@@ -59,7 +59,7 @@ export function Login({ onLogin }: LoginProps) {
           </h2>
           <p
             className="text-sm"
-            style={{ color: "rgba(250, 243, 220, 0.6)", fontFamily: "var(--font-sans)" }}
+            style={{ color: "rgba(250, 243, 220, 0.6)", fontFamily: "var(--font-ui)" }}
           >
             请输入访问密码
           </p>
@@ -86,7 +86,7 @@ export function Login({ onLogin }: LoginProps) {
               style={{
                 background: "rgba(179, 38, 30, 0.2)",
                 color: "var(--danger)",
-                fontFamily: "var(--font-sans)",
+                fontFamily: "var(--font-ui)",
               }}
             >
               {error}

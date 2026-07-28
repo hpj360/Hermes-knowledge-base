@@ -1,4 +1,5 @@
 import type { Citation } from "../types";
+import { HeadingText, MetaText, MonoText } from "./ui";
 
 interface CitationListProps {
   citations: Citation[];
@@ -8,42 +9,25 @@ interface CitationListProps {
 /**
  * 引用列表（M1-04：含 chunk_rowid；M2-04：点击跳转文档详情）。
  *
- * h6 设计重构：作为 JTBD 核心（引用式问答溯源），这里是用户会记住的视觉亮点
- * （frontend-design/SKILL.md：「差异化亮点 + 破格构图 + 氛围背景」）。
- * 金箔质感的来源编号 + 杂志式分栏 + 戏剧化阴影 hover，把"溯源可信感"做出来。
+ * R2 重构：复用 _components.css 的 `.citation-list` / `.cite-title` / `.cite-item` /
+ * `.cite-num` / `.cite-snippet` 语义类，承载金箔渐变边框 + 噪点底 + 戏剧化阴影 +
+ * 金箔来源编号 + 杂志分栏标题。inline style 只保留动态 cursor 与 brand-700 颜色覆盖。
  */
 export function CitationList({ citations, onJumpToDoc }: CitationListProps) {
   if (!citations || citations.length === 0) {
     return (
-      <div
-        className="text-xs italic mt-3"
-        style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}
-      >
-        无引用
-      </div>
+      <MetaText className="text-xs italic mt-3">无引用</MetaText>
     );
   }
 
   return (
-    <div className="mt-4">
-      {/* 杂志式分栏标题：金箔分隔线 + 大写 tracking */}
-      <div className="flex items-center gap-2 mb-2.5">
-        <span
-          className="text-[0.7rem] font-semibold uppercase tracking-[0.18em]"
-          style={{ color: "var(--gold-700)", fontFamily: "var(--font-sans)" }}
-        >
-          来源溯源
-        </span>
-        <span
-          className="text-[0.7rem] font-medium"
-          style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
-        >
+    <div className="citation-list mt-4">
+      {/* 杂志式分栏标题：.cite-title 由 _components.css 提供 gold-700 大写 tracking + ::after 金线 */}
+      <div className="cite-title">
+        <span>来源溯源</span>
+        <MonoText className="text-[0.7rem] font-medium ml-2">
           {citations.length}
-        </span>
-        <span
-          className="flex-1 h-px"
-          style={{ background: "var(--gold-foil)" }}
-        />
+        </MonoText>
       </div>
 
       <div className="space-y-2">
@@ -52,92 +36,41 @@ export function CitationList({ citations, onJumpToDoc }: CitationListProps) {
           return (
             <div
               key={`${c.doc_id}-${c.id}`}
+              className="citation-item"
               onClick={() => canJump && onJumpToDoc!(c.doc_id, c.chunk_rowid || undefined)}
               title={canJump ? "点击查看原文" : undefined}
-              className="group relative overflow-hidden rounded-md transition-all"
-              style={{
-                background: "var(--ink-50)",
-                border: "1px solid var(--ink-200)",
-                cursor: canJump ? "pointer" : "default",
-              }}
+              // 动态 cursor：仅当可跳转时为 pointer（保留动态计算值）
+              style={{ cursor: canJump ? "pointer" : "default" }}
             >
-              {/* 左侧金箔竖条（破格元素：略微超出顶边，强化"被引用"的物理感） */}
-              <span
-                className="absolute left-0 top-0 bottom-0 w-[3px]"
-                style={{ background: "var(--gold-foil)" }}
-              />
-              {/* hover 金色光晕（聚焦高光时刻，非散落微交互） */}
-              {canJump && (
-                <span
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                  style={{ boxShadow: "var(--shadow-gold)" }}
-                />
-              )}
-
-              <div className="pl-4 pr-3 py-2.5 relative">
+              {/* 金箔来源编号：.cite-num 由 _components.css 提供 serif + 金箔文字效果 */}
+              <span className="cite-num">[{c.id}]</span>
+              <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-2 mb-1">
-                  {/* 金箔来源编号 + 衬线标题 */}
-                  <div className="flex items-baseline gap-2 min-w-0">
-                    <span
-                      className="text-gold-foil font-bold leading-none flex-shrink-0"
-                      style={{
-                        fontFamily: "var(--font-serif)",
-                        fontSize: "1.05rem",
-                      }}
-                    >
-                      [{c.id}]
-                    </span>
-                    <span
-                      className="font-semibold truncate"
-                      style={{
-                        color: "var(--ink-900)",
-                        fontFamily: "var(--font-serif)",
-                        fontSize: "0.92rem",
-                      }}
-                    >
-                      {c.title}
-                    </span>
-                  </div>
-                  <span
-                    className="text-[0.65rem] flex-shrink-0"
-                    style={{
-                      color: "var(--ink-400)",
-                      fontFamily: "var(--font-mono)",
-                    }}
-                  >
+                  <HeadingText as="span" size="0.92rem" className="font-semibold truncate">
+                    {c.title}
+                  </HeadingText>
+                  <MonoText className="text-[0.65rem] flex-shrink-0">
                     {c.score.toFixed(4)}
-                  </span>
+                  </MonoText>
                 </div>
 
-                <p
-                  className="leading-relaxed line-clamp-3"
-                  style={{
-                    color: "var(--ink-600)",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "0.8rem",
-                  }}
-                >
+                <p className="cite-snippet leading-relaxed line-clamp-3">
                   {c.snippet}
                 </p>
 
-                <div
-                  className="flex items-center gap-2 mt-1.5"
-                  style={{
-                    color: "var(--ink-400)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.62rem",
-                  }}
-                >
-                  <span>doc: {c.doc_id}</span>
-                  <span style={{ color: "var(--gold-300)" }}>·</span>
-                  <span>chunk: {c.chunk_rowid}</span>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <MonoText className="text-[0.62rem]">doc: {c.doc_id}</MonoText>
+                  <span className="text-gold-300 text-[0.62rem]" aria-hidden="true">·</span>
+                  <MonoText className="text-[0.62rem]">chunk: {c.chunk_rowid}</MonoText>
                   {canJump && (
-                    <span
-                      className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-                      style={{ color: "var(--brand-700)", fontFamily: "var(--font-sans)" }}
+                    <MetaText
+                      as="span"
+                      className="ml-auto font-medium text-[0.62rem]"
+                      // 覆盖 MetaText 默认 ink-400，强调可点击动作
+                      style={{ color: "var(--brand-700)" }}
                     >
                       查看原文 →
-                    </span>
+                    </MetaText>
                   )}
                 </div>
               </div>

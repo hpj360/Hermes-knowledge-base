@@ -75,6 +75,7 @@
   .nav-tab-active {
     color: var(--brand-700);
     border-bottom-color: var(--gold-500);
+    box-shadow: var(--nav-tab-active);
     font-weight: 600;
   }
 

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
+import { MetaText } from "./ui";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -15,6 +16,11 @@ interface ErrorBoundaryState {
  *
  * 注意：Error Boundary 只能捕获渲染期、生命周期与构造函数中的同步错误，
  * 不捕获事件回调、异步代码（setTimeout/Promise）中的错误。
+ *
+ * R2 重构：卡片容器/顶部条/pre 用 Tailwind 工具类 + design token；
+ * 错误标题保留 text-gold-foil 金箔效果（与 HeadingText 默认 ink-900 冲突，故用 h1 + className）；
+ * 错误描述用 p + font-body/text-ink-600；操作 summary 用 font-ui；
+ * inline style 仅保留渐变背景上的 rgba 透明文字（无对应 token）。
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -47,67 +53,32 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         role="alert"
         className="min-h-screen flex items-center justify-center bg-brand-gradient bg-noise px-4"
       >
-        <div
-          className="max-w-md w-full overflow-hidden relative"
-          style={{
-            background: "#fff",
-            border: "1px solid var(--ink-200)",
-            borderRadius: "var(--r-lg)",
-            boxShadow: "var(--shadow-drama)",
-          }}
-        >
-          <div
-            className="px-6 py-5"
-            style={{
-              background: "var(--brand-gradient)",
-              borderBottom: "2px solid var(--gold-500)",
-            }}
-          >
-            <p
-              className="eyebrow mb-2"
-              style={{ color: "var(--gold-300)" }}
-            >
-              ERROR
-            </p>
-            <h1
-              className="text-gold-foil"
-              style={{ fontFamily: "var(--font-serif)", fontSize: "1.5rem", fontWeight: 600 }}
-            >
+        <div className="max-w-md w-full overflow-hidden relative bg-[var(--paper)] border border-ink-200 rounded-[var(--r-lg)] shadow-drama">
+          <div className="px-6 py-5 bg-brand-gradient border-b-2 border-gold-500">
+            <p className="eyebrow mb-2 text-gold-300">ERROR</p>
+            {/* 错误标题：保留 text-gold-foil 金箔效果（HeadingText 默认 ink-900 会覆盖金箔 transparent 色） */}
+            <h1 className="text-gold-foil font-serif text-2xl font-semibold">
               页面出错了
             </h1>
-            <p
+            <MetaText
+              as="p"
               className="text-sm mt-1"
-              style={{ color: "rgba(250, 243, 220, 0.75)", fontFamily: "var(--font-sans)" }}
+              // 渐变背景上的透明文字：gold-100 75% 透明度，_tokens.css 未定义此色
+              style={{ color: "rgba(250, 243, 220, 0.75)" }}
             >
               Hermes 知识库遇到了一个渲染异常
-            </p>
+            </MetaText>
           </div>
           <div className="p-6">
-            <p
-              className="mb-4"
-              style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)", fontSize: "var(--fs-sm)" }}
-            >
+            <p className="mb-4 font-body text-ink-600 text-sm">
               抱歉，应用在渲染时发生异常。您可以尝试重新加载页面；
               若问题持续，请联系管理员并附上下方错误信息。
             </p>
             <details className="mb-4 group">
-              <summary
-                className="cursor-pointer text-sm font-medium"
-                style={{ color: "var(--brand-700)", fontFamily: "var(--font-sans)" }}
-              >
+              <summary className="cursor-pointer text-sm font-medium text-brand-700 font-ui">
                 查看错误详情
               </summary>
-              <pre
-                className="mt-2 p-3 overflow-auto max-h-48 whitespace-pre-wrap break-all"
-                style={{
-                  background: "var(--ink-50)",
-                  border: "1px solid var(--ink-200)",
-                  borderRadius: "var(--r-sm)",
-                  color: "var(--ink-600)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "var(--fs-xs)",
-                }}
-              >
+              <pre className="mt-2 p-3 overflow-auto max-h-48 whitespace-pre-wrap break-all bg-ink-50 border border-ink-200 rounded text-ink-600 font-mono text-xs">
                 {message}
               </pre>
             </details>

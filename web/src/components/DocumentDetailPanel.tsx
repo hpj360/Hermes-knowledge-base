@@ -3,7 +3,7 @@ import { api } from "../api";
 import type { DocumentDetail, TagInfo } from "../types";
 import { Skeleton, SkeletonText } from "./Skeleton";
 import { showToast } from "./Toast";
-import { ErrorBanner, FormField, MetaText, MonoText } from "./ui";
+import { BodyText, ErrorBanner, FormField, HeadingText, MetaText, MonoText } from "./ui";
 
 interface DocumentDetailPanelProps {
   docId: string;
@@ -117,9 +117,12 @@ export function DocumentDetailPanel({
   return (
     <div className="flex flex-col h-full">
       {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-white" style={{ borderColor: "var(--ink-200)" }}>
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-white border-[color:var(--ink-200)]">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-2 text-sm" style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-sm text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]"
+          >
             <span>←</span>
             <span>返回列表</span>
           </button>
@@ -133,7 +136,7 @@ export function DocumentDetailPanel({
 
       {/* 编辑区 */}
       {editing && (
-        <div className="px-6 py-4 bg-white border-b space-y-3" style={{ borderColor: "var(--ink-200)" }}>
+        <div className="px-6 py-4 bg-white border-b space-y-3 border-[color:var(--ink-200)]">
           <p className="eyebrow">编辑元信息</p>
           <FormField label="标题">
             <input
@@ -155,7 +158,7 @@ export function DocumentDetailPanel({
           <FormField label="标签（多选）">
             <div className="flex flex-wrap gap-2 mt-1">
               {allTags.length === 0 && (
-                <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>暂无标签，请先在标签管理创建</span>
+                <MetaText className="text-xs">暂无标签，请先在标签管理创建</MetaText>
               )}
               {allTags.map((t) => (
                 <button
@@ -168,21 +171,11 @@ export function DocumentDetailPanel({
                       setEditTagIds([...editTagIds, t.id]);
                     }
                   }}
-                  className="text-xs px-2 py-1 rounded border transition-colors"
+                  className="text-xs px-2 py-1 rounded border transition-colors font-[family-name:var(--font-ui)]"
                   style={
                     editTagIds.includes(t.id)
-                      ? {
-                          background: "var(--brand-700)",
-                          color: "#fff",
-                          borderColor: "var(--brand-700)",
-                          fontFamily: "var(--font-sans)",
-                        }
-                      : {
-                          background: "#fff",
-                          color: "var(--ink-600)",
-                          borderColor: t.color || "var(--ink-200)",
-                          fontFamily: "var(--font-sans)",
-                        }
+                      ? { background: "var(--brand-700)", color: "#fff", borderColor: "var(--brand-700)" }
+                      : { background: "#fff", color: "var(--ink-600)", borderColor: t.color || "var(--ink-200)" }
                   }
                 >
                   {t.name}
@@ -203,22 +196,30 @@ export function DocumentDetailPanel({
       {/* 主体：左目录 + 右全文 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 左侧：元信息 + chunk 目录 */}
-        <aside className="w-64 border-r bg-white overflow-y-auto p-6 flex-shrink-0" style={{ borderColor: "var(--ink-200)" }}>
+        <aside className="w-64 border-r bg-white overflow-y-auto p-6 flex-shrink-0 border-[color:var(--ink-200)]">
           <p className="eyebrow mb-3">文档信息</p>
-          <h2 className="font-bold mb-4 break-all" style={{ fontFamily: "var(--font-serif)", color: "var(--ink-900)", fontSize: "1.125rem" }}>{doc.title}</h2>
-          <dl className="text-xs space-y-2" style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}>
-            <div><dt className="font-medium" style={{ color: "var(--ink-400)" }}>类型</dt><dd>{doc.file_type.toUpperCase()}</dd></div>
-            <div><dt className="font-medium" style={{ color: "var(--ink-400)" }}>来源</dt><dd>{doc.source_type}</dd></div>
-            <div><dt className="font-medium" style={{ color: "var(--ink-400)" }}>分类</dt><dd>{doc.category || "未分类"}</dd></div>
-            <div><dt className="font-medium" style={{ color: "var(--ink-400)" }}>分片</dt><dd>{doc.chunk_count}</dd></div>
-            <div><dt className="font-medium" style={{ color: "var(--ink-400)" }}>字符</dt><dd>{doc.content_length}</dd></div>
+          <HeadingText as="h2" size="1.125rem" className="font-bold mb-4 break-all">
+            {doc.title}
+          </HeadingText>
+          <dl className="text-xs space-y-2 text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]">
+            <div><MetaText as="dt" className="font-medium">类型</MetaText><dd>{doc.file_type.toUpperCase()}</dd></div>
+            <div><MetaText as="dt" className="font-medium">来源</MetaText><dd>{doc.source_type}</dd></div>
+            <div><MetaText as="dt" className="font-medium">分类</MetaText><dd>{doc.category || "未分类"}</dd></div>
+            <div><MetaText as="dt" className="font-medium">分片</MetaText><dd>{doc.chunk_count}</dd></div>
+            <div><MetaText as="dt" className="font-medium">字符</MetaText><dd>{doc.content_length}</dd></div>
           </dl>
           {detail.tags.length > 0 && (
             <div className="mt-4">
               <p className="eyebrow mb-2">标签</p>
               <div className="flex flex-wrap gap-1">
                 {detail.tags.map((t) => (
-                  <span key={t.id} className="text-xs px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: t.color }}>{t.name}</span>
+                  <span
+                    key={t.id}
+                    className="text-xs px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: t.color }}
+                  >
+                    {t.name}
+                  </span>
                 ))}
               </div>
             </div>
@@ -236,8 +237,7 @@ export function DocumentDetailPanel({
                         const el = chunkRefs.current[c.rowid];
                         el?.scrollIntoView({ behavior: "smooth", block: "center" });
                       }}
-                      className="block text-xs truncate"
-                      style={{ color: "var(--brand-700)", fontFamily: "var(--font-sans)" }}
+                      className="block text-xs truncate text-[color:var(--brand-700)] font-[family-name:var(--font-ui)]"
                       title={c.text.slice(0, 60)}
                     >
                       <span className="numeral mr-2">{String(c.idx + 1).padStart(2, "0")}</span>
@@ -265,13 +265,13 @@ export function DocumentDetailPanel({
                   ref={(el) => { chunkRefs.current[c.rowid] = el; }}
                   className="card p-5 transition-all duration-300"
                 >
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b" style={{ borderColor: "var(--ink-100)" }}>
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-[color:var(--ink-100)]">
                     <span className="numeral">片段 {String(c.idx + 1).padStart(2, "0")}</span>
                     <MonoText className="text-xs">chars {c.char_start}-{c.char_end}</MonoText>
                   </div>
-                  <div className="whitespace-pre-wrap leading-relaxed" style={{ color: "var(--ink-900)", fontFamily: "var(--font-sans)", fontSize: "0.95rem" }}>
+                  <BodyText as="div" className="whitespace-pre-wrap leading-relaxed text-[length:0.95rem]">
                     {c.text}
-                  </div>
+                  </BodyText>
                 </div>
               ))}
             </div>

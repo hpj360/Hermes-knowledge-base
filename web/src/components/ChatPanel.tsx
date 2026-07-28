@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CitationList } from "./CitationList";
 import { showToast } from "./Toast";
-import { MetaText, MonoText } from "./ui";
+import { BodyText, MetaText, MonoText, StatusBadge } from "./ui";
 import type { Citation, ExternalRef, SSEEvent } from "../types";
 
 interface ChatPanelProps {
@@ -149,18 +149,14 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
   return (
     <div className="flex flex-col h-full">
       {/* 工具栏 */}
-      <div
-        className="flex items-center justify-between px-6 py-3 border-b"
-        style={{ background: "var(--ink-50)", borderColor: "var(--ink-200)" }}
-      >
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-[color:var(--ink-50)] border-[color:var(--ink-200)]">
         <div className="flex items-baseline gap-3">
           <p className="eyebrow">Q&amp;A</p>
-          <h2 className="section-title" style={{ fontSize: "1rem" }}>问答</h2>
+          <h2 className="section-title text-base">问答</h2>
         </div>
         <button
           onClick={seed}
-          className="text-xs hover:opacity-75"
-          style={{ color: "var(--brand-700)" }}
+          className="text-xs hover:opacity-75 text-[color:var(--brand-700)]"
           disabled={loading}
         >
           导入种子知识
@@ -187,8 +183,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   <button
                     key={q}
                     onClick={() => setInput(q)}
-                    className="block w-full text-left card px-5 py-3 hover:shadow-md transition-shadow"
-                    style={{ fontFamily: "var(--font-serif)", color: "var(--ink-900)" }}
+                    className="block w-full text-left card px-5 py-3 hover:shadow-md transition-shadow font-[family-name:var(--font-serif)] text-[color:var(--ink-900)]"
                   >
                     <span className="numeral mr-3">{String(i + 1).padStart(2, "0")}</span>
                     {q}
@@ -203,23 +198,27 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
             key={i}
             className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
           >
+            {/*
+              消息气泡：critical 修复
+              原实现 brand-700 深底 + 白字（颜色反了）
+              修复为 mockup ask.html .msg-user 规范：brand-100 浅底 + brand-700 深字
+              AI 气泡：白底 + gold-500 左边框 + shadow-sm
+            */}
             <div
               className="max-w-3xl rounded-lg px-4 py-3"
               style={
                 m.role === "user"
                   ? {
-                      background: "var(--brand-700)",
-                      color: "#fff",
+                      background: "var(--brand-100)",
+                      color: "var(--brand-700)",
                       borderRadius: "var(--r-md)",
-                      boxShadow: "none",
                     }
                   : {
                       background: "#fff",
                       border: "1px solid var(--ink-200)",
                       borderLeft: "3px solid var(--gold-500)",
                       borderRadius: "var(--r-md)",
-                      boxShadow: "0 1px 3px rgba(31, 28, 24, 0.04)",
-                      fontFamily: "var(--font-sans)",
+                      boxShadow: "var(--shadow-sm)",
                     }
               }
             >
@@ -229,67 +228,40 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                 <>
                   {m.rejected && (
                     <div
-                      className="text-xs px-2 py-1 rounded mb-2"
-                      style={{ background: "#FDECEA", color: "var(--danger)" }}
+                      className="text-xs px-2 py-1 rounded mb-2 font-[family-name:var(--font-ui)] text-[color:var(--danger)]"
+                      style={{ background: "rgba(179, 38, 30, 0.08)" }}
+                      role="alert"
                     >
                       已拒绝：检测到越狱尝试
                     </div>
                   )}
                   {m.lowConfidence && (
-                    <div
-                      className="text-xs px-2 py-1 rounded mb-2"
-                      style={{ background: "var(--gold-100)", color: "var(--warning)" }}
-                    >
+                    <div className="text-xs px-2 py-1 rounded mb-2 bg-[color:var(--gold-100)] text-[color:var(--warning)] font-[family-name:var(--font-ui)]">
                       低置信度：知识库中暂无足够相关信息
                     </div>
                   )}
-                  <p
-                    className="whitespace-pre-wrap"
-                    style={{ color: "var(--ink-900)", fontFamily: "var(--font-sans)" }}
-                  >
+                  <BodyText as="p" className="whitespace-pre-wrap">
                     {m.content || (m.streaming ? "生成中..." : "")}
                     {m.streaming && (
-                      <span
-                        className="inline-block w-2 h-4 ml-1 align-middle animate-pulse"
-                        style={{ background: "var(--brand-500)" }}
-                      />
+                      <span className="inline-block w-2 h-4 ml-1 align-middle animate-pulse bg-[color:var(--brand-500)]" />
                     )}
-                  </p>
+                  </BodyText>
                   {m.citations && m.citations.length > 0 && (
                     <CitationList citations={m.citations} onJumpToDoc={onJumpToDoc} />
                   )}
                   {m.externalRefs && m.externalRefs.length > 0 && (
-                    <div
-                      className="mt-3 pt-3 border-t"
-                      style={{ borderColor: "var(--ink-100)" }}
-                    >
-                      <div
-                        className="text-xs mb-2 flex items-center gap-2"
-                        style={{ color: "var(--ink-500)", fontFamily: "var(--font-sans)" }}
-                      >
-                        <span
-                          className="inline-block px-2 py-0.5 rounded"
-                          style={{
-                            background: "var(--gold-100)",
-                            color: "var(--warning)",
-                            fontSize: "0.7rem",
-                          }}
-                        >
-                          外部参考
-                        </span>
+                    <div className="mt-3 pt-3 border-t border-[color:var(--ink-100)]">
+                      <div className="text-xs mb-2 flex items-center gap-2 text-[color:var(--ink-600)] font-[family-name:var(--font-ui)]">
+                        <StatusBadge variant="warning">外部参考</StatusBadge>
                         <span>来自「酒博士」订阅知识库 · 仅供参考</span>
                       </div>
                       <ul className="space-y-1.5">
                         {m.externalRefs.map((ref, idx) => (
                           <li
                             key={`${ref.title}-${idx}`}
-                            className="text-sm flex items-start gap-2"
-                            style={{ fontFamily: "var(--font-sans)" }}
+                            className="text-sm flex items-start gap-2 font-[family-name:var(--font-ui)]"
                           >
-                            <span
-                              className="numeral flex-shrink-0"
-                              style={{ color: "var(--gold-500)", fontSize: "0.75rem" }}
-                            >
+                            <span className="numeral flex-shrink-0 text-[color:var(--gold-500)] text-[0.75rem]">
                               {String(idx + 1).padStart(2, "0")}
                             </span>
                             <div className="flex-1 min-w-0">
@@ -298,23 +270,19 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                                   href={ref.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="hover:underline"
-                                  style={{ color: "var(--brand-700)" }}
+                                  className="hover:underline text-[color:var(--brand-700)]"
                                 >
                                   {ref.title}
                                 </a>
                               ) : (
-                                <span style={{ color: "var(--ink-900)" }}>
+                                <span className="text-[color:var(--ink-900)]">
                                   {ref.title}
                                 </span>
                               )}
                               {ref.snippet && (
-                                <p
-                                  className="text-xs mt-0.5 line-clamp-2"
-                                  style={{ color: "var(--ink-400)" }}
-                                >
+                                <MetaText as="p" className="text-xs mt-0.5 line-clamp-2">
                                   {ref.snippet}
-                                </p>
+                                </MetaText>
                               )}
                             </div>
                           </li>
@@ -325,8 +293,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                   {m.latencyMs !== undefined && !m.streaming && (
                     <MonoText
                       as="div"
-                      className="text-xs mt-2 pt-2 border-t"
-                      style={{ borderColor: "var(--ink-100)" }}
+                      className="text-xs mt-2 pt-2 border-t border-[color:var(--ink-100)]"
                     >
                       {m.modelUsed} · {m.latencyMs}ms
                     </MonoText>

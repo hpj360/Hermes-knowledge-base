@@ -142,16 +142,18 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col relative bg-noise" style={{ background: "var(--paper-bg)" }}>
-      {/* 顶部栏 — 深酒红渐变 + 金箔标题 */}
-      <header className="bg-brand-gradient px-6 py-4 flex items-center justify-between flex-shrink-0 relative overflow-hidden">
+      {/* 顶部栏 — .navbar 语义类：噪点底 + 深酒红渐变 + 金箔底边 + sticky */}
+      <header className="navbar px-6 py-4 flex items-center justify-between flex-shrink-0 relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <div className="text-gold-foil">
             <Logo size={28} />
           </div>
           <div>
-            <h1 className="font-bold text-gold-foil" style={{ fontFamily: "var(--font-serif)", fontSize: "1.375rem" }}>Hermes 知识库</h1>
+            <h1 className="brand">
+              <span className="brand-accent">Hermes 知识库</span>
+            </h1>
             {health && (
-              <p className="text-xs mt-0.5" style={{ color: "rgba(250, 243, 220, 0.75)", fontFamily: "var(--font-sans)" }}>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(250, 243, 220, 0.75)" }}>
                 {health.doc_count} 篇文档
               </p>
             )}

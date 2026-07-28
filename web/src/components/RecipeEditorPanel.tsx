@@ -201,7 +201,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
         {/* 状态横幅 */}
         <div
           className="text-sm px-3 py-2 rounded border-l-4"
-          style={{ ...bannerStyle, fontFamily: "var(--font-sans)" }}
+          style={{ ...bannerStyle, fontFamily: "var(--font-ui)" }}
         >
           当前状态：{STATUS_TEXT[status] || status}
         </div>
@@ -293,7 +293,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
           </div>
           <div className="flex flex-wrap gap-2 min-h-[24px]">
             {ingredients.length === 0 ? (
-              <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>未选择材料</span>
+              <span className="text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}>未选择材料</span>
             ) : (
               ingredients.map((name, idx) => (
                 <span
@@ -316,7 +316,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               ))
             )}
           </div>
-          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>回车快速添加；点击 chip 上的 × 移除。</p>
+          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}>回车快速添加；点击 chip 上的 × 移除。</p>
         </div>
 
         {/* 正文 */}
@@ -330,7 +330,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
             disabled={!canEdit || saving}
             aria-label="配方正文"
           />
-          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+          <p className="text-xs mt-1" style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}>
             可在正文首行使用 frontmatter 注解材料：
             <code className="font-mono px-1 rounded" style={{ background: "var(--ink-100)", color: "var(--gold-700)" }}>&lt;!-- ingredients: 金酒|柠檬汁|糖浆 --&gt;</code>
           </p>
@@ -394,8 +394,8 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
             className="text-sm px-3 py-2 rounded"
             style={
               resultMsg.kind === "ok"
-                ? { background: "rgba(46, 125, 91, 0.1)", color: "var(--success)", fontFamily: "var(--font-sans)" }
-                : { background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)", fontFamily: "var(--font-sans)" }
+                ? { background: "rgba(46, 125, 91, 0.1)", color: "var(--success)", fontFamily: "var(--font-ui)" }
+                : { background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)", fontFamily: "var(--font-ui)" }
             }
             role="status"
           >

@@ -79,12 +79,8 @@ describe("PendingReviewPanel", () => {
     });
   });
 
-  it("点击「驳回」调用 labRejectRecipe（带 reason）", async () => {
+  it("点击「驳回」打开 usePrompt 对话框，输入理由后调用 labRejectRecipe", async () => {
     const user = userEvent.setup();
-    // stub prompt — jsdom 默认无 prompt
-    const promptSpy = vi.fn(() => "材料不合规");
-    vi.stubGlobal("prompt", promptSpy);
-
     vi.mocked(api.labRecipes).mockResolvedValue({ items: PENDING_RECIPES });
     vi.mocked(api.labRejectRecipe).mockResolvedValue({
       doc_id: "doc-p1",
@@ -98,11 +94,35 @@ describe("PendingReviewPanel", () => {
     const rejectBtns = screen.getAllByText("驳回");
     await user.click(rejectBtns[0]);
 
+    // usePrompt 对话框打开：输入理由并点「确认」
+    const input = await screen.findByLabelText(/驳回理由/);
+    await user.type(input, "材料不合规");
+    await user.click(screen.getByRole("button", { name: "确认" }));
+
     await waitFor(() => {
       expect(api.labRejectRecipe).toHaveBeenCalledWith("doc-p1", "材料不合规");
     });
+  });
 
-    vi.unstubAllGlobals();
+  it("点击「驳回」后取消对话框：中止驳回，不调用 labRejectRecipe", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labRecipes).mockResolvedValue({ items: PENDING_RECIPES });
+
+    render(<PendingReviewPanel />);
+    await waitFor(() => expect(screen.getByText("待审核 Mojito")).toBeInTheDocument());
+
+    const rejectBtns = screen.getAllByText("驳回");
+    await user.click(rejectBtns[0]);
+
+    // 取消对话框
+    const cancelBtn = await screen.findByRole("button", { name: "取消" });
+    await user.click(cancelBtn);
+
+    // 对话框关闭且驳回被中止
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/驳回理由/)).not.toBeInTheDocument();
+    });
+    expect(api.labRejectRecipe).not.toHaveBeenCalled();
   });
 
   it("加载失败：展示错误信息", async () => {

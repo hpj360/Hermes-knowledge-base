@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { DocumentDetail, LabRecipe } from "../types";
 import { showToast } from "./Toast";
-import { ErrorBanner, MetaText, MonoText } from "./ui";
+import { ErrorBanner, MetaText, MonoText, usePrompt } from "./ui";
 
 interface PendingReviewPanelProps {
   /** 外部传入的刷新信号：每次自增触发重新加载。 */
@@ -21,6 +21,8 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
   const [expanded, setExpanded] = useState<string | null>(null);
   const [detailCache, setDetailCache] = useState<Record<string, DocumentDetail>>({});
   const [resolvedCount, setResolvedCount] = useState(0);
+  // R3: usePrompt 替代 window.prompt（驳回理由输入）
+  const { prompt, dialog } = usePrompt();
 
   const load = async () => {
     setLoading(true);
@@ -92,11 +94,9 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
   };
 
   const handleReject = async (docId: string) => {
-    // 浏览器原生 prompt 与 mockup recipe-editor 行为一致；测试环境 jsdom 可 stubGlobal prompt。
-    // TODO: R3 迁移到 usePrompt（当前 PendingReviewPanel.test.tsx stub prompt 并期望 window.prompt 被调用）
-    const reason = typeof window !== "undefined" && typeof window.prompt === "function"
-      ? window.prompt("驳回理由：") || ""
-      : "";
+    // R3: usePrompt 替代 window.prompt（取消返回 null → 中止驳回；确认返回理由字符串，可能为空串）
+    const reason = await prompt("驳回理由：");
+    if (reason === null) return; // 用户取消，中止驳回
     setBusyDocId(docId);
     try {
       await api.labRejectRecipe(docId, reason);
@@ -347,6 +347,9 @@ export function PendingReviewPanel({ refreshTick, onResolved }: PendingReviewPan
           })}
         </ul>
       )}
+
+      {/* R3: usePrompt 输入对话框（驳回理由） */}
+      {dialog}
     </div>
   );
 }

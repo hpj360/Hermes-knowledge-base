@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { api } from "../api";
 import type {
   IMASearchItem,
@@ -10,7 +10,7 @@ import type {
 } from "../types";
 import { Modal } from "./Modal";
 import { showToast } from "./Toast";
-import { EmptyState, MetaText, StatusBadge } from "./ui";
+import { GoldFoilCard, LabMetric, MetaText } from "./ui";
 
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
@@ -154,10 +154,18 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         </div>
       </div>
 
-      {/* 今日推荐 — 杂志式卡片 */}
+      {/* C3: 金箔引导卡（mockup lab.html#L84-L88，gap-analysis P0.4） */}
+      <GoldFoilCard
+        className="mb-8"
+        title="调酒实验室"
+        quote="告诉我们你手边有哪些材料，我们将从 IBA 金标准与 TheCocktailDB 600+ 配方中为你匹配最合适的鸡尾酒。"
+        attribution="HERMES LAB"
+      />
+
+      {/* 今日推荐 — .daily-recipe 语义类（mockup lab.html#L90-L97） */}
       {daily && daily.title && (
         <div
-          className="card-elevated mb-8 p-6 cursor-pointer transition-shadow hover:shadow-lg"
+          className="daily-recipe cursor-pointer"
           onClick={() =>
             onJumpToDoc && daily.doc_id
               ? onJumpToDoc(daily.doc_id, daily.chunk_rowid || undefined)
@@ -172,32 +180,22 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           role="button"
           tabIndex={0}
         >
-          <div className="flex items-center gap-3 mb-2">
-            <p className="eyebrow">今日推荐</p>
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "var(--gold-100)", color: "var(--gold-700)" }}
-            >
-              {reasonText(daily.reason)}
-            </span>
-          </div>
-          <h3 className="section-title mb-2">{daily.title}</h3>
+          <span className="daily-badge">今日推荐</span>
+          <span className="daily-name">{daily.title}</span>
+          <span className="daily-reason">{reasonText(daily.reason)}</span>
           {daily.base_spirit && (
-            <span
-              className="text-xs px-2 py-0.5 rounded"
-              style={{ background: "var(--brand-50)", color: "var(--brand-700)" }}
-            >
+            <span className="match-badge match-full whitespace-nowrap">
               {daily.base_spirit}
             </span>
           )}
         </div>
       )}
 
-      {/* 材料选择器 — 分类用 eyebrow 区隔，chip 选中态用金/酒红边框 */}
-      <div className="card p-6 mb-6">
+      {/* 材料选择器 — .material-selector 语义类（gap-analysis P1.1） */}
+      <div className="material-selector mb-6">
         <p className="eyebrow mb-4">选择材料</p>
         <input
-          className="input mb-5"
+          className="input material-search"
           placeholder="搜索材料... 如 金酒"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -205,37 +203,21 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         />
 
         {filteredCategories.map((cat) => (
-          <div
-            key={cat.id}
-            className="mb-5 last:mb-0 pb-5 last:pb-0 border-b last:border-b-0"
-            style={{ borderColor: "var(--ink-100)" }}
-          >
+          <div key={cat.id} className="material-category">
             <div className="flex items-baseline gap-2 mb-3">
               <span className="eyebrow">{cat.label}</span>
               <span className="numeral">{cat.items.length}</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="chip-list">
               {cat.items.map((name) => {
                 const isSelected = !!selected[name];
+                // P0.1 修复：用 .chip-chip.cat-{category}.selected 触发 _components.css 4 色分类规则
                 return (
                   <button
                     key={name}
                     type="button"
                     onClick={() => toggleMaterial(name, cat.id)}
-                    className="text-xs px-3 py-1.5 rounded-full border transition-all"
-                    style={
-                      isSelected
-                        ? {
-                            background: "var(--brand-700)",
-                            color: "#fff",
-                            borderColor: "var(--brand-700)",
-                          }
-                        : {
-                            background: "transparent",
-                            color: "var(--ink-600)",
-                            borderColor: "var(--ink-200)",
-                          }
-                    }
+                    className={`chip-chip cat-${cat.id}${isSelected ? " selected" : ""}`}
                     aria-pressed={isSelected}
                   >
                     {name}
@@ -246,44 +228,34 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           </div>
         ))}
 
-        {/* 已选材料条 */}
+        {/* 已选材料条 — .selected-bar 语义类 */}
         {selectedNames.length > 0 && (
-          <div
-            className="mt-5 p-4 rounded"
-            style={{
-              background: "var(--gold-100)",
-              borderLeft: "3px solid var(--gold-500)",
-            }}
-          >
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="eyebrow">已选</span>
-              {selectedNames.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => toggleMaterial(name, selected[name])}
-                  className="text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: "var(--gold-500)", color: "var(--ink-900)" }}
-                >
-                  {name} ×
-                </button>
-              ))}
+          <div className="selected-bar">
+            <span className="eyebrow">已选</span>
+            {selectedNames.map((name) => (
               <button
+                key={name}
                 type="button"
-                onClick={clearAll}
-                className="ml-auto text-xs"
-                style={{ color: "var(--ink-400)" }}
+                onClick={() => toggleMaterial(name, selected[name])}
+                className="selected-chip"
               >
-                清空
+                {name} ×
               </button>
-            </div>
+            ))}
+            <button
+              type="button"
+              onClick={clearAll}
+              className="btn-ghost clear-btn text-xs ml-auto"
+            >
+              清空
+            </button>
           </div>
         )}
 
         <button
           type="button"
           onClick={doMatch}
-          className="btn-primary w-full mt-5"
+          className="btn-primary match-btn w-full mt-5"
           disabled={matching || selectedNames.length === 0}
         >
           {matching
@@ -294,7 +266,7 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         </button>
       </div>
 
-      {/* 错误 */}
+      {/* 错误 — 保留 1 处 inline：card 内文本色（无对应语义类，token 引用） */}
       {error && (
         <div
           className="card p-6 mb-6 text-center text-sm"
@@ -304,10 +276,14 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
         </div>
       )}
 
-      {/* 空状态 — 杂志化 */}
+      {/* 空状态 — .lab-empty 语义类 */}
       {!result && !error && (
-        <div className="text-center py-16">
-          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>
+        <div className="lab-empty text-center py-16">
+          {/* 保留 1 处 inline：装饰符号 ◆ 的金色（无对应语义类） */}
+          <div
+            className="text-3xl mb-3"
+            style={{ color: "var(--gold-500)" }}
+          >
             ◆
           </div>
           <p className="eyebrow mb-2">START</p>
@@ -407,21 +383,14 @@ function MatchGroup({
 }: MatchGroupProps) {
   if (items.length === 0) {
     return (
-      <div
-        className="text-center py-6 text-sm"
-        style={{ color: "var(--ink-400)" }}
-      >
-        {emptyHint}
-      </div>
+      <div className="empty-state-mini text-center py-6">{emptyHint}</div>
     );
   }
   return (
     <div className="mb-8">
       <div className="flex items-baseline gap-3 mb-4">
         <span className="numeral">{String(items.length).padStart(2, "0")}</span>
-        <h3 className="section-title" style={{ fontSize: "1.25rem" }}>
-          {title}
-        </h3>
+        <h3 className="section-title text-xl">{title}</h3>
         <hr className="divider-gold flex-1" />
       </div>
       <div className="space-y-4">
@@ -457,89 +426,42 @@ function RecipeMatchCard({
   const hasSteps = !!item.steps && item.steps.length > 0;
   const missingItems = item.ingredients.filter((ing) => !ing.have);
   const hasSubstitutes = missingItems.some((ing) => ing.substitutes && ing.substitutes.length > 0);
+  // variant → .recipe-card 修饰类（_components.css 提供 .full-match/.partial-match 左边框色）
+  const cardClass = `recipe-card ${isPartial ? "partial-match" : "full-match"}`;
+  // variant → .match-badge 修饰类（_components.css 提供 .match-full/.match-partial 配色）
+  const badgeClass = `match-badge ${isPartial ? "match-partial" : "match-full"}`;
+  const badgeText = isPartial
+    ? `缺 ${item.missing_count ?? (item.missing?.length || 0)} 种`
+    : "材料齐全";
 
   return (
-    <div
-      className="card p-5"
-      style={{
-        borderLeft: `3px solid ${isPartial ? "var(--gold-500)" : "var(--brand-700)"}`,
-      }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <h4
-          className="font-semibold"
-          style={{
-            fontFamily: "var(--font-serif)",
-            color: "var(--ink-900)",
-            fontSize: "1.05rem",
-          }}
-        >
-          {item.title}
-        </h4>
-        <span
-          className="text-xs px-2 py-0.5 rounded-full"
-          style={
-            isPartial
-              ? { background: "var(--gold-100)", color: "var(--gold-700)" }
-              : { background: "var(--brand-50)", color: "var(--brand-700)" }
-          }
-        >
-          {isPartial
-            ? `缺 ${item.missing_count ?? (item.missing?.length || 0)} 种`
-            : "材料齐全"}
-        </span>
+    <div className={cardClass}>
+      <div className="recipe-header">
+        <h3 className="recipe-name">{item.title}</h3>
+        <span className={badgeClass}>{badgeText}</span>
       </div>
 
-      {/* 材料清单：have 绿色对勾 / missing 灰色删除线 */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
+      {/* 材料清单 — .ing.have/.missing 语义类（_components.css 提供 ✓/✗ 配色 + 删除线） */}
+      <div className="recipe-ingredients">
         {(item.ingredients || []).map((ing) => (
-          <span
-            key={ing.name}
-            className="text-xs px-2 py-0.5 rounded"
-            style={
-              ing.have
-                ? { background: "var(--brand-50)", color: "var(--brand-700)" }
-                : {
-                    background: "var(--ink-100)",
-                    color: "var(--ink-400)",
-                    textDecoration: "line-through",
-                  }
-            }
-          >
+          <span key={ing.name} className={`ing ${ing.have ? "have" : "missing"}`}>
             {ing.have ? "✓ " : "✗ "}
             {ing.name}
           </span>
         ))}
       </div>
 
-      {/* 替代原料推荐：缺失材料下方显示虚线 chip，点击加入已选 */}
+      {/* 替代原料推荐 — .substitute-suggest 语义类 + .sub-chip */}
       {hasSubstitutes && (
-        <div
-          className="mb-3 p-3 rounded"
-          style={{
-            background: "var(--gold-100)",
-            borderLeft: "2px dashed var(--gold-500)",
-          }}
-        >
-          <p
-            className="eyebrow mb-2"
-            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
-          >
-            替代原料推荐
-          </p>
+        <div className="substitute-suggest">
           {missingItems
             .filter((ing) => ing.substitutes && ing.substitutes.length > 0)
             .map((ing) => (
-              <div
+              <span
                 key={ing.name}
-                className="flex items-center gap-2 flex-wrap mb-1.5 last:mb-0"
+                className="flex items-center gap-2 flex-wrap"
               >
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
-                >
-                  {ing.name} →
-                </span>
+                <span className="ing missing">{ing.name} →</span>
                 {(ing.substitutes || []).map((sub) => (
                   <button
                     key={sub}
@@ -551,84 +473,47 @@ function RecipeMatchCard({
                     {sub}
                   </button>
                 ))}
-              </div>
+              </span>
             ))}
         </div>
       )}
 
       {/* 缺失摘要（partial 时仍保留简短列表，便于无替代时也可视） */}
       {isPartial && item.missing && item.missing.length > 0 && !hasSubstitutes && (
-        <div className="text-xs mb-3" style={{ color: "var(--gold-700)" }}>
+        <div className="substitute-suggest">
           缺：{item.missing.join("、")}
         </div>
       )}
 
       {/* 制作方法推荐：可折叠的步骤区，杂志式编号 */}
       {hasSteps && (
-        <div
-          className="mb-3 rounded"
-          style={{
-            background: "var(--ink-50)",
-            border: "1px solid var(--ink-100)",
-          }}
-        >
+        <div className="mb-3 rounded p-3 bg-[var(--ink-50)] border border-[var(--ink-100)]">
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="w-full flex items-center justify-between px-3 py-2 text-left"
+            className="w-full flex items-center justify-between text-left eyebrow"
             aria-expanded={expanded}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "var(--font-sans)",
-            }}
           >
-            <span
-              className="eyebrow"
-              style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
-            >
-              制作方法 · {item.steps!.length} 步
-            </span>
-            <span
-              className="text-xs"
-              style={{ color: "var(--ink-400)" }}
-              aria-hidden="true"
-            >
+            <span>制作方法 · {item.steps!.length} 步</span>
+            <span className="text-xs text-[var(--ink-400)]" aria-hidden="true">
               {expanded ? "收起 ▲" : "展开 ▼"}
             </span>
           </button>
           {expanded && (
-            <ol
-              className="px-4 pb-3 m-0"
-              style={{ listStyle: "none", counterReset: "step" }}
-            >
+            <ol className="m-0 mt-2 px-4 pb-2 list-none">
               {item.steps!.map((step, i) => (
-                <li
-                  key={i}
-                  className="flex gap-3 mb-2 last:mb-0"
-                  style={{ counterIncrement: "step" }}
-                >
+                <li key={i} className="flex gap-3 mb-2 last:mb-0">
+                  {/* 保留 1 处 inline：步骤编号样式（serif + brand-700，无对应语义类） */}
                   <span
-                    style={{
-                      fontFamily: "var(--font-serif)",
-                      fontSize: "var(--fs-sm)",
-                      fontWeight: 700,
-                      color: "var(--brand-700)",
-                      minWidth: "1.5rem",
-                      textAlign: "right",
-                    }}
+                    className="font-serif font-bold text-sm min-w-[1.5rem] text-right"
+                    style={{ color: "var(--brand-700)" }}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
+                  {/* 保留 1 处 inline：步骤正文样式（ink-900 + 行高，无对应语义类） */}
                   <span
-                    className="flex-1"
-                    style={{
-                      fontFamily: "var(--font-sans)",
-                      fontSize: "var(--fs-sm)",
-                      color: "var(--ink-900)",
-                      lineHeight: 1.6,
-                    }}
+                    className="flex-1 text-sm leading-relaxed"
+                    style={{ color: "var(--ink-900)" }}
                   >
                     {step}
                   </span>
@@ -639,10 +524,7 @@ function RecipeMatchCard({
         </div>
       )}
 
-      <div
-        className="flex items-center justify-between pt-3 border-t border-dashed"
-        style={{ borderColor: "var(--ink-200)" }}
-      >
+      <div className="recipe-footer">
         {item.chunk_rowid ? (
           <button
             type="button"
@@ -651,18 +533,15 @@ function RecipeMatchCard({
                 ? onJumpToDoc(item.doc_id, item.chunk_rowid || undefined)
                 : undefined
             }
-            className="text-xs"
-            style={{ color: "var(--brand-700)" }}
+            className="citation-link"
           >
             [{item.chunk_rowid}] 查看引用
           </button>
         ) : (
-          <span className="text-xs" style={{ color: "var(--ink-400)" }}>
-            无引用
-          </span>
+          <span className="citation-link opacity-60">无引用</span>
         )}
         {item.base_spirit && (
-          <span className="text-xs" style={{ color: "var(--ink-400)" }}>
+          <span className="text-xs text-[var(--ink-400)]">
             基酒：{item.base_spirit}
           </span>
         )}
@@ -674,6 +553,24 @@ function RecipeMatchCard({
 // ---------------------------------------------------------------------------
 // B6: IMA 知识库同步弹窗
 // ---------------------------------------------------------------------------
+
+/** 配置项 inline code 样式：ink-100 底 + 等宽字体（无对应语义类，集中定义避免重复 inline） */
+function ConfigCode({ children }: { children: ReactNode }) {
+  return (
+    <code
+      className="font-mono mx-1"
+      style={{
+        background: "var(--ink-100)",
+        padding: "1px 4px",
+        borderRadius: "var(--r-sm)",
+        fontSize: "0.85em",
+      }}
+    >
+      {children}
+    </code>
+  );
+}
+
 interface ImaSyncDialogProps {
   onClose: () => void;
   onSynced?: () => void;
@@ -755,36 +652,13 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
         </>
       }
     >
-      <p
-        className="text-sm mb-4"
-        style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
-      >
+      <MetaText className="text-sm mb-4">
         通过 IMA OpenAPI 把知识库中的内容检索并导入到本地知识库。需在服务端配置
-        <code
-          style={{
-            background: "var(--ink-100)",
-            padding: "1px 4px",
-            borderRadius: "var(--r-sm)",
-            margin: "0 2px",
-            fontSize: "0.85em",
-          }}
-        >
-          KB_IMA_CLIENT_ID
-        </code>
+        <ConfigCode>KB_IMA_CLIENT_ID</ConfigCode>
         与
-        <code
-          style={{
-            background: "var(--ink-100)",
-            padding: "1px 4px",
-            borderRadius: "var(--r-sm)",
-            margin: "0 2px",
-            fontSize: "0.85em",
-          }}
-        >
-          KB_IMA_API_KEY
-        </code>
+        <ConfigCode>KB_IMA_API_KEY</ConfigCode>
         。
-      </p>
+      </MetaText>
 
       <div className="flex gap-2 mb-4">
         <input
@@ -807,6 +681,7 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
         </button>
       </div>
 
+      {/* 保留 1 处 inline：错误横幅（rgba + var 混用，无对应语义类） */}
       {error && (
         <div
           className="text-xs mb-3 p-2 rounded"
@@ -821,35 +696,28 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
 
       {searchHits && (
         <div className="mb-4">
-          <p
-            className="eyebrow mb-2"
-            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
-          >
-            检索预览 · {searchHits.length} 条
-          </p>
+          <p className="eyebrow mb-2">检索预览 · {searchHits.length} 条</p>
+          {/* 保留 1 处 inline：搜索结果滚动容器（maxHeight + 多 token 边框/底色，无对应语义类） */}
           <div
+            className="rounded-md"
             style={{
               maxHeight: "240px",
               overflowY: "auto",
               border: "1px solid var(--ink-200)",
-              borderRadius: "var(--r-md)",
               background: "var(--ink-50)",
             }}
           >
             {searchHits.length === 0 ? (
-              <p
-                className="text-sm text-center py-6"
-                style={{ color: "var(--ink-400)" }}
-              >
+              <p className="empty-state-mini text-center py-6">
                 未找到相关内容
               </p>
             ) : (
               searchHits.map((hit, i) => (
                 <div
                   key={i}
-                  className="px-3 py-2 border-b last:border-b-0"
-                  style={{ borderColor: "var(--ink-100)" }}
+                  className="px-3 py-2 border-b last:border-b-0 border-[var(--ink-100)]"
                 >
+                  {/* 保留 1 处 inline：检索 hit 标题（serif + ink-900，无对应语义类） */}
                   <p
                     className="text-sm font-semibold mb-1"
                     style={{
@@ -859,16 +727,13 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
                   >
                     {hit.title || "未命名"}
                   </p>
+                  {/* 保留 1 处 inline：检索 hit 正文（line-clamp + 多 token，无对应语义类） */}
                   <p
-                    className="text-xs"
+                    className="text-xs line-clamp-2"
                     style={{
                       color: "var(--ink-600)",
-                      fontFamily: "var(--font-sans)",
+                      fontFamily: "var(--font-ui)",
                       lineHeight: 1.5,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
                     }}
                   >
                     {hit.content || "（无正文预览）"}
@@ -880,72 +745,18 @@ function ImaSyncDialog({ onClose, onSynced }: ImaSyncDialogProps) {
         </div>
       )}
 
+      {/* 上次同步结果 — .lab-sync-panel + LabMetric（gap-analysis P1.1） */}
       {lastResult && (
-        <div
-          className="p-3 rounded"
-          style={{
-            background: "var(--gold-100)",
-            borderLeft: "3px solid var(--gold-500)",
-          }}
-        >
-          <p
-            className="eyebrow mb-2"
-            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
-          >
-            上次同步结果
-          </p>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: "var(--success)",
-                }}
-              >
-                {lastResult.imported}
-              </div>
-              <div
-                className="text-xs"
-                style={{ color: "var(--ink-400)" }}
-              >
-                新增
-              </div>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: "var(--ink-400)",
-                }}
-              >
-                {lastResult.skipped}
-              </div>
-              <div
-                className="text-xs"
-                style={{ color: "var(--ink-400)" }}
-              >
-                跳过
-              </div>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: lastResult.failed > 0 ? "var(--danger)" : "var(--ink-400)",
-                }}
-              >
-                {lastResult.failed}
-              </div>
-              <div
-                className="text-xs"
-                style={{ color: "var(--ink-400)" }}
-              >
-                失败
-              </div>
-            </div>
+        <div className="lab-sync-panel">
+          <p className="eyebrow mb-2">上次同步结果</p>
+          <div className="lab-metrics">
+            <LabMetric label="新增" num={lastResult.imported} />
+            <LabMetric label="跳过" num={lastResult.skipped} />
+            <LabMetric
+              label="失败"
+              num={lastResult.failed}
+              alert={lastResult.failed > 0}
+            />
           </div>
         </div>
       )}
@@ -1024,18 +835,14 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
         </>
       }
     >
-      <p
-        className="text-sm mb-4"
-        style={{ color: "var(--ink-600)", fontFamily: "var(--font-sans)" }}
-      >
+      <MetaText className="text-sm mb-4">
         将英文配方标题（IBA / TheCocktailDB）批量翻译为中文。已含中文的标题自动跳过。
         LLM 后端可用时使用 AI 翻译，否则回退到内置鸡尾酒词典。
-      </p>
+      </MetaText>
 
       <div className="mb-4">
         <label
           className="eyebrow block mb-2"
-          style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
           htmlFor="translate-source"
         >
           数据源筛选
@@ -1058,7 +865,6 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
       <div className="mb-4">
         <label
           className="eyebrow block mb-2"
-          style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
           htmlFor="translate-limit"
         >
           翻译上限（1-500）
@@ -1078,6 +884,7 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
         />
       </div>
 
+      {/* 保留 1 处 inline：错误横幅（同 ImaSyncDialog） */}
       {error && (
         <div
           className="text-xs mb-3 p-2 rounded"
@@ -1090,63 +897,20 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
         </div>
       )}
 
+      {/* 上次翻译结果 — .lab-sync-panel + LabMetric（gap-analysis P1.1） */}
       {lastResult && (
-        <div
-          className="p-3 rounded"
-          style={{
-            background: "var(--gold-100)",
-            borderLeft: "3px solid var(--gold-500)",
-          }}
-        >
-          <p
-            className="eyebrow mb-2"
-            style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}
-          >
+        <div className="lab-sync-panel">
+          <p className="eyebrow mb-2">
             上次翻译结果 · {lastResult.model_used}
           </p>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: "var(--success)",
-                }}
-              >
-                {lastResult.translated}
-              </div>
-              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
-                翻译
-              </div>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: "var(--ink-400)",
-                }}
-              >
-                {lastResult.skipped}
-              </div>
-              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
-                跳过
-              </div>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "var(--font-serif)",
-                  fontSize: "var(--fs-xl)",
-                  color: lastResult.failed > 0 ? "var(--danger)" : "var(--ink-400)",
-                }}
-              >
-                {lastResult.failed}
-              </div>
-              <div className="text-xs" style={{ color: "var(--ink-400)" }}>
-                失败
-              </div>
-            </div>
+          <div className="lab-metrics">
+            <LabMetric label="翻译" num={lastResult.translated} />
+            <LabMetric label="跳过" num={lastResult.skipped} />
+            <LabMetric
+              label="失败"
+              num={lastResult.failed}
+              alert={lastResult.failed > 0}
+            />
           </div>
         </div>
       )}

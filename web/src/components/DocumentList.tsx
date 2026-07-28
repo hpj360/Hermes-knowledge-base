@@ -3,7 +3,13 @@ import { api } from "../api";
 import type { CategoryInfo, DocumentItem, TagInfo } from "../types";
 import { SkeletonList } from "./Skeleton";
 import { showToast } from "./Toast";
-import { useConfirm, MetaText } from "./ui";
+import {
+  useConfirm,
+  MetaText,
+  HeadingText,
+  ErrorBanner,
+  EmptyState,
+} from "./ui";
 
 interface DocumentListProps {
   refreshKey: number;
@@ -11,7 +17,11 @@ interface DocumentListProps {
   onSelectDoc?: (docId: string) => void;
 }
 
-/** 文档列表（M2-06：分类+标签筛选）。 */
+/** 文档列表（M2-06：分类+标签筛选）。
+ *
+ * R2 重构：错误用 ErrorBanner、空状态用 EmptyState、筛选 select 用 `.select` 语义类、
+ * 标题用 HeadingText、元信息用 MetaText。inline style 仅保留 tag 动态色板。
+ */
 export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentListProps) {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,12 +85,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   if (error) {
     return (
       <>
-        <div
-          className="p-4 text-center"
-          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
-        >
-          {error}
-        </div>
+        <ErrorBanner className="p-4 text-center mb-0">{error}</ErrorBanner>
         {confirmDialog}
       </>
     );
@@ -89,11 +94,10 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
   return (
     <div className="flex flex-col h-full">
       {/* 筛选栏 */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b bg-white flex-wrap" style={{ borderColor: "var(--ink-200)" }}>
+      <div className="flex items-center gap-3 px-6 py-3 border-b bg-white flex-wrap border-ink-200">
         <span className="eyebrow">筛选</span>
         <select
-          className="text-sm border rounded px-2 py-1 bg-white"
-          style={{ borderColor: "var(--ink-200)", fontFamily: "var(--font-sans)" }}
+          className="select text-sm rounded px-2 py-1"
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
         >
@@ -105,8 +109,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           ))}
         </select>
         <select
-          className="text-sm border rounded px-2 py-1 bg-white"
-          style={{ borderColor: "var(--ink-200)", fontFamily: "var(--font-sans)" }}
+          className="select text-sm rounded px-2 py-1"
           value={filterTagId ?? ""}
           onChange={(e) => setFilterTagId(e.target.value ? Number(e.target.value) : undefined)}
         >
@@ -125,22 +128,23 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
             清除
           </button>
         )}
-        <span className="ml-auto text-xs" style={{ color: "var(--ink-400)" }}>共 {docs.length} 篇</span>
+        <MetaText className="ml-auto text-xs">共 {docs.length} 篇</MetaText>
       </div>
 
       {/* 列表 */}
       {docs.length === 0 ? (
-        <div className="p-16 text-center">
-          <div className="text-3xl mb-3" style={{ color: "var(--gold-500)" }}>◆</div>
-          <p className="eyebrow mb-2">EMPTY</p>
-          <p className="section-title mb-2">{filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}</p>
-          <MetaText className="text-sm">
-            {filterCategory || filterTagId ? "尝试更换筛选条件" : "点击右上角导入或种子知识"}
-          </MetaText>
-        </div>
+        <EmptyState
+          eyebrow="EMPTY"
+          title={filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}
+          description={
+            filterCategory || filterTagId
+              ? "尝试更换筛选条件"
+              : "点击右上角导入或种子知识"
+          }
+        />
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <div className="divide-y" style={{ borderColor: "var(--ink-200)" }}>
+          <div className="divide-y border-ink-200">
             {docs.map((d, i) => (
               <div key={d.doc_id} className="flex items-center gap-4 px-6 py-4 hover:bg-ink-50 transition-colors group">
                 {/* 编号 */}
@@ -148,14 +152,15 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
 
                 {/* 主信息 */}
                 <div className="flex-1 min-w-0">
-                  <button
+                  <HeadingText
+                    as="button"
+                    size="1rem"
                     onClick={() => onSelectDoc?.(d.doc_id)}
-                    className="text-left block"
-                    style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", color: "var(--ink-900)", fontWeight: 600 }}
+                    className="text-left block font-semibold bg-transparent border-0 p-0 cursor-pointer"
                   >
                     {d.title}
-                  </button>
-                  <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: "var(--ink-400)", fontFamily: "var(--font-sans)" }}>
+                  </HeadingText>
+                  <MetaText as="div" className="flex items-center gap-3 mt-1 text-xs">
                     {d.category && <span>{d.category}</span>}
                     <span>·</span>
                     <span>{d.chunk_count} 片段</span>
@@ -167,14 +172,19 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
                         <span>{new Date(d.created_at).toLocaleDateString()}</span>
                       </>
                     )}
-                  </div>
+                  </MetaText>
                 </div>
 
                 {/* 标签 */}
                 {(d.tags || []).length > 0 && (
                   <div className="flex gap-1 flex-shrink-0">
                     {d.tags.map((t) => (
-                      <span key={t.id} className="text-xs px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: t.color }}>
+                      <span
+                        key={t.id}
+                        className="text-xs px-2 py-0.5 rounded-full text-white"
+                        // 动态色板：tag.color 由用户自定义，无法用静态 token 表达
+                        style={{ backgroundColor: t.color }}
+                      >
                         {t.name}
                       </span>
                     ))}
@@ -186,7 +196,12 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
                   {onSelectDoc && (
                     <button onClick={() => onSelectDoc(d.doc_id)} className="btn-ghost text-xs">详情</button>
                   )}
-                  <button onClick={() => handleDelete(d.doc_id, d.title)} className="btn-ghost text-xs" style={{ color: "var(--danger)" }}>删除</button>
+                  <button
+                    onClick={() => handleDelete(d.doc_id, d.title)}
+                    className="btn-ghost text-xs text-[color:var(--danger)]"
+                  >
+                    删除
+                  </button>
                 </div>
               </div>
             ))}

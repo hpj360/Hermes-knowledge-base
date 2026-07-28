@@ -4,7 +4,7 @@ import type { LabRecipe, LabRecipeVariant } from "../types";
 import { PendingReviewPanel } from "./PendingReviewPanel";
 import { SkeletonList } from "./Skeleton";
 import { showToast } from "./Toast";
-import { EmptyState, HeadingText, MetaText, MonoText, StatusBadge } from "./ui";
+import { EmptyState, ErrorBanner, HeadingText, MetaText, MonoText, StatusBadge } from "./ui";
 
 interface RecipePanelProps {
   /** 打开 UGC 编辑器（外部通过 tab 切换实现，组件本身只发请求）。 */
@@ -107,10 +107,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* 页面头部：杂志式 eyebrow + display-title + 细线分隔 */}
-      <div
-        className="flex items-baseline justify-between mb-6 pb-4 border-b"
-        style={{ borderColor: "var(--ink-200)" }}
-      >
+      <div className="flex items-baseline justify-between mb-6 pb-4 border-b border-[color:var(--ink-200)]">
         <div>
           <p className="eyebrow mb-1">RECIPES</p>
           <h2 className="display-title">📝 配方治理</h2>
@@ -134,8 +131,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
         <div className="flex items-center gap-3 flex-wrap">
           <span className="eyebrow">筛选</span>
           <select
-            className="text-sm border rounded px-2 py-1 bg-white min-w-[140px]"
-            style={{ borderColor: "var(--ink-200)" }}
+            className="select min-w-[140px]"
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value)}
             aria-label="来源筛选"
@@ -145,8 +141,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             ))}
           </select>
           <select
-            className="text-sm border rounded px-2 py-1 bg-white"
-            style={{ borderColor: "var(--ink-200)" }}
+            className="select"
             value={filterVerified}
             onChange={(e) => setFilterVerified(e.target.value)}
             aria-label="审核状态筛选"
@@ -156,8 +151,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
             ))}
           </select>
           <select
-            className="text-sm border rounded px-2 py-1 bg-white"
-            style={{ borderColor: "var(--ink-200)" }}
+            className="select"
             value={filterHidden}
             onChange={(e) => setFilterHidden(e.target.value)}
             aria-label="可见性筛选"
@@ -183,14 +177,8 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
               清除
             </button>
           )}
-          <span
-            className="ml-auto text-sm flex items-baseline gap-2"
-            style={{ color: "var(--ink-600)" }}
-          >
-            <span
-              className="numeral"
-              style={{ fontSize: "1.5rem", color: "var(--gold-500)" }}
-            >
+          <span className="ml-auto text-sm flex items-baseline gap-2 text-[color:var(--ink-600)]">
+            <span className="numeral text-[1.5rem] text-[color:var(--gold-500)]">
               {filtered.length}
             </span>
             <span>款</span>
@@ -207,13 +195,10 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
         </div>
       </div>
 
-      {/* 错误 */}
+      {/* 错误 — 用 ErrorBanner（role=alert + token 化） */}
       {error && (
-        <div
-          className="card p-6 mb-4 text-center"
-          style={{ color: "var(--danger)", fontFamily: "var(--font-sans)" }}
-        >
-          加载失败：{error}
+        <div className="card p-6 mb-4 text-center">
+          <ErrorBanner>加载失败：{error}</ErrorBanner>
         </div>
       )}
 
@@ -259,6 +244,14 @@ interface RecipeCardProps {
   onEdit?: () => void;
 }
 
+// 状态 -> StatusBadge variant 映射（替代原 statusStyle inline 对象）
+const STATUS_VARIANT_MAP: Record<string, "brand" | "gold" | "danger" | "ink"> = {
+  published: "brand",
+  pending: "gold",
+  rejected: "danger",
+  draft: "ink",
+};
+
 function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
@@ -273,19 +266,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       default: return recipe.status;
     }
   })();
-  // 状态标签样式：token 化（rejected 用 danger，published 用 brand，pending 用 gold，draft 用 ink）
-  const statusStyle = (() => {
-    switch (recipe.status) {
-      case "published":
-        return { background: "var(--brand-50)", color: "var(--brand-700)" };
-      case "pending":
-        return { background: "var(--gold-100)", color: "var(--gold-700)" };
-      case "rejected":
-        return { background: "rgba(179, 38, 30, 0.1)", color: "var(--danger)" };
-      default:
-        return { background: "var(--ink-100)", color: "var(--ink-600)" };
-    }
-  })();
+  const statusVariant = STATUS_VARIANT_MAP[recipe.status] ?? "ink";
 
   return (
     <div
@@ -300,24 +281,15 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           alt={recipe.title || "配方"}
           loading="lazy"
           onError={() => setImgError(true)}
-          className="w-full h-40 object-cover rounded mb-2"
-          style={{ borderRadius: "var(--r-sm)" }}
+          className="w-full h-40 object-cover rounded-md mb-2"
         />
       ) : (
         <div
-          className="w-full h-40 rounded mb-2 flex flex-col items-center justify-center"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--ink-100) 0%, var(--ink-50) 100%)",
-            borderRadius: "var(--r-sm)",
-          }}
+          className="w-full h-40 rounded-md mb-2 flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(135deg, var(--ink-100) 0%, var(--ink-50) 100%)" }}
         >
-          <span className="text-2xl mb-1" style={{ color: "var(--gold-500)" }}>
-            ◆
-          </span>
-          <span className="eyebrow" style={{ fontSize: "0.6rem" }}>
-            NO IMAGE
-          </span>
+          <span className="text-2xl mb-1 text-[color:var(--gold-500)]">◆</span>
+          <span className="eyebrow text-[0.6rem]">NO IMAGE</span>
         </div>
       )}
       <div className="flex items-start justify-between gap-2">
@@ -329,12 +301,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         >
           {recipe.title || "(未命名)"}
         </HeadingText>
-        <span
-          className="text-xs px-2 py-0.5 rounded-full"
-          style={statusStyle}
-        >
-          {statusText}
-        </span>
+        <StatusBadge variant={statusVariant}>{statusText}</StatusBadge>
       </div>
       <div className="flex gap-2 flex-wrap items-center text-xs">
         <StatusBadge variant="brand" pill={false}>
@@ -367,7 +334,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       >
         {recipe.doc_id}
       </MonoText>
-      <div className="flex gap-2 pt-2 border-t border-dashed border-ink-100">
+      <div className="flex gap-2 pt-2 border-t border-dashed border-[color:var(--ink-100)]">
         {!recipe.verified && (
           <button
             type="button"
@@ -412,8 +379,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
             }
             setShowVariants(!showVariants);
           }}
-          className="btn-ghost text-xs"
-          style={{ color: "var(--ink-500)" }}
+          className="btn-ghost text-xs text-[color:var(--ink-600)]"
         >
           {showVariants ? "▾" : "▸"} 变体
           {variants.length > 0 && ` (${variants.length})`}
@@ -421,24 +387,23 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         {showVariants && (
           <div className="mt-2 space-y-1">
             {variantLoading ? (
-              <span className="text-xs" style={{ color: "var(--ink-400)" }}>加载中…</span>
+              <MetaText className="text-xs">加载中…</MetaText>
             ) : variants.length === 0 ? (
-              <span className="text-xs" style={{ color: "var(--ink-400)" }}>暂无变体</span>
+              <MetaText className="text-xs">暂无变体</MetaText>
             ) : (
               variants.map((v) => (
                 <div
                   key={v.variant_doc_id}
-                  className="text-xs flex items-center gap-1 px-2 py-1 rounded"
-                  style={{ background: "var(--ink-50)" }}
+                  className="text-xs flex items-center gap-1 px-2 py-1 rounded bg-[color:var(--ink-50)]"
                 >
-                  <span style={{ color: "var(--brand-600)" }}>↳</span>
-                  <span className="truncate" style={{ color: "var(--ink-700)" }}>
+                  <span className="text-[color:var(--brand-700)]">↳</span>
+                  <span className="truncate text-[color:var(--ink-900)]">
                     {v.variant_title}
                   </span>
                   {v.variant_note && (
-                    <span className="truncate ml-1" style={{ color: "var(--ink-400)" }}>
+                    <MetaText className="truncate ml-1">
                       — {v.variant_note}
-                    </span>
+                    </MetaText>
                   )}
                 </div>
               ))

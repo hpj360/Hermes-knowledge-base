@@ -72,7 +72,7 @@ export function AgeGate({ onConfirm }: AgeGateProps) {
           </p>
         )}
 
-        <p className="text-sm mb-8" style={{ color: "rgba(250, 243, 220, 0.6)", fontFamily: "var(--font-sans)" }}>
+        <p className="text-sm mb-8" style={{ color: "rgba(250, 243, 220, 0.6)", fontFamily: "var(--font-body)" }}>
           本站内容含酒类知识，依据相关法律法规，未满 18 岁请勿访问。
         </p>
 

@@ -381,15 +381,31 @@ export function useConfirm() {
 // PromptDialog —— 输入对话框（替代 window.prompt）
 // ============================================================================
 
+/** usePrompt 返回值：prompt 触发函数 + 渲染到组件树的 dialog 节点 */
+interface UsePromptReturn {
+  /** 弹出输入对话框；返回用户输入的字符串，用户取消返回 null（空串确认为 ""） */
+  prompt: (message: string, defaultValue?: string) => Promise<string | null>;
+  /** 渲染到组件树中的 Modal 节点 */
+  dialog: React.ReactNode;
+}
+
 /**
  * 输入对话框 Hook：替代 window.prompt
  *
  * 用法：
  *   const { prompt, dialog } = usePrompt();
  *   const reason = await prompt("请输入驳回理由");
- *   if (reason) { ... }
+ *   if (reason === null) return; // 用户取消
+ *   // reason 为字符串（可能为空串）
+ *
+ * 实现要点（与 useConfirm 模式一致）：
+ * - 标题固定「请输入」(font-serif via .modal-title)，message 作为独立段落 (font-body)
+ * - input 用 .input 语义类 (font-ui)，aria-label 关联 message 保证 a11y
+ * - 确定按钮 .btn-primary，取消按钮 .btn-ghost
+ * - Enter 触发确定，Escape 触发取消（Modal 内置 ESC 监听 → onClose）
+ * - 确定返回输入值（空串为 ""），取消返回 null
  */
-export function usePrompt() {
+export function usePrompt(): UsePromptReturn {
   const [state, setState] = React.useState<{
     open: boolean;
     message: string;
@@ -403,7 +419,7 @@ export function usePrompt() {
     (message: string, defaultValue?: string): Promise<string | null> => {
       return new Promise((resolve) => {
         setState({ open: true, message, defaultValue, resolve });
-        setInputValue(defaultValue || "");
+        setInputValue(defaultValue ?? "");
       });
     },
     []
@@ -418,31 +434,41 @@ export function usePrompt() {
     [state]
   );
 
+  // 延迟导入 Modal（Modal.tsx 是命名导出，需重命名为 default 以适配 React.lazy）
   const Modal = React.useMemo(() => {
     return React.lazy(() => import("./Modal").then((m) => ({ default: m.Modal })));
   }, []);
 
   const dialog = state.open ? (
     <React.Suspense fallback={null}>
-      <Modal
-        open={true}
-        title={state.message}
-        onClose={() => handleClose(null)}
-      >
-        <textarea
+      <Modal open={true} title="请输入" onClose={() => handleClose(null)}>
+        <p
+          className="mb-4"
+          style={{ color: "var(--ink-900)", fontFamily: "var(--font-body)" }}
+        >
+          {state.message}
+        </p>
+        <input
+          type="text"
           className="input mb-4"
-          style={{ minHeight: "80px" }}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleClose(inputValue);
+            }
+          }}
+          aria-label={state.message || "请输入"}
           autoFocus
         />
         <div className="flex gap-3 justify-end">
-          <button className="btn-secondary" onClick={() => handleClose(null)}>
+          <button className="btn-ghost" onClick={() => handleClose(null)}>
             取消
           </button>
           <button
             className="btn-primary"
-            onClick={() => handleClose(inputValue || null)}
+            onClick={() => handleClose(inputValue)}
           >
             确认
           </button>
@@ -452,4 +478,330 @@ export function usePrompt() {
   ) : null;
 
   return { prompt, dialog };
+}
+
+// ============================================================================
+// MagazineCard / GoldFoilCard / LabMetric / DailyRecipeCard
+// 杂志式语义卡片（对应 design/mockup/_components.css 语义类）
+// 设计原则：语义类承载布局/装饰（_components.css），inline var(--*) 强化 token
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// MagazineCard —— 杂志式配方卡片（对应 .recipe-card-magazine）
+// 5 区结构：thumb / kicker / title / deck / meta
+// ----------------------------------------------------------------------------
+
+/** MagazineCard.Meta 子组件 Props：渲染 spirit + abv 两个子项或自定义 children */
+interface MagazineCardMetaProps {
+  spirit?: React.ReactNode;
+  abv?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+/** MagazineCard.Meta：meta 区子组件，含 spirit/abv 两个子项或 children 兜底 */
+function MagazineCardMeta({
+  spirit,
+  abv,
+  children,
+  className = "",
+}: MagazineCardMetaProps) {
+  return (
+    <div className={`mag-meta ${className}`}>
+      {spirit && (
+        <span
+          className="mag-spirit"
+          style={{
+            color: "var(--brand-700)",
+            fontFamily: "var(--font-ui)",
+          }}
+        >
+          {spirit}
+        </span>
+      )}
+      {abv && (
+        <span
+          className="mag-abv"
+          style={{
+            color: "var(--gold-700)",
+            fontFamily: "var(--font-mono)",
+          }}
+        >
+          {abv}
+        </span>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/** 杂志式配方卡片 Props */
+interface MagazineCardProps {
+  title: React.ReactNode;
+  kicker?: string;
+  deck?: React.ReactNode;
+  thumb?: string;
+  meta?: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
+}
+
+/** 杂志式配方卡片：5 区结构（thumb/kicker/title/deck/meta），对应 .recipe-card-magazine */
+function MagazineCardImpl({
+  title,
+  kicker,
+  deck,
+  thumb,
+  meta,
+  className = "",
+  onClick,
+  children,
+}: MagazineCardProps) {
+  return (
+    <div
+      className={`recipe-card-magazine ${className}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
+      {thumb ? (
+        <img className="mag-thumb" src={thumb} alt="" />
+      ) : (
+        <div className="mag-thumb-placeholder" aria-hidden="true" />
+      )}
+      <div className="mag-body">
+        {kicker && (
+          <p
+            className="mag-kicker"
+            style={{
+              color: "var(--gold-700)",
+              fontFamily: "var(--font-ui)",
+            }}
+          >
+            {kicker}
+          </p>
+        )}
+        <h3
+          className="mag-title"
+          style={{
+            color: "var(--ink-900)",
+            fontFamily: "var(--font-serif)",
+          }}
+        >
+          {title}
+        </h3>
+        {deck && (
+          <p
+            className="mag-deck"
+            style={{
+              color: "var(--ink-600)",
+              fontFamily: "var(--font-serif)",
+            }}
+          >
+            {deck}
+          </p>
+        )}
+        {meta}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export const MagazineCard = Object.assign(MagazineCardImpl, {
+  Meta: MagazineCardMeta,
+});
+
+// ----------------------------------------------------------------------------
+// GoldFoilCard —— 金箔英雄卡片（对应 .gold-foil-card）
+// ::before 伪元素金箔边框由 _components.css 实现，组件只需应用类名
+// ----------------------------------------------------------------------------
+
+/** 金箔英雄卡片 Props */
+interface GoldFoilCardProps {
+  title?: React.ReactNode;
+  quote?: React.ReactNode;
+  attribution?: React.ReactNode;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+/** 金箔英雄卡片：金箔边框 + 金箔标题 + 斜体引文 + 归属，对应 .gold-foil-card */
+export function GoldFoilCard({
+  title,
+  quote,
+  attribution,
+  className = "",
+  children,
+}: GoldFoilCardProps) {
+  return (
+    <div className={`gold-foil-card ${className}`}>
+      {title && (
+        <div className="foil-title" style={{ fontFamily: "var(--font-serif)" }}>
+          {title}
+        </div>
+      )}
+      {quote && (
+        <div
+          className="foil-quote"
+          style={{
+            color: "var(--ink-900)",
+            fontFamily: "var(--font-serif)",
+          }}
+        >
+          {quote}
+        </div>
+      )}
+      {attribution && (
+        <div
+          className="foil-attribution"
+          style={{
+            color: "var(--ink-400)",
+            fontFamily: "var(--font-ui)",
+          }}
+        >
+          {attribution}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// LabMetric —— 实验室指标格（对应 .lab-metric）
+// ----------------------------------------------------------------------------
+
+/** 实验室指标格 Props */
+interface LabMetricProps {
+  label: string;
+  num: React.ReactNode;
+  sub?: string;
+  alert?: boolean;
+  className?: string;
+}
+
+/** 实验室指标格：label + num + sub，alert 变体 num 用 gold-700，对应 .lab-metric */
+export function LabMetric({
+  label,
+  num,
+  sub,
+  alert = false,
+  className = "",
+}: LabMetricProps) {
+  return (
+    <div className={`lab-metric ${alert ? "alert" : ""} ${className}`}>
+      <div
+        className="lab-label"
+        style={{
+          color: "var(--ink-400)",
+          fontFamily: "var(--font-ui)",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="lab-num"
+        style={{
+          color: alert ? "var(--gold-700)" : "var(--ink-900)",
+          fontFamily: "var(--font-serif)",
+        }}
+      >
+        {num}
+      </div>
+      {sub && (
+        <div
+          className="lab-sub"
+          style={{
+            color: "var(--brand-700)",
+            fontFamily: "var(--font-ui)",
+          }}
+        >
+          {sub}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// DailyRecipeCard —— 今日推荐卡（对应 .daily-recipe）
+// hover 抬升效果由 _components.css 实现
+// ----------------------------------------------------------------------------
+
+/** 今日推荐卡 Props */
+interface DailyRecipeCardProps {
+  badge?: string;
+  name: React.ReactNode;
+  reason?: string;
+  className?: string;
+  onClick?: () => void;
+  href?: string;
+}
+
+/** 今日推荐卡：badge + name + reason，hover 抬升，对应 .daily-recipe */
+export function DailyRecipeCard({
+  badge,
+  name,
+  reason,
+  className = "",
+  onClick,
+  href,
+}: DailyRecipeCardProps) {
+  const cls = `daily-recipe ${className}`;
+  const inner = (
+    <>
+      {badge && (
+        <span
+          className="daily-badge"
+          style={{
+            background: "var(--gold-500)",
+            color: "var(--ink-900)",
+          }}
+        >
+          {badge}
+        </span>
+      )}
+      <span
+        className="daily-name"
+        style={{
+          color: "var(--ink-900)",
+          fontFamily: "var(--font-serif)",
+        }}
+      >
+        {name}
+      </span>
+      {reason && (
+        <span
+          className="daily-reason"
+          style={{
+            color: "var(--ink-400)",
+            fontFamily: "var(--font-ui)",
+          }}
+        >
+          {reason}
+        </span>
+      )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <a href={href} className={cls}>
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <div
+      className={cls}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
+      {inner}
+    </div>
+  );
 }
