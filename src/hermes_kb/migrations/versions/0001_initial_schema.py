@@ -4,19 +4,21 @@ Revision ID: 0001
 Revises:
 Create Date: 2026-07-23 04:50:23.139751+00:00
 
-首版迁移：建立全部 SQLModel 表 + FTS5 全文检索虚拟表 + 同步触发器 + 向量表。
+First migration: create all SQLModel tables + FTS5 full-text virtual tables +
+sync triggers + vector table.
 
-覆盖对象（与 database.py 原 create_all + _init_fts + _init_vec_table 完全对齐）：
-- SQLModel 表：document / chunk / tag / documenttag / querylog / recipestats /
+Coverage (aligned with database.py original create_all + _init_fts + _init_vec_table):
+- SQLModel tables: document / chunk / tag / documenttag / querylog / recipestats /
   ingredientsubstitute / missingingredientstats / recipevariant
-- FTS5 虚拟表：chunks_fts（unicode61 分词）
-- 触发器：chunk_ai / chunk_ad / chunk_au（chunk ↔ chunks_fts 同步）
-- 向量表：chunk_vec（JSON 数组存储，Python 层余弦相似度）
-- 索引：idx_chunk_vec_doc_id
+- FTS5 virtual table: chunks_fts (unicode61 tokenizer)
+- Triggers: chunk_ai / chunk_ad / chunk_au (sync chunk <-> chunks_fts)
+- Vector table: chunk_vec (JSON array storage, Python-side cosine similarity)
+- Index: idx_chunk_vec_doc_id
 
-注：表名为 SQLModel 默认（类名小写，无下划线），如 documenttag / querylog 等，
-与 SQLModel.metadata 一致；FTS5/触发器/向量表用 op.execute() 原始 SQL
-（alembic autogenerate 不支持 FTS5 虚拟表）。
+Note: table names follow SQLModel defaults (lowercase class name, no underscore),
+e.g. documenttag / querylog, matching SQLModel.metadata; FTS5/triggers/vector
+table use raw SQL via op.execute() (alembic autogenerate does not support
+FTS5 virtual tables).
 """
 from __future__ import annotations
 
@@ -35,7 +37,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # === SQLModel 表（autogenerate 生成，与 metadata 一致）===
+    # === SQLModel tables (autogenerate-produced, matching metadata) ===
     op.create_table('document',
         sa.Column('doc_id', sqlmodel.sql.sqltypes.AutoString(length=64), nullable=False),
         sa.Column('title', sqlmodel.sql.sqltypes.AutoString(length=200), nullable=False),
@@ -154,8 +156,8 @@ def upgrade() -> None:
         batch_op.create_index(batch_op.f('ix_recipevariant_base_doc_id'), ['base_doc_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_recipevariant_variant_doc_id'), ['variant_doc_id'], unique=False)
 
-    # === FTS5 虚拟表 + 同步触发器（autogenerate 不支持 FTS5，用原始 SQL）===
-    # 与 database.py._init_fts 完全一致
+    # === FTS5 virtual table + sync triggers (autogenerate does not support FTS5, raw SQL) ===
+    # Matches database.py._init_fts exactly
     op.execute(
         "CREATE VIRTUAL TABLE chunks_fts USING fts5("
         "text, doc_id UNINDEXED, chunk_rowid UNINDEXED, "
@@ -181,11 +183,13 @@ def upgrade() -> None:
         "END"
     )
 
-    # === 向量表 chunk_vec（与 database.py._init_vec_table 一致）===
-    # chunk_vec_ann（vec0 虚拟表）+ chunk_ad_vec 触发器不在此创建：
-    # vec0 需要 sqlite-vec 扩展，仅在运行时 per-connection 加载（database.py 事件监听器），
-    # alembic 迁移引擎不加载该扩展。故 chunk_vec_ann 由 database.py._init_vec_table
-    # 以 CREATE VIRTUAL TABLE IF NOT EXISTS 在运行时创建，保证扩展可用时才建表。
+    # === Vector table chunk_vec (matches database.py._init_vec_table) ===
+    # chunk_vec_ann (vec0 virtual table) + chunk_ad_vec trigger are NOT created here:
+    # vec0 requires the sqlite-vec extension, loaded per-connection at runtime
+    # (database.py event listener); alembic migration engine does not load it.
+    # So chunk_vec_ann is created at runtime by database.py._init_vec_table via
+    # CREATE VIRTUAL TABLE IF NOT EXISTS, ensuring the table is only built when
+    # the extension is available.
     op.execute(
         "CREATE TABLE chunk_vec ("
         "chunk_rowid INTEGER PRIMARY KEY, "
@@ -199,7 +203,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # === 向量表 / 触发器 / FTS5（逆序）===
+    # === Vector table / triggers / FTS5 (reverse order) ===
     op.execute("DROP INDEX IF EXISTS idx_chunk_vec_doc_id")
     op.execute("DROP TABLE IF EXISTS chunk_vec")
     op.execute("DROP TRIGGER IF EXISTS chunk_au")
@@ -207,7 +211,7 @@ def downgrade() -> None:
     op.execute("DROP TRIGGER IF EXISTS chunk_ai")
     op.execute("DROP TABLE IF EXISTS chunks_fts")
 
-    # === SQLModel 表（逆序，autogenerate 生成）===
+    # === SQLModel tables (reverse order, autogenerate-produced) ===
     with op.batch_alter_table('recipevariant', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_recipevariant_variant_doc_id'))
         batch_op.drop_index(batch_op.f('ix_recipevariant_base_doc_id'))

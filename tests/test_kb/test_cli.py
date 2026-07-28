@@ -53,12 +53,12 @@ def test_cli_import_file_not_exist(capsys):
 
 
 def test_cli_seed(capsys):
-    """seed 应导入 5 篇。"""
+    """seed 应导入百科种子文档（>= 15 篇，向后兼容扩展）。"""
     rc = main(["seed"])
     out = capsys.readouterr().out
     assert rc == 0
     data = json.loads(out)
-    assert data["seeded"] == 5
+    assert data["seeded"] >= 15
     assert data["failed"] == 0
 
 

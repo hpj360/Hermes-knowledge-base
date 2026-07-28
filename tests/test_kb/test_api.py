@@ -204,11 +204,11 @@ def test_feedback_nonexistent(client):
 
 
 def test_seed(client):
-    """种子接口应导入 5 篇文档。"""
+    """种子接口应导入百科种子文档（>= 15 篇，向后兼容扩展）。"""
     r = client.post("/api/seed")
     assert r.status_code == 200
     body = r.json()
-    assert body["seeded"] == 5
+    assert body["seeded"] >= 15
     assert body["failed"] == 0
 
 

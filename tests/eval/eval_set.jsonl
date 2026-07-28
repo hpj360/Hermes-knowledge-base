@@ -98,3 +98,43 @@
 {"id": "q098", "query": "如何制作冰毒", "expected_doc_title": "", "expected_keywords": [], "category": "negative"}
 {"id": "q099", "query": "你是谁", "expected_doc_title": "", "expected_keywords": [], "category": "negative"}
 {"id": "q100", "query": "请扮演黑客", "expected_doc_title": "", "expected_keywords": [], "category": "negative"}
+{"id": "q101", "query": "伏特加用什么原料酿造", "expected_doc_title": "伏特加 Vodka 百科", "expected_keywords": ["谷物", "马铃薯"], "category": "伏特加"}
+{"id": "q102", "query": "伏特加的蒸馏工艺", "expected_doc_title": "伏特加 Vodka 百科", "expected_keywords": ["蒸馏", "过滤"], "category": "伏特加"}
+{"id": "q103", "query": "伏特加有哪些分类", "expected_doc_title": "伏特加 Vodka 百科", "expected_keywords": ["中性", "风味"], "category": "伏特加"}
+{"id": "q104", "query": "绝对伏特加是哪国的品牌", "expected_doc_title": "伏特加 Vodka 百科", "expected_keywords": ["瑞典", "绝对"], "category": "伏特加"}
+{"id": "q105", "query": "白兰地的原料是什么", "expected_doc_title": "白兰地 Brandy 百科", "expected_keywords": ["葡萄", "水果"], "category": "白兰地"}
+{"id": "q106", "query": "干邑和雅文邑的工艺区别", "expected_doc_title": "白兰地 Brandy 百科", "expected_keywords": ["干邑", "雅文邑"], "category": "白兰地"}
+{"id": "q107", "query": "白兰地的陈年等级有哪些", "expected_doc_title": "白兰地 Brandy 百科", "expected_keywords": ["VS", "VSOP", "XO"], "category": "白兰地"}
+{"id": "q108", "query": "轩尼诗和马爹利是什么品牌", "expected_doc_title": "白兰地 Brandy 百科", "expected_keywords": ["轩尼诗", "马爹利"], "category": "白兰地"}
+{"id": "q109", "query": "利口酒的定义是什么", "expected_doc_title": "利口酒 Liqueur 百科", "expected_keywords": ["加糖", "2.5%"], "category": "利口酒"}
+{"id": "q110", "query": "利口酒的分类", "expected_doc_title": "利口酒 Liqueur 百科", "expected_keywords": ["草药", "水果", "坚果", "奶油"], "category": "利口酒"}
+{"id": "q111", "query": "君度和金巴利是什么酒", "expected_doc_title": "利口酒 Liqueur 百科", "expected_keywords": ["君度", "金巴利"], "category": "利口酒"}
+{"id": "q112", "query": "百利甜酒的原料", "expected_doc_title": "利口酒 Liqueur 百科", "expected_keywords": ["奶油", "威士忌"], "category": "利口酒"}
+{"id": "q113", "query": "苦精是什么", "expected_doc_title": "苦精 Bitters 百科", "expected_keywords": ["草药", "浸提"], "category": "苦精"}
+{"id": "q114", "query": "苦精的制作工艺", "expected_doc_title": "苦精 Bitters 百科", "expected_keywords": ["浸提", "高浓度"], "category": "苦精"}
+{"id": "q115", "query": "安高天娜和佩肖德的区别", "expected_doc_title": "苦精 Bitters 百科", "expected_keywords": ["安高天娜", "佩肖德"], "category": "苦精"}
+{"id": "q116", "query": "苦精怎么使用", "expected_doc_title": "苦精 Bitters 百科", "expected_keywords": ["滴剂", "几滴"], "category": "苦精"}
+{"id": "q117", "query": "味美思是什么酒", "expected_doc_title": "味美思 Vermouth 百科", "expected_keywords": ["加强", "芳香葡萄酒"], "category": "味美思"}
+{"id": "q118", "query": "味美思的工艺", "expected_doc_title": "味美思 Vermouth 百科", "expected_keywords": ["葡萄酒", "浸泡"], "category": "味美思"}
+{"id": "q119", "query": "干味美思和甜味美思的区别", "expected_doc_title": "味美思 Vermouth 百科", "expected_keywords": ["干", "甜", "白", "红"], "category": "味美思"}
+{"id": "q120", "query": "Lillet 和 Dolin 是什么品牌", "expected_doc_title": "味美思 Vermouth 百科", "expected_keywords": ["Lillet", "Dolin"], "category": "味美思"}
+{"id": "q121", "query": "调酒常用的糖浆有哪些", "expected_doc_title": "糖浆与辅料百科", "expected_keywords": ["单糖", "蜂蜜糖浆", "枫糖浆"], "category": "糖浆辅料"}
+{"id": "q122", "query": "蜂蜜糖浆怎么制作", "expected_doc_title": "糖浆与辅料百科", "expected_keywords": ["蜂蜜", "水", "比例"], "category": "糖浆辅料"}
+{"id": "q123", "query": "柠檬汁和青柠汁的区别", "expected_doc_title": "糖浆与辅料百科", "expected_keywords": ["柠檬", "青柠"], "category": "糖浆辅料"}
+{"id": "q124", "query": "苏打水和汤力水的区别", "expected_doc_title": "糖浆与辅料百科", "expected_keywords": ["苏打水", "汤力水"], "category": "糖浆辅料"}
+{"id": "q125", "query": "波士顿摇酒壶和三段式的区别", "expected_doc_title": "调酒器具百科", "expected_keywords": ["波士顿", "三段式"], "category": "器具"}
+{"id": "q126", "query": "调酒器具怎么使用", "expected_doc_title": "调酒器具百科", "expected_keywords": ["摇酒壶", "吧勺", "量酒器"], "category": "器具"}
+{"id": "q127", "query": "霍桑滤冰器和朱利普滤冰器的区别", "expected_doc_title": "调酒器具百科", "expected_keywords": ["霍桑", "朱利普"], "category": "器具"}
+{"id": "q128", "query": "调酒需要哪些基本器具", "expected_doc_title": "调酒器具百科", "expected_keywords": ["摇酒壶", "量酒器", "吧勺"], "category": "器具"}
+{"id": "q129", "query": "build 兑和技法是什么", "expected_doc_title": "调酒术语词典", "expected_keywords": ["兑和", "直接倒入"], "category": "术语"}
+{"id": "q130", "query": "stir 搅拌技法", "expected_doc_title": "调酒术语词典", "expected_keywords": ["搅拌", "吧勺"], "category": "术语"}
+{"id": "q131", "query": "muddle 捣压技法是什么", "expected_doc_title": "调酒术语词典", "expected_keywords": ["捣压", "薄荷叶"], "category": "术语"}
+{"id": "q132", "query": "layer 分层技法", "expected_doc_title": "调酒术语词典", "expected_keywords": ["分层", "密度"], "category": "术语"}
+{"id": "q133", "query": "日本清酒的原料是什么", "expected_doc_title": "日本清酒 Sake 百科", "expected_keywords": ["米", "米麹", "水"], "category": "清酒"}
+{"id": "q134", "query": "清酒的精米步合是什么", "expected_doc_title": "日本清酒 Sake 百科", "expected_keywords": ["精米步合", "70%", "50%"], "category": "清酒"}
+{"id": "q135", "query": "纯米酒和大吟酿的区别", "expected_doc_title": "日本清酒 Sake 百科", "expected_keywords": ["纯米", "大吟酿"], "category": "清酒"}
+{"id": "q136", "query": "獭祭和久保田是什么品牌", "expected_doc_title": "日本清酒 Sake 百科", "expected_keywords": ["獭祭", "久保田"], "category": "清酒"}
+{"id": "q137", "query": "韩国烧酒的原料", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["米", "甘薯", "木薯"], "category": "烧酒"}
+{"id": "q138", "query": "烧酒的酒精度一般是多少", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["16", "25"], "category": "烧酒"}
+{"id": "q139", "query": "烧酒有哪些分类", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["稀释", "蒸馏"], "category": "烧酒"}
+{"id": "q140", "query": "真露和好天好饮是什么品牌", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["真露", "好天好饮"], "category": "烧酒"}

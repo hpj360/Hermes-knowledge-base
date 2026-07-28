@@ -135,7 +135,7 @@ def parse_iba_recipe(
                 for name, vol in volume_pairs
             )
             calories = round(total_calories, 1)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
             _logger.warning(
                 "IBA recipe ABV/calories calc failed for '%s': %s", title, e
             )
@@ -263,7 +263,7 @@ def sync_iba_dataset(
             from hermes_kb.ingredient_strength import fetch_iba_strength_data
 
             strength_data = fetch_iba_strength_data()
-        except Exception as e:
+        except (httpx.HTTPError, KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
             _logger.warning("IBA strength data fetch failed: %s", e)
     else:
         strength_data = None
@@ -315,7 +315,7 @@ def sync_iba_dataset(
                     recipe_tokens.append(toks)
             else:
                 failed += 1
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
             _logger.warning("IBA recipe import failed for item: %s", e)
             failed += 1
 

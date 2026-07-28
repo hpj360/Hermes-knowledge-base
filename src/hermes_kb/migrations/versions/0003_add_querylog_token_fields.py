@@ -4,12 +4,12 @@ Revision ID: 0003
 Revises: 0002
 Create Date: 2026-07-25 09:00:00+00:00
 
-M2-10：QueryLog 新增 token 用量字段：
-- prompt_tokens: 输入 token 数
-- completion_tokens: 输出 token 数
-- cost_cny: 单次问答成本（CNY）
+M2-10: Add token usage fields to QueryLog:
+- prompt_tokens: input token count
+- completion_tokens: output token count
+- cost_cny: per-query cost (CNY)
 
-均为可空字段（向后兼容旧记录），默认值 0。
+All are nullable fields (backward compatible with old records), default 0.
 """
 from __future__ import annotations
 
@@ -27,10 +27,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # SQLite batch mode：ALTER TABLE 在 SQLite 中需要重建表
-    # alembic batch_alter_table 会自动处理
+    # SQLite batch mode: ALTER TABLE in SQLite requires table rebuild
+    # alembic batch_alter_table handles this automatically
     with op.batch_alter_table('querylog', schema=None) as batch_op:
-        # 新增字段，全部有默认值，旧记录自动填 0
+        # Add new columns, all with defaults; old records auto-filled with 0
         batch_op.add_column(
             sa.Column('prompt_tokens', sa.Integer(), nullable=False, server_default='0')
         )

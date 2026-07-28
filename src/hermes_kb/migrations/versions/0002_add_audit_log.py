@@ -4,7 +4,7 @@ Revision ID: 0002
 Revises: 0001
 Create Date: 2026-07-25 08:00:00+00:00
 
-M2-08：审计日志表。记录关键写操作（login/import/delete/seed/ask 采样 10%）。
+M2-08: Audit log table. Records key write operations (login/import/delete/seed/ask sampled at 10%).
 """
 from __future__ import annotations
 

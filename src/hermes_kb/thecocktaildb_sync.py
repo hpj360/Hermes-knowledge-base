@@ -334,7 +334,7 @@ def sync_thecocktaildb(
                     imported += 1
                 else:
                     failed += 1
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
                 _logger.warning("thecocktaildb drink import failed: %s", e)
                 failed += 1
 

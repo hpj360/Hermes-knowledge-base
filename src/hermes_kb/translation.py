@@ -122,7 +122,7 @@ def translate_title(title: str, llm_client: Any = None) -> str:
         # 去除可能的多余引号
         translated = translated.strip('"\'""''')
         return translated if translated else title
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
         _logger.warning("LLM translate failed for '%s': %s, fallback to mock", title, e)
         return _mock_translate(title)
 
@@ -177,7 +177,7 @@ def batch_translate_titles(
                     translated += 1
                 else:
                     skipped += 1
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
                 _logger.warning("Translate failed for doc %s: %s", doc.doc_id, e)
                 failed += 1
 

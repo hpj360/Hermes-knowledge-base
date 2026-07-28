@@ -27,7 +27,6 @@ def verify_difficulty_season_abv_bucket() -> list[str]:
     errors: list[str] = []
     valid_difficulties = {"easy", "medium", "hard"}
     valid_seasons = {"spring", "summer", "autumn", "winter"}
-    valid_abv_buckets = {"low", "medium", "high", "strong", ""}  # "" 兼容旧数据
 
     for recipe in SEED_RECIPES:
         title = recipe.get("title", "<unknown>")
@@ -87,6 +86,87 @@ def verify_mocktail_ingredients_no_alcohol() -> list[str]:
                         f"'{ing}' (abv={abv})."
                     )
     return errors
+
+
+def verify_encyclopedia_docs() -> bool:
+    """Task 5: 校验百科种子文档与新增材料注册条目完整性。
+
+    校验内容：
+    1. SEED_DOCS 规模 ≥ 15
+    2. 每篇百科 title/content 非空、content 长度 ≥ 500、含 ≥ 3 个 "## " 二级标题
+    3. 新增 INGREDIENT_REGISTRY 条目（亚洲酒与辅料）canonical 存在且
+       aliases（list）与 category（str）非空
+
+    失败时打印具体 title/canonical 与原因并返回 False；全部通过返回 True。
+    """
+    from hermes_kb.seed import SEED_DOCS
+
+    errors: list[str] = []
+
+    # 1. SEED_DOCS 规模
+    if len(SEED_DOCS) < 15:
+        errors.append(
+            f"SEED_DOCS 规模不足: len={len(SEED_DOCS)}，期望 ≥ 15"
+        )
+
+    # 2. 每篇百科字段完整性
+    for doc in SEED_DOCS:
+        title = doc.get("title", "")
+        if not isinstance(title, str) or not title:
+            errors.append(f"百科 title 为空或非字符串: {title!r}")
+            continue
+
+        content = doc.get("content", "")
+        if not isinstance(content, str) or not content:
+            errors.append(f"百科 '{title}' content 为空或非字符串")
+            continue
+
+        if len(content) < 500:
+            errors.append(
+                f"百科 '{title}' content 长度 {len(content)} < 500"
+            )
+
+        h2_count = content.count("## ")
+        if h2_count < 3:
+            errors.append(
+                f"百科 '{title}' 二级标题数 {h2_count} < 3"
+            )
+
+    # 3. 新增 INGREDIENT_REGISTRY 条目字段完整性（亚洲酒与辅料）
+    required_canonicals = [
+        "纯米酒", "本酿造", "纯米大吟酿", "大吟酿", "烧酎",
+        "力洛酒", "多林味美思", "诺瓦利帕味美思", "奎纳味美思",
+        "薰衣草糖浆", "方块冰", "碎冰", "老冰", "球冰", "冰沙",
+    ]
+
+    canonical_to_entry: dict[str, dict] = {}
+    for entry in INGREDIENT_REGISTRY.values():
+        canon = entry.get("canonical", "")
+        if canon:
+            canonical_to_entry[canon] = entry
+
+    for canon in required_canonicals:
+        if canon not in canonical_to_entry:
+            errors.append(f"INGREDIENT_REGISTRY 缺少 canonical: {canon}")
+            continue
+        entry = canonical_to_entry[canon]
+        aliases = entry.get("aliases")
+        if not isinstance(aliases, list) or not aliases:
+            errors.append(f"材料 '{canon}' aliases 为空或非 list")
+        category = entry.get("category")
+        if not isinstance(category, str) or not category:
+            errors.append(f"材料 '{canon}' category 为空或非 str")
+
+    if errors:
+        print(f"❌ {len(errors)} 条百科/材料校验问题:")
+        for err in errors:
+            print(f"  - {err}")
+        return False
+
+    print(
+        f"✅ 百科 {len(SEED_DOCS)} 篇 + 新增材料 {len(required_canonicals)} 条校验通过"
+    )
+    return True
 
 
 def main() -> None:
@@ -295,6 +375,13 @@ def main() -> None:
             _record_failure(f"Task 12 Mocktail 含酒精: {err}")
     else:
         print("✅ 所有 Mocktail 配方材料均无酒精")
+
+    # ============================================================
+    # Task 5 新增校验：百科文档与新增材料完整性
+    # ============================================================
+    print("\n=== Task 5: 百科文档与新增材料校验 ===")
+    if not verify_encyclopedia_docs():
+        _record_failure("百科文档/新增材料校验失败（详见上方输出）")
 
     # ============================================================
     # 汇总退出码

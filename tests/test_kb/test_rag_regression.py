@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from hermes_kb.recipe_match import match_recipes
 from hermes_kb.seed import seed_recipes
+from tests.eval import load_eval_set
 
 
 # 抽样 5 款覆盖不同基酒 / 技法 / 分类的经典 IBA 配方（标题需与 seed_recipes 一致）
@@ -161,4 +162,91 @@ def test_recipe_match_idempotent_after_reimport(tmp_db):
         full_titles = {m["title"] for m in result["full_match"]}
         assert title in full_titles, (
             f"幂等导入后 {title} 未在 full_match 中: {sorted(full_titles)}"
+        )
+
+
+# Task 7：新增百科评估查询（q101-q140）覆盖的 10 篇百科标题
+_NEW_ENCYCLOPEDIA_TITLES = [
+    "伏特加 Vodka 百科",
+    "白兰地 Brandy 百科",
+    "利口酒 Liqueur 百科",
+    "苦精 Bitters 百科",
+    "味美思 Vermouth 百科",
+    "糖浆与辅料百科",
+    "调酒器具百科",
+    "调酒术语词典",
+    "日本清酒 Sake 百科",
+    "韩国烧酒 Soju 百科",
+]
+
+# 每篇新百科在 q101-q140 中对应的 category（每篇 4 条查询）
+_NEW_ENCYCLOPEDIA_CATEGORY_MAP = {
+    "伏特加 Vodka 百科": "伏特加",
+    "白兰地 Brandy 百科": "白兰地",
+    "利口酒 Liqueur 百科": "利口酒",
+    "苦精 Bitters 百科": "苦精",
+    "味美思 Vermouth 百科": "味美思",
+    "糖浆与辅料百科": "糖浆辅料",
+    "调酒器具百科": "器具",
+    "调酒术语词典": "术语",
+    "日本清酒 Sake 百科": "清酒",
+    "韩国烧酒 Soju 百科": "烧酒",
+}
+
+
+def test_eval_set_new_encyclopedia_sampling():
+    """抽样校验新百科评估查询的数据结构（仅校验 JSONL，不依赖真实 RAG 检索）。"""
+    by_id = {item.id: item for item in load_eval_set()}
+
+    # 1. 伏特加查询 q101
+    q101 = by_id["q101"]
+    assert "伏特加 Vodka 百科" in q101.expected_doc_titles
+    assert "谷物" in q101.expected_keywords
+    assert "马铃薯" in q101.expected_keywords
+
+    # 2. 日本清酒查询 q133
+    q133 = by_id["q133"]
+    assert "日本清酒 Sake 百科" in q133.expected_doc_titles
+    assert "米" in q133.expected_keywords
+
+    # 3. 调酒术语查询
+    #    eval_set.jsonl 中：
+    #      - q129 = build 兑和技法（keywords=["兑和","直接倒入"]）
+    #      - q131 = muddle 捣压技法（keywords=["捣压","薄荷叶"]）
+    #    分别校验两者的 doc_title 与对应关键词。
+    q129 = by_id["q129"]
+    assert "调酒术语词典" in q129.expected_doc_titles
+    assert "兑和" in q129.expected_keywords
+    q131 = by_id["q131"]
+    assert "调酒术语词典" in q131.expected_doc_titles
+    assert "捣压" in q131.expected_keywords
+
+
+def test_eval_set_covers_new_encyclopedia():
+    """eval_set.jsonl 规模 >= 140，且 q101-q140 覆盖全部 10 篇新百科，
+    category 字段非空且与对应百科一致（如 q101-q104 category == "伏特加"）。"""
+    items = load_eval_set()
+    # 评估集规模：原 100 条 + 新增 40 条
+    assert len(items) >= 140, f"期望 eval_set >= 140 条，实际 {len(items)}"
+
+    by_id = {item.id: item for item in items}
+    new_ids = [f"q{i:03d}" for i in range(101, 141)]
+
+    # q101-q140 必须全部存在
+    missing_ids = [qid for qid in new_ids if qid not in by_id]
+    assert not missing_ids, f"缺少 q101-q140 中的条目: {missing_ids}"
+
+    # expected_doc_title 覆盖全部 10 篇新百科
+    new_titles = {by_id[qid].expected_doc_titles[0] for qid in new_ids}
+    missing_titles = [t for t in _NEW_ENCYCLOPEDIA_TITLES if t not in new_titles]
+    assert not missing_titles, f"q101-q140 未覆盖的新百科标题: {missing_titles}"
+
+    # category 非空且与对应百科一致
+    for qid in new_ids:
+        item = by_id[qid]
+        assert item.category, f"{qid} 的 category 为空"
+        expected_title = item.expected_doc_titles[0]
+        expected_category = _NEW_ENCYCLOPEDIA_CATEGORY_MAP[expected_title]
+        assert item.category == expected_category, (
+            f"{qid}: category 期望 {expected_category!r}, 实际 {item.category!r}"
         )
