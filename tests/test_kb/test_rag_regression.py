@@ -18,9 +18,15 @@
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from hermes_kb.recipe_match import match_recipes
 from hermes_kb.seed import seed_recipes
 from tests.eval import load_eval_set
+
+# Task 5：RAG 评估基线文件路径（tests/eval/baseline.json）
+BASELINE_PATH = Path(__file__).resolve().parent.parent / "eval" / "baseline.json"
 
 
 # 抽样 5 款覆盖不同基酒 / 技法 / 分类的经典 IBA 配方（标题需与 seed_recipes 一致）
@@ -250,3 +256,45 @@ def test_eval_set_covers_new_encyclopedia():
         assert item.category == expected_category, (
             f"{qid}: category 期望 {expected_category!r}, 实际 {item.category!r}"
         )
+
+
+def test_baseline_json_exists():
+    """Task 5：断言 tests/eval/baseline.json 文件存在（RAG 评估基线产物）。"""
+    assert BASELINE_PATH.exists(), (
+        f"baseline.json 不存在: {BASELINE_PATH}。请运行 run_eval_baseline() 生成基线。"
+    )
+    assert BASELINE_PATH.is_file(), f"baseline.json 不是文件: {BASELINE_PATH}"
+
+
+def test_baseline_recall_rate_above_threshold():
+    """Task 5：读取 baseline.json，断言 recall_rate >= 0。
+
+    基线仅作对比基准，不设高阈值；但确保不为负数（合法范围 [0, 1]）。
+    同时校验关键字段齐全：total / recall_hit / keyword_hit / recall_rate /
+    keyword_rate / harvested_at。
+    """
+    assert BASELINE_PATH.exists(), (
+        f"baseline.json 不存在: {BASELINE_PATH}。请先运行 run_eval_baseline()。"
+    )
+    data = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
+
+    # 校验字段齐全
+    required_keys = {
+        "total",
+        "recall_hit",
+        "keyword_hit",
+        "recall_rate",
+        "keyword_rate",
+        "harvested_at",
+    }
+    missing = required_keys - set(data)
+    assert not missing, f"baseline.json 缺少字段: {sorted(missing)}"
+
+    # recall_rate 非负（基线仅作对比基准，不设高阈值）
+    recall_rate = data["recall_rate"]
+    assert isinstance(recall_rate, (int, float)), (
+        f"recall_rate 应为数值，实际 {type(recall_rate).__name__}: {recall_rate!r}"
+    )
+    assert recall_rate >= 0, (
+        f"recall_rate 不应为负数，实际 {recall_rate}"
+    )

@@ -691,13 +691,13 @@ def test_parse_iba_recipe_maps_iba_category():
     }
     assert parse_iba_recipe(raw_new_era)["iba_category"] == "new_era_drinks"
 
-    # 未知 type 返回空字符串
+    # 未知 type 返回默认分类 contemporary_classics（infer_iba_category 的默认值）
     raw_unknown = {
         "name": "TEST UNKNOWN TYPE",
         "ingredients": [{"name": "gin", "quantity": 4.5}],
         "type": "Some Unknown Category",
     }
-    assert parse_iba_recipe(raw_unknown)["iba_category"] == ""
+    assert parse_iba_recipe(raw_unknown)["iba_category"] == "contemporary_classics"
 
 
 def test_parse_iba_recipe_infers_technique():

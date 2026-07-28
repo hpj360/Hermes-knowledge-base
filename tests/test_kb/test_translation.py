@@ -1,9 +1,16 @@
 """P1 翻译服务测试。"""
 from __future__ import annotations
 
-from hermes_kb.translation import _mock_translate, translate_title, batch_translate_titles
-from hermes_kb.models import Document
+import pytest
+
 from hermes_kb.database import get_session
+from hermes_kb.models import Document
+from hermes_kb.translation import (
+    _COMMON_TRANSLATIONS,
+    _mock_translate,
+    batch_translate_titles,
+    translate_title,
+)
 
 
 def test_mock_translate_known():
@@ -218,3 +225,45 @@ def test_batch_translate_failed_records_error(tmp_db, monkeypatch):
     result = batch_translate_titles(source="iba", limit=10)
     assert result["failed"] >= 1
     assert result["translated"] == 0
+
+
+# ============================================================
+# Task 1: 标题中文化字典扩展测试
+# ============================================================
+
+
+def test_title_dict_size():
+    """字典规模至少 200 条。"""
+    assert len(_COMMON_TRANSLATIONS) >= 200
+
+
+@pytest.mark.parametrize(
+    "english,expected",
+    [
+        ("Margarita", "玛格丽特"),
+        ("Old Fashioned", "古典鸡尾酒"),
+        ("Cosmopolitan", "大都会"),
+        ("White Lady", "白色佳人"),
+        ("Boulevardier", "林荫道"),
+        ("Singapore Sling", "新加坡司令"),
+        ("Mint Julep", "薄荷茱莉普"),
+        ("Paper Plane", "纸飞机"),
+        ("Amaretto Sour", "杏仁酸"),
+        ("Blue Hawaiian", "蓝色夏威夷"),
+    ],
+)
+def test_sample_translations(english, expected):
+    """抽样验证 10 条标题翻译正确性（含原有与新增映射）。"""
+    assert translate_title(english) == expected
+
+
+def test_unmapped_title_returns_original():
+    """未命中字典的标题返回英文原值。"""
+    original = "Totally Fictional Concoction XYZ123"
+    assert translate_title(original) == original
+
+
+def test_no_duplicate_values():
+    """所有中文值唯一，避免一词多译。"""
+    values = list(_COMMON_TRANSLATIONS.values())
+    assert len(values) == len(set(values)), "存在重复的中文值"

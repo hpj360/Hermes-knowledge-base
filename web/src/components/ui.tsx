@@ -829,7 +829,7 @@ export function BauhausCard({
   title?: React.ReactNode;
   meta?: React.ReactNode;
   accent?: BauhausAccent;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & Omit<React.HTMLAttributes<HTMLDivElement>, "title">) {
   return (
     <div className={`bauhaus-card accent-${accent} ${className}`} {...rest}>
       {title && <div className="bauhaus-card-title">{title}</div>}

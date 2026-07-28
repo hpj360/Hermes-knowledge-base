@@ -35,6 +35,8 @@ function mockAskStream() {
 describe("ChatPanel SSE branches", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // 7.4: 每个测试前清理 localStorage，避免溯源引导提示的 seen 标记干扰
+    localStorage.clear();
   });
 
   it("renders empty state with placeholder hint", () => {
@@ -300,5 +302,124 @@ describe("ChatPanel SSE branches", () => {
 
     // Resolve the pending promise to let the test complete cleanly
     resolveFn();
+  });
+
+  // ==========================================================================
+  // 7.4 冷启动溯源引导链测试
+  // ==========================================================================
+
+  it("首次收到带引用答案时展示溯源引导提示", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "金酒是什么");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [{
+          id: 1,
+          doc_id: "doc-1",
+          title: "金酒百科",
+          snippet: "金酒是一种以杜松子为核心的烈酒...",
+          score: 0.8923,
+          chunk_rowid: 1,
+        }],
+        rejected: false,
+        low_confidence: false,
+        model_used: "gpt-4o-mini",
+        latency_ms: 0,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("💡 点击下方引用可跳转查看原文出处")).toBeInTheDocument();
+    });
+  });
+
+  it("已展示过溯源提示后不再显示", async () => {
+    // 模拟此前已展示过溯源提示
+    localStorage.setItem("hermes_kb_citation_hint_seen", "true");
+
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "威士忌");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [{
+          id: 1,
+          doc_id: "doc-2",
+          title: "威士忌百科",
+          snippet: "威士忌是一种由谷物发酵蒸馏而成的烈酒...",
+          score: 0.8810,
+          chunk_rowid: 1,
+        }],
+        rejected: false,
+        low_confidence: false,
+        model_used: "gpt-4o-mini",
+        latency_ms: 0,
+      });
+    });
+
+    // 给 state 更新一点时间
+    await waitFor(() => {
+      expect(screen.getByText("威士忌百科")).toBeInTheDocument();
+    });
+
+    // 已展示过提示后，不再出现溯源引导提示条
+    expect(screen.queryByText("💡 点击下方引用可跳转查看原文出处")).not.toBeInTheDocument();
+  });
+
+  it("点击关闭按钮可隐藏溯源提示", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "朗姆酒");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [{
+          id: 1,
+          doc_id: "doc-3",
+          title: "朗姆酒百科",
+          snippet: "朗姆酒是一种以甘蔗糖蜜为原料的烈酒...",
+          score: 0.8750,
+          chunk_rowid: 1,
+        }],
+        rejected: false,
+        low_confidence: false,
+        model_used: "gpt-4o-mini",
+        latency_ms: 0,
+      });
+    });
+
+    // 等待提示条出现
+    await waitFor(() => {
+      expect(screen.getByText("💡 点击下方引用可跳转查看原文出处")).toBeInTheDocument();
+    });
+
+    // 点击 × 关闭按钮
+    await user.click(screen.getByRole("button", { name: "关闭溯源提示" }));
+
+    // 提示条应消失
+    await waitFor(() => {
+      expect(screen.queryByText("💡 点击下方引用可跳转查看原文出处")).not.toBeInTheDocument();
+    });
   });
 });

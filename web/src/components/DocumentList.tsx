@@ -17,6 +17,7 @@ interface DocumentListProps {
   refreshKey: number;
   onChange: () => void;
   onSelectDoc?: (docId: string) => void;
+  onShowImport?: () => void;
 }
 
 /** 文档列表（M2-06：分类+标签筛选）。
@@ -24,7 +25,7 @@ interface DocumentListProps {
  * R2 重构：错误用 ErrorBanner、空状态用 EmptyState、筛选 select 用 `.select` 语义类、
  * 标题用 HeadingText、元信息用 MetaText。inline style 仅保留 tag 动态色板。
  */
-export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentListProps) {
+export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }: DocumentListProps) {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -132,6 +133,11 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc }: DocumentList
           </BauhausButton>
         )}
         <MetaText className="ml-auto text-xs">共 {docs.length} 篇</MetaText>
+        {onShowImport && (
+          <BauhausButton variant="solid" onClick={onShowImport}>
+            导入文档
+          </BauhausButton>
+        )}
       </div>
 
       {/* 列表 */}

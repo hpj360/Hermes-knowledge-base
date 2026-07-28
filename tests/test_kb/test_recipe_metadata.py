@@ -355,10 +355,10 @@ def test_infer_iba_category_new_era_drinks():
 
 
 def test_infer_iba_category_unknown():
-    """未知分类 → 空字符串。"""
+    """未知分类 → contemporary_classics（旧分类默认映射）。"""
     from hermes_kb.recipe_metadata import infer_iba_category
 
-    assert infer_iba_category("Some Other Category") == ""
+    assert infer_iba_category("Some Other Category") == "contemporary_classics"
 
 
 def test_infer_iba_category_empty():

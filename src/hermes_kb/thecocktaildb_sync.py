@@ -216,8 +216,8 @@ def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
     unknown: list[str] = []
 
     for i in range(1, 16):
-        ing = api_data.get(f"strIngredient{i}")
-        measure = api_data.get(f"strMeasure{i}", "")
+        ing = api_data.get(f"strIngredient{i}") or ""
+        measure = api_data.get(f"strMeasure{i}") or ""
         if not ing:
             break
         normalized = normalize_ingredient(ing)
@@ -247,7 +247,9 @@ def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
 
     # Task 6: 推断结构化元数据（technique/glassware/flavor_profile）
     technique = infer_technique(content)
-    glassware = infer_glassware(content, title)
+    # glassware: 优先使用 TheCocktailDB 的 strGlass 字段（英文值，中文映射后续优化），
+    # 否则回退到基于 content 的关键词推断
+    glassware = (api_data.get("strGlass") or "").strip() or infer_glassware(content, title)
     flavor_profile = infer_flavor_profile(ingredients)
 
     return {
@@ -334,7 +336,7 @@ def sync_thecocktaildb(
                     imported += 1
                 else:
                     failed += 1
-            except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
+            except (KeyError, TypeError, ValueError, RuntimeError, OSError, AttributeError) as e:  # noqa: BLE001
                 _logger.warning("thecocktaildb drink import failed: %s", e)
                 failed += 1
 

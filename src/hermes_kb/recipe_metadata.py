@@ -100,26 +100,45 @@ def infer_glassware(content: str, title: str = "") -> str:
 def infer_iba_category(iba_type: str) -> str:
     """将 IBA dataset 的 type 字段映射为标准 iba_category。
 
-    规则：
-    - "The Unforgettables" → "unforgettables"
-    - "Contemporary Classics" → "contemporary_classics"
-    - "New Era Drinks" → "new_era_drinks"
-    - 其他/空 → ""
+    规则（大小写不敏感）：
+    - 新 IBA 分类：
+      - "The Unforgettables" → "unforgettables"
+      - "Contemporary Classics" → "contemporary_classics"
+      - "New Era Drinks" → "new_era_drinks"
+    - 旧 IBA 分类（lmc2179/iba_dataset_json 数据集）：
+      - "All Day Cocktail" → "contemporary_classics"
+      - "Longdrink" → "contemporary_classics"
+      - "After Dinner Cocktail" → "new_era_drinks"
+      - "Before Dinner Cocktail" → "unforgettables"
+      - "Sparkling Cocktail" → "contemporary_classics"
+      - "Hot Drink" → "new_era_drinks"
+    - 其他旧分类 → "contemporary_classics"（默认）
+    - 空 → ""
 
     Args:
         iba_type: IBA dataset 的 type 字段值。
 
     Returns:
-        标准 iba_category 标识符，无法映射返回 ""。
+        标准 iba_category 标识符，空值返回 ""。
     """
     if not iba_type:
         return ""
+    # 大小写不敏感映射（lowercase 比较），并 strip 处理尾部空白
+    key = iba_type.strip().lower()
     mapping = {
-        "The Unforgettables": "unforgettables",
-        "Contemporary Classics": "contemporary_classics",
-        "New Era Drinks": "new_era_drinks",
+        # 新 IBA 分类
+        "the unforgettables": "unforgettables",
+        "contemporary classics": "contemporary_classics",
+        "new era drinks": "new_era_drinks",
+        # 旧 IBA 分类（lmc2179/iba_dataset_json 数据集）
+        "all day cocktail": "contemporary_classics",
+        "longdrink": "contemporary_classics",
+        "after dinner cocktail": "new_era_drinks",
+        "before dinner cocktail": "unforgettables",
+        "sparkling cocktail": "contemporary_classics",
+        "hot drink": "new_era_drinks",
     }
-    return mapping.get(iba_type, "")
+    return mapping.get(key, "contemporary_classics")
 
 
 def infer_flavor_profile(ingredients: list[str]) -> str:

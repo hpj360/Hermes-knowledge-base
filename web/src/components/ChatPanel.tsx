@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CitationList } from "./CitationList";
+import { HistoryPanel } from "./HistoryPanel";
 import { showToast } from "./Toast";
 import {
   BodyText,
@@ -35,7 +36,25 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // 视图切换：chat（默认问答）/ history（问答历史）
+  const [view, setView] = useState<"chat" | "history">("chat");
   const abortRef = useRef<AbortController | null>(null);
+
+  // 7.3 冷启动溯源引导：首次收到带引用答案时在 CitationList 上方展示提示条，
+  // 通过 localStorage hermes_kb_citation_hint_seen 跨会话只展示一次
+  const [hintVisible, setHintVisible] = useState(() =>
+    localStorage.getItem("hermes_kb_citation_hint_seen") !== "true"
+  );
+  // 本会话第一条带引用的 assistant 消息索引（仅在该条上展示提示，避免后续重复）
+  const firstCitedIdx = messages.findIndex(
+    (m) => m.role === "assistant" && m.citations && m.citations.length > 0
+  );
+  // 首次出现带引用答案后写入 localStorage，标记已展示过
+  useEffect(() => {
+    if (firstCitedIdx !== -1 && hintVisible) {
+      localStorage.setItem("hermes_kb_citation_hint_seen", "true");
+    }
+  }, [firstCitedIdx, hintVisible]);
 
   // P2-4: 组件卸载时中止进行中的 SSE 流，避免 LLM token 泄漏与卸载后 setState
   useEffect(() => {
@@ -162,16 +181,39 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
           <BauhausSectionLabel>Q&amp;A</BauhausSectionLabel>
           <h2 className="section-title text-base">问答</h2>
         </div>
-        <BauhausButton
-          variant="outline"
-          onClick={seed}
-          disabled={loading}
-          className="text-xs"
-        >
-          导入种子知识
-        </BauhausButton>
+        <div className="flex items-center gap-2">
+          {view === "history" ? (
+            <BauhausButton
+              variant="outline"
+              onClick={() => setView("chat")}
+              className="text-xs"
+            >
+              返回问答
+            </BauhausButton>
+          ) : (
+            <BauhausButton
+              variant="outline"
+              onClick={() => setView("history")}
+              className="text-xs"
+            >
+              历史
+            </BauhausButton>
+          )}
+          <BauhausButton
+            variant="outline"
+            onClick={seed}
+            disabled={loading}
+            className="text-xs"
+          >
+            导入种子知识
+          </BauhausButton>
+        </div>
       </div>
 
+      {view === "history" ? (
+        <HistoryPanel onBack={() => setView("chat")} />
+      ) : (
+        <>
       {/* 消息列表 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
@@ -267,7 +309,31 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                     )}
                   </BodyText>
                   {m.citations && m.citations.length > 0 && (
-                    <CitationList citations={m.citations} onJumpToDoc={onJumpToDoc} />
+                    <>
+                      {/* 7.3: 首条带引用答案上方的溯源引导提示条（包豪斯浅底 + ink-600） */}
+                      {i === firstCitedIdx && hintVisible && (
+                        <MetaText
+                          as="div"
+                          className="text-xs flex items-center justify-between gap-2 px-3 py-2 rounded mb-2 mt-3"
+                          style={{
+                            background: "var(--ink-50)",
+                            color: "var(--ink-600)",
+                          }}
+                        >
+                          <span>💡 点击下方引用可跳转查看原文出处</span>
+                          <button
+                            type="button"
+                            aria-label="关闭溯源提示"
+                            onClick={() => setHintVisible(false)}
+                            className="text-sm leading-none hover:opacity-70 transition-opacity"
+                            style={{ color: "var(--ink-600)" }}
+                          >
+                            ×
+                          </button>
+                        </MetaText>
+                      )}
+                      <CitationList citations={m.citations} onJumpToDoc={onJumpToDoc} />
+                    </>
                   )}
                   {m.externalRefs && m.externalRefs.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-[color:var(--ink-100)]">
@@ -358,6 +424,8 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

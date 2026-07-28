@@ -21,9 +21,11 @@ vi.mock("../api", () => ({
     getToken: vi.fn().mockReturnValue(null),
     logout: vi.fn(),
     setToken: vi.fn(),
-    // 实验室相关方法（App 在 lab/recipes tab 下不会主动调用，但子组件可能用到）
+    // 实验室相关方法
     labDaily: vi.fn().mockResolvedValue({ title: null, reason: "empty" }),
     labRecipes: vi.fn().mockResolvedValue({ items: [] }),
+    labDashboard: vi.fn().mockResolvedValue(null),
+    history: vi.fn().mockResolvedValue({ total: 0, items: [] }),
     // R3: handleSeed 测试需要
     seed: vi.fn().mockResolvedValue({ seeded: 5, failed: 0 }),
     // R3: 详情页 / 编辑器可能触发的 API
@@ -62,10 +64,8 @@ async function waitForAppReady() {
 
 describe("App", () => {
   it("冒烟测试：能渲染不崩溃", async () => {
-    // 不应抛出异常
     const { container } = render(<App />);
     expect(container).toBeTruthy();
-    // App 渲染后应出现顶部栏标题（年龄门未启用，会直接放行）
     await waitFor(() => {
       expect(screen.getByText("Hermes 知识库")).toBeInTheDocument();
     });
@@ -89,7 +89,7 @@ describe("App", () => {
     });
   });
 
-  it("点击「📝 配方」切换到 RecipePanel", async () => {
+  it("点击「配方」切换到 RecipePanel", async () => {
     const user = userEvent.setup();
     render(<App />);
     await waitFor(() => expect(screen.getByText("配方")).toBeInTheDocument());
@@ -101,32 +101,29 @@ describe("App", () => {
 });
 
 // ════════════════════════════════════════════════════════════════════
-// R3 路由 + IA 重构验收测试
+// 产品重构：分组导航 + 首页 Dashboard + 设置中心
 // ════════════════════════════════════════════════════════════════════
-describe("R3 路由与 IA 重构", () => {
-  it("IA：导航包含 4 主 tab + 1 管理 tab（问答/实验室/配方/文档/管理）", async () => {
+describe("产品重构：分组导航与 IA", () => {
+  it("IA：导航包含首页 + 知识区(问答/文档) + 调酒区(配方/实验室) + 设置", async () => {
     render(<App />);
     await waitForAppReady();
-    // 用主导航容器范围限定，避免与子页面内的同名文字冲突
     const nav = screen.getByLabelText("主导航");
-    // 4 主 tab
+    expect(nav).toHaveTextContent("首页");
     expect(nav).toHaveTextContent("问答");
-    expect(nav).toHaveTextContent("实验室");
-    expect(nav).toHaveTextContent("配方");
     expect(nav).toHaveTextContent("文档");
-    // 1 管理 tab
-    expect(nav).toHaveTextContent("管理");
-    // 旧的「标签」tab 不应再出现（已迁入管理）
-    expect(nav).not.toHaveTextContent("标签");
+    expect(nav).toHaveTextContent("配方");
+    expect(nav).toHaveTextContent("实验室");
+    expect(nav).toHaveTextContent("设置");
+    // 旧的「管理」tab 不应再出现
+    expect(nav).not.toHaveTextContent("管理");
   });
 
-  it("默认路径 / 重定向到 /chat", async () => {
-    // 初始 URL 为 /（setup.ts beforeEach 已重置）
+  it("默认路径 / 展示首页 Dashboard", async () => {
     render(<App />);
     await waitForAppReady();
-    // ChatPanel 应该被渲染（h2 标题「向 Hermes 知识库提问吧」）
+    // DashboardPanel 渲染：展示「从知识到实践」价值主张
     await waitFor(() => {
-      expect(screen.getByText("向 Hermes 知识库提问吧")).toBeInTheDocument();
+      expect(screen.getByText("从知识到实践")).toBeInTheDocument();
     });
   });
 
@@ -135,24 +132,23 @@ describe("R3 路由与 IA 重构", () => {
     render(<App />);
     await waitForAppReady();
     await user.click(screen.getByText("文档"));
-    // DocumentList 渲染：空状态展示「知识库为空」标题
     await waitFor(() => {
       expect(screen.getByText("知识库为空")).toBeInTheDocument();
     });
   });
 
-  it("点击「管理」切换到 TagPanel", async () => {
+  it("点击「设置」切换到 TagPanel", async () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("管理"));
-    // TagPanel 渲染：展示「标签管理」标题
+    await user.click(screen.getByText("设置"));
     await waitFor(() => {
-      expect(screen.getByText("标签管理")).toBeInTheDocument();
+      // SettingsPanel 默认渲染 TagPanel；"标签管理"同时出现在子模块 tab 与 TagPanel 标题
+      expect(screen.getAllByText("标签管理").length).toBeGreaterThanOrEqual(1);
     });
   });
 
-  it("导航 active 状态：点击实验室后实验室 tab 带 nav-tab-active 类", async () => {
+  it("导航 active 状态：点击实验室后实验室 tab 带 aria-current", async () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
@@ -160,25 +156,21 @@ describe("R3 路由与 IA 重构", () => {
     await waitFor(() => {
       expect(screen.getByText("🧪 鸡尾酒实验室")).toBeInTheDocument();
     });
-    // 实验室链接应带 aria-current="page"（a11y + active 标识）
     const labLink = screen.getByText("实验室").closest("a");
     expect(labLink).not.toBeNull();
     expect(labLink?.getAttribute("aria-current")).toBe("page");
   });
 
   it("深链接 /recipes/new 直接进入配方编辑器（创建模式）", async () => {
-    // 模拟用户直接访问 /recipes/new（刷新场景）
     window.history.replaceState({}, "", "/recipes/new");
     render(<App />);
     await waitForAppReady();
-    // RecipeEditorPanel 创建模式会展示「创作新配方」标题
     await waitFor(() => {
       expect(screen.getByText("创作新配方")).toBeInTheDocument();
     });
   });
 
   it("深链接 /recipes/:id/edit 进入配方编辑器（编辑模式）", async () => {
-    // RecipeEditorPanel 编辑模式会调用 labRecipes 加载已有配方
     const { api } = await import("../api");
     vi.mocked(api.labRecipes).mockResolvedValueOnce({
       items: [
@@ -203,7 +195,6 @@ describe("R3 路由与 IA 重构", () => {
   it("深链接 /docs/:id 直接进入文档详情页", async () => {
     window.history.replaceState({}, "", "/docs/doc-1");
     render(<App />);
-    // DocumentDetailPanel 渲染：会调用 getDocument，加载完成后展示「返回列表」按钮
     await waitFor(() => {
       expect(screen.getByText("返回列表")).toBeInTheDocument();
     });
@@ -212,11 +203,9 @@ describe("R3 路由与 IA 重构", () => {
   it("URL chunk 参数同步：/docs/:id?chunk=5 解析为 highlightChunk", async () => {
     window.history.replaceState({}, "", "/docs/doc-1?chunk=5");
     render(<App />);
-    // 详情面板应渲染（验证不崩溃且 chunk 参数被消费）
     await waitFor(() => {
       expect(screen.getByText("返回列表")).toBeInTheDocument();
     });
-    // 验证 URL 仍保留 chunk 参数
     expect(window.location.search).toContain("chunk=5");
   });
 
@@ -229,41 +218,35 @@ describe("R3 路由与 IA 重构", () => {
     });
   });
 
-  it("顶部「导入」按钮打开 ImportDialog", async () => {
+  it("文档 tab 内有「导入文档」按钮（上下文感知导入）", async () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    // 顶部栏「导入」按钮（区别于「导入种子知识」）
-    const importBtn = screen.getByRole("button", { name: "导入" });
-    await user.click(importBtn);
-    // ImportDialog 渲染：包含文件输入或拖拽区
+    await user.click(screen.getByText("文档"));
     await waitFor(() => {
-      const dialog = screen.queryByText(/拖拽|选择文件|支持格式|导入文档/i);
-      expect(dialog).not.toBeNull();
+      expect(screen.getByText("知识库为空")).toBeInTheDocument();
     });
+    // 文档 tab 筛选栏应有「导入文档」按钮
+    expect(screen.getByRole("button", { name: "导入文档" })).toBeInTheDocument();
   });
 
-  it("空库时「导入种子知识」按钮触发 handleSeed 流程", async () => {
+  it("空库时首页与顶部都展示「导入种子知识」按钮", async () => {
     const { api } = await import("../api");
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    // 健康检查返回 doc_count=0 → 顶部栏与 ChatPanel 都会显示「导入种子知识」按钮
-    // 用 getAllByRole 取所有匹配项，点击顶部栏（第一个）
+    // 首页空库引导卡片 + 顶部都有「导入种子知识」按钮
     const seedBtns = screen.getAllByRole("button", { name: "导入种子知识" });
     expect(seedBtns.length).toBeGreaterThanOrEqual(1);
     await user.click(seedBtns[0]);
-    // 点击后弹出 useConfirm 对话框，需再点确认
     await waitFor(() => {
       expect(screen.getByText("请确认")).toBeInTheDocument();
     });
-    // 点击「确认」触发 api.seed
     const confirmBtn = screen.getByRole("button", { name: "确认" });
     await user.click(confirmBtn);
     await waitFor(() => {
       expect(api.seed).toHaveBeenCalled();
     });
-    // 成功后展示 toast
     await waitFor(() => {
       expect(screen.getByText(/导入完成：5 篇成功/)).toBeInTheDocument();
     });
@@ -271,7 +254,6 @@ describe("R3 路由与 IA 重构", () => {
 
   it("auth_enabled=true 时展示「退出」按钮，点击触发 logout", async () => {
     const { api } = await import("../api");
-    // 覆盖 health mock：返回 auth_enabled=true 且 token 已存在
     vi.mocked(api.health).mockResolvedValueOnce({
       doc_count: 5,
       llm_available: true,
@@ -284,18 +266,107 @@ describe("R3 路由与 IA 重构", () => {
 
     const user = userEvent.setup();
     render(<App />);
-    // 等待退出按钮出现
     const logoutBtn = await screen.findByRole("button", { name: "退出" });
     await user.click(logoutBtn);
     expect(api.logout).toHaveBeenCalled();
   });
 
-  it("导航 tab 数量恰好为 5（4 主 + 1 管理）", async () => {
+  it("导航 tab 数量恰好为 6（首页/问答/文档/配方/实验室/设置）", async () => {
     render(<App />);
     await waitForAppReady();
-    // 主导航内的链接数量应为 5
     const nav = screen.getByLabelText("主导航");
     const links = nav.querySelectorAll("a");
-    expect(links.length).toBe(5);
+    expect(links.length).toBe(6);
+  });
+
+  it("导航分组：知识区与调酒区之间有分隔符", async () => {
+    render(<App />);
+    await waitForAppReady();
+    const nav = screen.getByLabelText("主导航");
+    // 分隔符为 aria-hidden 的 span
+    const dividers = nav.querySelectorAll('span[aria-hidden="true"]');
+    expect(dividers.length).toBeGreaterThanOrEqual(2);
+  });
+
+  // 覆盖 App.tsx line 153：handleSeed catch 块（导入种子失败时的错误处理）
+  it("handleSeed 失败时 showToast 显示导入失败信息", async () => {
+    const { api } = await import("../api");
+    vi.mocked(api.seed).mockRejectedValueOnce(new Error("网络错误"));
+    const user = userEvent.setup();
+    render(<App />);
+    await waitForAppReady();
+    const seedBtns = screen.getAllByRole("button", { name: "导入种子知识" });
+    await user.click(seedBtns[0]);
+    await waitFor(() => {
+      expect(screen.getByText("请确认")).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: "确认" }));
+    await waitFor(() => {
+      expect(screen.getByText(/导入失败：网络错误/)).toBeInTheDocument();
+    });
+  });
+
+  // 覆盖 App.tsx lines 301-304：ImportDialog 条件渲染（showImport=true）
+  it("点击「导入文档」按钮渲染 ImportDialog 对话框", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await waitForAppReady();
+    await user.click(screen.getByText("文档"));
+    await waitFor(() => {
+      expect(screen.getByText("知识库为空")).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: "导入文档" }));
+    await waitFor(() => {
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+    // ImportDialog 的 Modal 标题为「导入文档」，且包含纯文本/单文件/批量上传 tab
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent("导入文档");
+    expect(dialog).toHaveTextContent("纯文本");
+    expect(dialog).toHaveTextContent("批量上传");
+  });
+
+  // 覆盖 App.tsx line 139：handleSelectDoc 中的 navigate(`/docs/${docId}`)
+  it("handleSelectDoc：点击文档列表中的文档标题跳转到 /docs/:id", async () => {
+    const { api } = await import("../api");
+    vi.mocked(api.listDocuments).mockResolvedValueOnce({
+      items: [
+        {
+          doc_id: "doc-1",
+          title: "测试文档一",
+          source_type: "local",
+          file_type: "md",
+          chunk_count: 3,
+          category: "wine",
+          tags: [],
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await waitForAppReady();
+    await user.click(screen.getByText("文档"));
+    await waitFor(() => {
+      expect(screen.getByText("测试文档一")).toBeInTheDocument();
+    });
+    await user.click(screen.getByText("测试文档一"));
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/docs/doc-1");
+    });
+  });
+
+  // 覆盖 App.tsx lines 142-143：handleBackToList 中的 navigate("/docs")
+  it("handleBackToList：详情页点击「返回列表」跳转到 /docs", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, "", "/docs/doc-1");
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText("返回列表")).toBeInTheDocument();
+    });
+    await user.click(screen.getByText("返回列表"));
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/docs");
+    });
   });
 });

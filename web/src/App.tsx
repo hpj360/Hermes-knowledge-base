@@ -8,31 +8,47 @@ import { ChatPanel } from "./components/ChatPanel";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentDetailPanel } from "./components/DocumentDetailPanel";
 import { ImportDialog } from "./components/ImportDialog";
-import { TagPanel } from "./components/TagPanel";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { LabPanel } from "./components/LabPanel";
 import { RecipePanel } from "./components/RecipePanel";
 import { RecipeEditorPanel } from "./components/RecipeEditorPanel";
+import { DashboardPanel } from "./components/DashboardPanel";
 import { Skeleton } from "./components/Skeleton";
 import { ToastHost, showToast } from "./components/Toast";
 import { Logo, useConfirm, BauhausBrandMark, BauhausButton, BauhausGeometry } from "./components/ui";
 
 /**
- * R3 IA 重构：4 主 tab + 1 管理 tab
- * 主 tab：问答 / 实验室 / 配方 / 文档
- * 管理 tab：标签管理（后续可扩展审核队列、导入历史等）
+ * 产品重构：分组导航 — 首页 + 知识区(问答/文档) + 调酒区(配方/实验室) + 设置
+ * 统一叙事：从知识到实践（知识可信 → 实践可用 → 持续成长）
  */
-const NAV_ITEMS: ReadonlyArray<{ path: string; label: string }> = [
-  { path: "/chat", label: "问答" },
-  { path: "/lab", label: "实验室" },
-  { path: "/recipes", label: "配方" },
-  { path: "/docs", label: "文档" },
-  { path: "/admin", label: "管理" },
+interface NavGroup {
+  label: string;
+  items: ReadonlyArray<{ path: string; label: string }>;
+}
+
+const NAV_GROUPS: ReadonlyArray<NavGroup> = [
+  { label: "", items: [{ path: "/", label: "首页" }] },
+  {
+    label: "知识",
+    items: [
+      { path: "/chat", label: "问答" },
+      { path: "/docs", label: "文档" },
+    ],
+  },
+  {
+    label: "调酒",
+    items: [
+      { path: "/recipes", label: "配方" },
+      { path: "/lab", label: "实验室" },
+    ],
+  },
+  { label: "", items: [{ path: "/settings", label: "设置" }] },
 ];
 
 /** 导航项：当前路径精确或前缀匹配时激活 */
 function NavItem({ path, label }: { path: string; label: string }) {
   const [location] = useLocation();
-  const isActive = location === path || location.startsWith(`${path}/`);
+  const isActive = path === "/" ? location === "/" : location === path || location.startsWith(`${path}/`);
   return (
     <Link
       to={path}
@@ -171,12 +187,6 @@ export default function App() {
               {seeding ? "导入中..." : "导入种子知识"}
             </BauhausButton>
           )}
-          <BauhausButton
-            variant="solid"
-            onClick={() => setShowImport(true)}
-          >
-            导入
-          </BauhausButton>
           {health?.auth_enabled && (
             <BauhausButton
               variant="outline"
@@ -191,27 +201,49 @@ export default function App() {
         </div>
       </header>
 
-      {/* 水平导航 — 包豪斯 tab：mono 大写 + 3px 黑色 active 下划线（R3: 4 主 + 1 管理） */}
+      {/* 水平导航 — 分组：首页 | 知识区(问答/文档) | 调酒区(配方/实验室) | 设置 */}
       <nav
         className="flex items-center gap-1 px-6 border-b border-ink-200 flex-shrink-0 overflow-x-auto"
         aria-label="主导航"
         style={{ background: "var(--paper)" }}
       >
-        {NAV_ITEMS.map((item) => (
-          <NavItem key={item.path} path={item.path} label={item.label} />
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi} className="flex items-center gap-1">
+            {gi > 0 && (
+              <span
+                className="mx-2 h-5 w-px flex-shrink-0"
+                style={{ background: "var(--ink-200)" }}
+                aria-hidden="true"
+              />
+            )}
+            {group.items.map((item) => (
+              <NavItem key={item.path} path={item.path} label={item.label} />
+            ))}
+          </div>
         ))}
       </nav>
 
-      {/* 内容区 — R3 路由驱动，包豪斯几何装饰 */}
+      {/* 内容区 — 路由驱动，包豪斯几何装饰 */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
         <BauhausGeometry positions={["tr", "br"]} />
         <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
           <Switch>
+          <Route path="/">
+            <DashboardPanel
+              health={health}
+              onSeed={handleSeed}
+              seeding={seeding}
+              onShowImport={() => setShowImport(true)}
+            />
+          </Route>
           <Route path="/chat">
             <ChatPanel refreshDocs={refreshDocs} onJumpToDoc={jumpToDocChunk} />
           </Route>
           <Route path="/lab">
-            <LabPanel onJumpToDoc={jumpToDocChunk} />
+            <LabPanel
+              onJumpToDoc={jumpToDocChunk}
+              onCreateRecipe={() => navigate("/recipes/new")}
+            />
           </Route>
           {/* /recipes/new 必须在 /recipes/:id/edit 与 /recipes 之前以避免歧义 */}
           <Route path="/recipes/new">
@@ -251,13 +283,11 @@ export default function App() {
               refreshKey={docRefreshKey}
               onChange={refreshHealth}
               onSelectDoc={handleSelectDoc}
+              onShowImport={() => setShowImport(true)}
             />
           </Route>
-          <Route path="/admin">
-            <TagPanel onChange={refreshDocs} />
-          </Route>
-          <Route path="/">
-            <Redirect to="/chat" />
+          <Route path="/settings">
+            <SettingsPanel onChange={refreshDocs} />
           </Route>
           <Route>
             <NotFound />

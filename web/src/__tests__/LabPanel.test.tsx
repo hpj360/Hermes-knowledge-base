@@ -210,6 +210,27 @@ describe("LabPanel", () => {
     // 无 onJumpToDoc 时按 Enter 不应抛错
     expect(() => fireEvent.keyDown(dailyCard, { key: "Enter" })).not.toThrow();
   });
+
+  it("创作配方入口：传入 onCreateRecipe 时渲染「创作配方」按钮，点击触发回调", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    const onCreateRecipe = vi.fn();
+    render(<LabPanel onCreateRecipe={onCreateRecipe} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    const btn = screen.getByRole("button", { name: "创作配方" });
+    expect(btn).toBeInTheDocument();
+    await user.click(btn);
+    expect(onCreateRecipe).toHaveBeenCalledTimes(1);
+  });
+
+  it("未传入 onCreateRecipe 时不渲染「创作配方」按钮", async () => {
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    expect(screen.queryByRole("button", { name: "创作配方" })).not.toBeInTheDocument();
+  });
 });
 
 describe("LabPanel: P1 翻译配方标题 UI", () => {

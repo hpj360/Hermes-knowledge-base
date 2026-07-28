@@ -22,10 +22,11 @@ import {
 
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
+  onCreateRecipe?: () => void;
 }
 
 /** M3 实验室主面板：今日推荐 + 材料选择 + 匹配结果 + 替代原料 + 制作步骤 + IMA 同步。 */
-export function LabPanel({ onJumpToDoc }: LabPanelProps) {
+export function LabPanel({ onJumpToDoc, onCreateRecipe }: LabPanelProps) {
   const [daily, setDaily] = useState<LabDailyRecipe | null>(null);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
@@ -159,6 +160,16 @@ export function LabPanel({ onJumpToDoc }: LabPanelProps) {
           >
             🌐 翻译配方标题
           </BauhausButton>
+          {onCreateRecipe && (
+            <BauhausButton
+              variant="outline"
+              className="text-xs"
+              onClick={() => onCreateRecipe()}
+              aria-label="创作配方"
+            >
+              ✏️ 创作配方
+            </BauhausButton>
+          )}
         </div>
       </div>
 

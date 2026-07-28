@@ -103,14 +103,14 @@ export interface HealthStatus {
 }
 
 export interface HistoryItem {
-  id: number;
+  log_id: number;
   query: string;
   answer: string;
-  citations: Citation[];
-  model_used: string;
-  latency_ms: number;
-  feedback: number;
-  created_at: string | null;
+  model?: string;
+  latency_ms?: number;
+  created_at: string;
+  citations?: Array<{ doc_id: string; chunk_rowid: number; title: string; text: string }>;
+  feedback?: number;
 }
 
 export interface SeedResult {
