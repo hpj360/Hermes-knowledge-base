@@ -13,16 +13,17 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    /* C1: 去 Inter，使用 _tokens.css 的衬线杂志字体 */
-    font-family: var(--font-sans);
+    /* P1 包豪斯：Space Grotesk + 纯色背景 */
+    font-family: var(--font-body);
     color: var(--ink-900);
     background: var(--paper-bg);
-    line-height: 1.7;
+    line-height: 1.6;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-serif);
-    font-weight: 600;
-    line-height: 1.25;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
   }
 }
 
