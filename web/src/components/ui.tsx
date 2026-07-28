@@ -805,3 +805,178 @@ export function DailyRecipeCard({
     </div>
   );
 }
+
+// ============================================================================
+// P2 包豪斯几何 + 极简现代组件库
+//
+// 设计宪法：白底 + 粗体大写 + 3px 粗边框 + 领域色实色几何 + 微圆角 2px
+// 全部使用 design tokens（var(--*)），无硬编码 hex，支持 className 透传。
+// 语义类定义在 index.css 末尾（非 layer 区域，覆盖 _components.css 同名类）。
+// ============================================================================
+
+/** 包豪斯强调色变体 */
+export type BauhausAccent = "wine" | "amber" | "bronze" | "ink";
+
+/** 包豪斯卡片：2px 黑边框 + 左上角实色方块 + 大写标题 */
+export function BauhausCard({
+  title,
+  meta,
+  accent = "wine",
+  className = "",
+  children,
+  ...rest
+}: {
+  title?: React.ReactNode;
+  meta?: React.ReactNode;
+  accent?: BauhausAccent;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={`bauhaus-card accent-${accent} ${className}`} {...rest}>
+      {title && <div className="bauhaus-card-title">{title}</div>}
+      {meta && <div className="bauhaus-card-meta">{meta}</div>}
+      {children}
+    </div>
+  );
+}
+
+/** 包豪斯指标卡变体 */
+export type BauhausMetricVariant = "wine" | "amber" | "bronze" | "outline";
+
+/** 包豪斯指标卡：实色填充 + 反白数字 */
+export function BauhausMetric({
+  num,
+  label,
+  variant = "outline",
+  className = "",
+  ...rest
+}: {
+  num: React.ReactNode;
+  label: React.ReactNode;
+  variant?: BauhausMetricVariant;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={`bauhaus-metric variant-${variant} ${className}`} {...rest}>
+      <div className="bauhaus-metric-num">{num}</div>
+      <div className="bauhaus-metric-label">{label}</div>
+    </div>
+  );
+}
+
+/** 包豪斯 chip：实色填充 + mono 大写 */
+export function BauhausChip({
+  variant = "wine",
+  className = "",
+  children,
+  ...rest
+}: {
+  variant?: BauhausMetricVariant;
+} & React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span className={`bauhaus-chip variant-${variant} ${className}`} {...rest}>
+      {children}
+    </span>
+  );
+}
+
+/** 包豪斯按钮变体 */
+export type BauhausBtnVariant = "solid" | "accent" | "outline";
+
+/** 包豪斯按钮：mono 大写 + 2px 黑边 */
+export function BauhausButton({
+  variant = "solid",
+  className = "",
+  type = "button",
+  children,
+  ...rest
+}: {
+  variant?: BauhausBtnVariant;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type={type}
+      className={`bauhaus-btn variant-${variant} ${className}`}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** 包豪斯章节标签：mono 大写 + 44×4 黑色前条 */
+export function BauhausSectionLabel({
+  className = "",
+  children,
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={`bauhaus-section-label ${className}`} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+/** 包豪斯大标题：black 700 + 大写 + 微收紧 */
+export function BauhausDisplay({
+  className = "",
+  as: Tag = "h2",
+  children,
+  ...rest
+}: {
+  as?: React.ElementType;
+} & React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <Tag className={`bauhaus-display ${className}`} {...rest}>
+      {children}
+    </Tag>
+  );
+}
+
+/** 几何装饰位置 */
+export type BauhausGeometryPos = "tr" | "br" | "ml";
+
+/** 几何装饰组件：角落圆形色块（适度密度，opacity 0.1-0.15） */
+export function BauhausGeometry({
+  positions = ["tr", "br"],
+  className = "",
+}: {
+  positions?: BauhausGeometryPos[];
+  className?: string;
+}) {
+  return (
+    <>
+      {positions.map((pos) => (
+        <span
+          key={pos}
+          className={`bauhaus-geometry pos-${pos} ${className}`}
+          aria-hidden="true"
+        />
+      ))}
+    </>
+  );
+}
+
+/** 包豪斯布局：主内容 + 右辅助面板（移动端折叠） */
+export function BauhausLayout({
+  main,
+  aside,
+  className = "",
+}: {
+  main: React.ReactNode;
+  aside?: React.ReactNode;
+  className?: string;
+}) {
+  if (!aside) {
+    return <div className={className}>{main}</div>;
+  }
+  return (
+    <div className={`bauhaus-layout ${className}`}>
+      <div>{main}</div>
+      <aside>{aside}</aside>
+    </div>
+  );
+}
+
+/** 包豪斯导航栏 brand mark：酒红实色方块 */
+export function BauhausBrandMark({ className = "" }: { className?: string }) {
+  return <span className={`brand-mark ${className}`} aria-hidden="true" />;
+}

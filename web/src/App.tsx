@@ -14,7 +14,7 @@ import { RecipePanel } from "./components/RecipePanel";
 import { RecipeEditorPanel } from "./components/RecipeEditorPanel";
 import { Skeleton } from "./components/Skeleton";
 import { ToastHost, showToast } from "./components/Toast";
-import { Logo, useConfirm } from "./components/ui";
+import { Logo, useConfirm, BauhausBrandMark, BauhausButton, BauhausGeometry } from "./components/ui";
 
 /**
  * R3 IA 重构：4 主 tab + 1 管理 tab
@@ -92,7 +92,7 @@ export default function App() {
   if (!authReady) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "var(--paper-bg)" }}>
-        <div className="reveal-item" style={{ color: "var(--brand-700)" }}>
+        <div className="reveal-item" style={{ color: "var(--wine)" }}>
           <Logo size={36} />
         </div>
         <div className="w-48 reveal-item delay-2">
@@ -141,19 +141,21 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col relative bg-noise" style={{ background: "var(--paper-bg)" }}>
-      {/* 顶部栏 — .navbar 语义类：噪点底 + 深酒红渐变 + 金箔底边 + sticky */}
-      <header className="navbar px-6 py-4 flex items-center justify-between flex-shrink-0 relative overflow-hidden">
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="text-gold-foil">
-            <Logo size={28} />
-          </div>
+    <div className="h-screen flex flex-col relative" style={{ background: "var(--paper-bg)" }}>
+      {/* 顶部栏 — 包豪斯导航栏：白底 + 3px 黑色底边 + brand mark 实色方块 */}
+      <header className="navbar px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <BauhausBrandMark />
+          <Logo size={24} className="text-ink-900" />
           <div>
             <h1 className="brand">
               <span className="brand-accent">Hermes 知识库</span>
             </h1>
             {health && (
-              <p className="text-xs mt-0.5" style={{ color: "rgba(250, 243, 220, 0.75)" }}>
+              <p
+                className="text-xs mt-0.5"
+                style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
+              >
                 {health.doc_count} 篇文档
               </p>
             )}
@@ -161,47 +163,50 @@ export default function App() {
         </div>
         <div className="flex items-center gap-2">
           {health && health.doc_count === 0 && (
-            <button
+            <BauhausButton
+              variant="outline"
               onClick={handleSeed}
-              className="btn-secondary text-sm"
               disabled={seeding}
             >
               {seeding ? "导入中..." : "导入种子知识"}
-            </button>
+            </BauhausButton>
           )}
-          <button
+          <BauhausButton
+            variant="solid"
             onClick={() => setShowImport(true)}
-            className="btn-primary text-sm"
           >
             导入
-          </button>
+          </BauhausButton>
           {health?.auth_enabled && (
-            <button
+            <BauhausButton
+              variant="outline"
               onClick={() => {
                 api.logout();
                 setNeedLogin(true);
               }}
-              className="btn-secondary text-sm"
             >
               退出
-            </button>
+            </BauhausButton>
           )}
         </div>
       </header>
 
-      {/* 水平导航 — 杂志式 tab（R3: 4 主 + 1 管理） */}
+      {/* 水平导航 — 包豪斯 tab：mono 大写 + 3px 黑色 active 下划线（R3: 4 主 + 1 管理） */}
       <nav
-        className="flex items-center gap-1 px-6 bg-white border-b border-ink-200 flex-shrink-0 overflow-x-auto"
+        className="flex items-center gap-1 px-6 border-b border-ink-200 flex-shrink-0 overflow-x-auto"
         aria-label="主导航"
+        style={{ background: "var(--paper)" }}
       >
         {NAV_ITEMS.map((item) => (
           <NavItem key={item.path} path={item.path} label={item.label} />
         ))}
       </nav>
 
-      {/* 内容区 — R3 路由驱动 */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <Switch>
+      {/* 内容区 — R3 路由驱动，包豪斯几何装饰 */}
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        <BauhausGeometry positions={["tr", "br"]} />
+        <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+          <Switch>
           <Route path="/chat">
             <ChatPanel refreshDocs={refreshDocs} onJumpToDoc={jumpToDocChunk} />
           </Route>
@@ -257,7 +262,8 @@ export default function App() {
           <Route>
             <NotFound />
           </Route>
-        </Switch>
+          </Switch>
+        </div>
       </main>
 
       {/* 导入对话框 */}

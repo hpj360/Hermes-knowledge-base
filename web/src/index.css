@@ -330,3 +330,260 @@
   border-radius: var(--r-md);
   box-shadow: var(--shadow-md);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+ * P2 包豪斯几何 + 极简现代组件类
+ *
+ * 设计宪法：白底 + 粗体大写 + 3px 粗边框 + 领域色实色几何 + 微圆角 2px
+ * 覆盖 _components.css 的 .navbar 杂志氛围版本，改为包豪斯白底锐利风格。
+ * ════════════════════════════════════════════════════════════════════ */
+
+/* === 包豪斯导航栏（覆盖 .navbar 杂志氛围版本） ===
+ * 白底 + 3px 黑色底边 + brand mark 实色方块 */
+.navbar {
+  background: var(--paper);
+  background-image: none;
+  border-bottom: var(--border-bold);
+  border-image: none;
+  box-shadow: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar .brand {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: var(--tracking-tight);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.navbar .brand .brand-accent {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--ink-900);
+  font-style: normal;
+}
+/* brand mark：酒红实色方块（包豪斯几何标识） */
+.navbar .brand-mark {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: var(--wine);
+  flex-shrink: 0;
+}
+
+/* === 包豪斯导航 tab（覆盖 .nav-tab 杂志版本） ===
+ * mono 大写 + 3px 黑色 active 下划线 */
+.nav-tab {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-400);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 3px solid transparent;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+  white-space: nowrap;
+}
+.nav-tab:hover {
+  color: var(--ink-900);
+}
+.nav-tab-active {
+  color: var(--ink-900);
+  border-bottom-color: var(--ink-900);
+}
+
+/* === 包豪斯卡片：2px 黑边框 + 左上角实色方块 === */
+.bauhaus-card {
+  background: var(--paper);
+  border: var(--border-medium);
+  border-radius: var(--r-sm);
+  padding: var(--sp-4);
+  position: relative;
+}
+.bauhaus-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 20px;
+  height: 20px;
+  background: var(--wine);
+}
+.bauhaus-card.accent-amber::before { background: var(--amber); }
+.bauhaus-card.accent-bronze::before { background: var(--bronze); }
+.bauhaus-card.accent-ink::before { background: var(--ink-900); }
+.bauhaus-card-title {
+  font-family: var(--font-serif);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink-900);
+  padding-left: 26px;
+  margin-bottom: var(--sp-1);
+}
+.bauhaus-card-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-medium);
+  color: var(--ink-400);
+  padding-left: 26px;
+  margin-bottom: var(--sp-3);
+}
+
+/* === 包豪斯指标卡：实色填充 + 反白数字 === */
+.bauhaus-metric {
+  border: var(--border-medium);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.bauhaus-metric.variant-wine { background: var(--wine); color: #fff; border-color: var(--wine); }
+.bauhaus-metric.variant-amber { background: var(--amber); color: var(--ink-900); border-color: var(--amber); }
+.bauhaus-metric.variant-bronze { background: var(--bronze); color: #fff; border-color: var(--bronze); }
+.bauhaus-metric.variant-outline { background: var(--paper); color: var(--ink-900); }
+.bauhaus-metric-num {
+  font-family: var(--font-serif);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+.bauhaus-metric-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.8;
+}
+
+/* === 包豪斯 chip：实色填充 + mono 大写 === */
+.bauhaus-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-medium);
+  padding: 3px var(--sp-2);
+  border-radius: var(--r-sm);
+}
+.bauhaus-chip.variant-wine { background: var(--wine); color: #fff; }
+.bauhaus-chip.variant-amber { background: var(--amber); color: var(--ink-900); }
+.bauhaus-chip.variant-bronze { background: var(--bronze); color: #fff; }
+.bauhaus-chip.variant-outline { background: transparent; color: var(--ink-900); border: 1px solid var(--ink-900); }
+
+/* === 包豪斯按钮 === */
+.bauhaus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-medium);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-sm);
+  border: 2px solid var(--ink-900);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+.bauhaus-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bauhaus-btn.variant-solid { background: var(--ink-900); color: #fff; }
+.bauhaus-btn.variant-solid:hover:not(:disabled) { background: var(--ink-600); border-color: var(--ink-600); }
+.bauhaus-btn.variant-accent { background: var(--ink-900); color: var(--amber); }
+.bauhaus-btn.variant-accent:hover:not(:disabled) { background: var(--ink-600); }
+.bauhaus-btn.variant-outline { background: transparent; color: var(--ink-900); }
+.bauhaus-btn.variant-outline:hover:not(:disabled) { background: var(--ink-900); color: #fff; }
+
+/* === 包豪斯章节标签：mono 大写 + 44×4 黑色前条 === */
+.bauhaus-section-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--ink-900);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.bauhaus-section-label::before {
+  content: "";
+  display: inline-block;
+  width: 44px;
+  height: 4px;
+  background: var(--ink-900);
+}
+
+/* === 包豪斯大标题：black 700 + 大写 + 微收紧 === */
+.bauhaus-display {
+  font-family: var(--font-serif);
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.05;
+  color: var(--ink-900);
+}
+
+/* === 包豪斯布局：主内容 + 右辅助面板（移动端折叠） === */
+.bauhaus-layout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: var(--sp-6);
+}
+@media (max-width: 768px) {
+  .bauhaus-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === 几何装饰：角落圆形色块（适度密度，opacity 0.1） === */
+.bauhaus-geometry {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+.bauhaus-geometry.pos-tr {
+  top: -20px;
+  right: -20px;
+  width: 90px;
+  height: 90px;
+  background: var(--wine);
+  opacity: 0.1;
+}
+.bauhaus-geometry.pos-br {
+  bottom: 30px;
+  right: 10px;
+  width: 60px;
+  height: 60px;
+  background: var(--amber);
+  opacity: 0.12;
+}
+.bauhaus-geometry.pos-ml {
+  top: 200px;
+  left: -10px;
+  width: 40px;
+  height: 40px;
+  background: var(--bronze);
+  opacity: 0.15;
+}
