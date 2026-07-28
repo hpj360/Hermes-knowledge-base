@@ -41,7 +41,7 @@ def verify_age_cookie(value: str | None) -> bool:
         return False
     try:
         payload: dict[str, Any] = json.loads(payload_str)
-    except Exception:
+    except (json.JSONDecodeError, ValueError, TypeError):
         return False
     if not payload.get("confirmed"):
         return False

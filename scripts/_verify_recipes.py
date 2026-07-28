@@ -339,7 +339,7 @@ def main() -> None:
 
     # --- 4. iba_category 值合法性校验 ---
     print("\n=== iba_category 值合法性校验 ===")
-    valid_categories = {"unforgettables", "contemporary_classics", "new_era_drinks", ""}
+    valid_categories = {"unforgettables", "contemporary_classics", "new_era_drinks", "non_iba", ""}
     invalid_categories: list[tuple[str, str]] = [
         (r.get("title", "?"), r.get("iba_category", ""))
         for r in SEED_RECIPES

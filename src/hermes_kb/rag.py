@@ -278,7 +278,7 @@ class RAGEngine:
         """M2-02：查询改写（失败降级原 query）。"""
         try:
             return self.rewriter.rewrite(query)
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             return query
 
     def _fetch_external_refs(

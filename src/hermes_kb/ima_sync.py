@@ -252,7 +252,7 @@ def sync_knowledge_base(
                             "status": "skipped",
                         })
                         continue
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
                 _logger.warning("IMA 去重查询失败: %s", e)
                 failed += 1
                 continue
@@ -279,7 +279,7 @@ def sync_knowledge_base(
                     })
                 else:
                     failed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
                 _logger.warning("IMA 导入失败 (%s): %s", title, e)
                 failed += 1
         cursor = page.get("cursor") or ""

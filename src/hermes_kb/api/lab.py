@@ -181,7 +181,7 @@ async def lab_sync_all(
         from hermes_kb.iba_dataset_importer import sync_iba_dataset
 
         results["iba_dataset"] = sync_iba_dataset(importer=importer)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         results["iba_dataset"] = {
             "error": str(e),
             "imported": 0,
@@ -192,7 +192,7 @@ async def lab_sync_all(
         from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
 
         results["thecocktaildb"] = sync_thecocktaildb(importer=importer)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         results["thecocktaildb"] = {
             "error": str(e),
             "imported": 0,
@@ -203,7 +203,7 @@ async def lab_sync_all(
         from hermes_kb.bar_assistant_sync import sync_bar_assistant_substitutes
 
         results["bar_assistant"] = sync_bar_assistant_substitutes()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         results["bar_assistant"] = {
             "error": str(e),
             "imported": 0,
@@ -243,7 +243,7 @@ async def lab_ima_list_kbs(query: str = "", limit: int = 50) -> dict[str, Any]:
         kbs = list_knowledge_bases(query=query, limit=limit)
     except IMAConfigError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         raise HTTPException(status_code=502, detail=f"IMA API 调用失败: {e}")
     return {"items": kbs, "total": len(kbs)}
 
@@ -389,7 +389,7 @@ async def lab_recipe_stats(doc_id: str) -> dict[str, Any]:
                         abv = stats["estimated_abv"]
                     if calories is None:
                         calories = stats["estimated_calories"]
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             pass
 
     return {

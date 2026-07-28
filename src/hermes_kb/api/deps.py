@@ -55,13 +55,13 @@ def jwt_decode(token: str, secret: str) -> dict[str, Any] | None:
     expected = hmac.new(secret.encode(), signing_input, hashlib.sha256).digest()
     try:
         actual = _b64d(s)
-    except Exception:
+    except (ValueError, TypeError):
         return None
     if not hmac.compare_digest(expected, actual):
         return None
     try:
         body = json.loads(_b64d(p).decode())
-    except Exception:
+    except (json.JSONDecodeError, ValueError, TypeError):
         return None
     if body.get("exp", 0) < int(time.time()):
         return None

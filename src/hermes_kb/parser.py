@@ -61,7 +61,7 @@ class DocumentParser:
         for page in reader.pages:
             try:
                 t = page.extract_text() or ""
-            except Exception:
+            except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
                 t = ""
             if t:
                 parts.append(t)

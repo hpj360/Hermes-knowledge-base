@@ -99,7 +99,7 @@ class OpenAIEmbeddingBackend:
             try:
                 v = self._call_api(["probe"])[0]
                 self._dim = len(v)
-            except Exception:
+            except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
                 # 探针失败回退配置值
                 self._dim = self.settings.embedding_dim
         return self._dim
@@ -110,7 +110,7 @@ class OpenAIEmbeddingBackend:
             return []
         try:
             return self._call_api(texts_list)
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             # 降级 Hash
             backend = HashEmbeddingBackend(self.settings.embedding_dim)
             return backend.embed(texts_list)
@@ -159,7 +159,7 @@ class SentenceTransformerBackend:
             from sentence_transformers import SentenceTransformer  # type: ignore
 
             self._model = SentenceTransformer(self.settings.embedding_st_model)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             self._load_error = str(e)
 
     @property
@@ -169,7 +169,7 @@ class SentenceTransformerBackend:
             if self._model is not None:
                 try:
                     self._dim = self._model.get_sentence_embedding_dimension()
-                except Exception:
+                except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
                     self._dim = self.settings.embedding_dim
             else:
                 self._dim = self.settings.embedding_dim
@@ -186,7 +186,7 @@ class SentenceTransformerBackend:
         try:
             vecs = self._model.encode(texts_list, normalize_embeddings=True)
             return [list(map(float, v)) for v in vecs]
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             return HashEmbeddingBackend(self.settings.embedding_dim).embed(texts_list)
 
 

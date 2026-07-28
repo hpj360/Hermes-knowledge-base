@@ -32,7 +32,7 @@ async def health() -> dict[str, Any]:
     try:
         with get_session() as session:
             doc_count = len(session.exec(select(Document)).all())
-    except Exception:
+    except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
         doc_count = 0
     settings = get_settings()
     return {
@@ -70,7 +70,7 @@ async def readiness() -> JSONResponse:
         with get_session() as session:
             session.exec(select(Document).limit(1))
             db_ok = True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         db_error = type(e).__name__
     checks["db"] = {"status": "up" if db_ok else "down", "error": db_error}
     if not db_ok:

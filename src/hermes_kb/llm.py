@@ -199,7 +199,7 @@ class LLMClient:
     def chat(self, messages: list[dict[str, str]]) -> LLMResponse:
         try:
             return self._backend.chat(messages)
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             # 任何异常都降级 Mock，保证可用性
             return MockLLMBackend().chat(messages)
 
@@ -211,7 +211,7 @@ class LLMClient:
         try:
             async for chunk in self._backend.chat_stream(messages):
                 yield chunk
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             # 降级 Mock 流式
             async for chunk in MockLLMBackend().chat_stream(messages):
                 yield chunk

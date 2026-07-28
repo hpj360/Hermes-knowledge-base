@@ -198,7 +198,7 @@ class HybridRetriever:
                 if hits:
                     return hits
                 # ANN 返回空：索引可能未填充，降级到全表扫描兜底
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 — 软降级，不阻塞主流程
                 logger.warning(
                     "ANN query failed, falling back to Python cosine scan: %s", exc
                 )

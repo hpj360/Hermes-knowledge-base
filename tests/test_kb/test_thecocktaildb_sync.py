@@ -245,14 +245,14 @@ def test_parse_recipe_known_ingredients_normalized():
     assert "galliano" not in ingredients_str.lower()
     assert "drambuie" not in ingredients_str.lower()
 
-    # 抽样验证归一化结果命中（金酒 + midori→哈密瓜利口酒 / galliano→加利亚诺）
+    # 抽样验证归一化结果命中（金酒 + midori→蜜瓜力娇酒 / galliano→加利亚诺）
     assert "金酒" in recipe["ingredients"]
-    # midori 的 override 值为 "哈密瓜利口酒"
-    assert "哈密瓜利口酒" in recipe["ingredients"]
+    # midori 的 override 值为 "蜜瓜力娇酒"
+    assert "蜜瓜力娇酒" in recipe["ingredients"]
     # galliano 的 override 值为 "加利亚诺"
     assert "加利亚诺" in recipe["ingredients"]
-    # drambuie 的 override 值为 "威士忌利口酒"
-    assert "威士忌利口酒" in recipe["ingredients"]
+    # drambuie 的 override 值为 "杜林标"
+    assert "杜林标" in recipe["ingredients"]
 
 
 # ---------- Task 6: 元数据推断（technique/glassware/flavor_profile） ----------

@@ -221,6 +221,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
         "category": "garnish",
         "abv": 0.0,
         "brands": [],
+        "tags": ["citrus"],
     },
     "mint": {
         "canonical": "薄荷叶",
@@ -235,6 +236,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
         "category": "garnish",
         "abv": 0.0,
         "brands": [],
+        "tags": ["fruity", "sweet"],
     },
     "orange_peel": {
         "canonical": "橙皮",
@@ -589,6 +591,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
+        "tags": ["sweet", "fruity", "red"],
     },
     "honey_syrup": {
         "canonical": "蜂蜜糖浆",
@@ -1481,6 +1484,7 @@ INGREDIENT_REGISTRY: dict[str, dict] = {
         "category": "modifier",
         "abv": 0.0,
         "brands": [],
+        "tags": ["ginger", "spicy", "bubbly"],
     },
     "lemon_lime_soda": {
         "canonical": "柠檬青柠汽水",

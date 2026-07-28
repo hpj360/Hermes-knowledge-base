@@ -164,7 +164,7 @@ def cmd_seed(_args: argparse.Namespace) -> int:
                 file_type="md",
             )
             results.append(r)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             results.append({"title": doc["title"], "error": str(e), "status": "failed"})
     _print_json(
         {
@@ -188,7 +188,7 @@ def cmd_health(_args: argparse.Namespace) -> int:
     try:
         with get_session() as session:
             doc_count = len(session.exec(select(Document)).all())
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         print(f"[warn] 数据库查询失败: {e}", file=sys.stderr)
     _print_json(
         {

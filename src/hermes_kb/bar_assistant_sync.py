@@ -76,7 +76,7 @@ def sync_bar_assistant_substitutes(
                 else:
                     pending_skipped += 1
             session.commit()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         _logger.warning("bar-assistant batch insert failed: %s", e)
         return {"imported": 0, "skipped": 0, "failed": failed + len(items)}
 

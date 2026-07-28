@@ -51,7 +51,7 @@ def _load_sqlite_vec(dbapi_conn) -> None:
     try:
         dbapi_conn.enable_load_extension(True)
         sqlite_vec.load(dbapi_conn)
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # pragma: no cover  # noqa: BLE001 — 软降级，不阻塞主流程
         log.warning("sqlite-vec extension load failed: %s", exc)
 
 
@@ -249,7 +249,7 @@ def backfill_history_fts(eng=None) -> int:
                     {"q": query or "", "a": answer or "", "lid": int(log_id)},
                 )
         return len(rows)
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # pragma: no cover  # noqa: BLE001 — 软降级，不阻塞主流程
         log.warning("history_fts backfill failed: %s", exc)
         return 0
 
@@ -336,7 +336,7 @@ def _migrate_vec_to_ann(eng, dim: int) -> None:
                 migrated,
                 skipped,
             )
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  # pragma: no cover  # noqa: BLE001 — 软降级，不阻塞主流程
         log.warning("chunk_vec_ann migration failed: %s", exc)
 
 

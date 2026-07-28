@@ -211,7 +211,7 @@ def _search_history_fts(
             row_dict = row._mapping  # noqa: SLF001 —— SQLAlchemy Row 标准访问
             logs.append(QueryLog(**row_dict))
         return logs, total
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — 软降级，不阻塞主流程
         # FTS5 不可用（表缺失 / tokenizer 错误 / schema 漂移）→ 回退 LIKE
         log.warning("FTS5 history search failed, falling back to LIKE: %s", exc)
         return None
@@ -453,7 +453,7 @@ async def seed(
                 file_type="md",
             )
             imported.append(result)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             imported.append(
                 {"title": doc["title"], "error": str(e), "status": "failed"}
             )
@@ -515,7 +515,7 @@ async def seed_recipes(
             )
             seeded += 1
             items.append({**result, "status": "imported"})
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             failed += 1
             items.append(
                 {"title": recipe["title"], "error": str(e), "status": "failed"}

@@ -315,7 +315,7 @@ def sync_iba_dataset(
                     recipe_tokens.append(toks)
             else:
                 failed += 1
-        except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
+        except (KeyError, TypeError, ValueError, RuntimeError, OSError, AttributeError) as e:
             _logger.warning("IBA recipe import failed for item: %s", e)
             failed += 1
 

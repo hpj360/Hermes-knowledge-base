@@ -302,7 +302,7 @@ async def import_from_export(
                     # H3：每 _BATCH_SIZE 行提交一次，释放锁与内存
                     if inserted % _BATCH_SIZE == 0:
                         session.commit()
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
                     # 单行失败不阻塞整体导入，但记录失败计数与详情
                     failed += 1
                     if len(errors) < 50:  # 限制错误列表大小

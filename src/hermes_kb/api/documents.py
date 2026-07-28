@@ -187,7 +187,7 @@ async def upload_file(
         return result
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
         # PDF 解析失败等 → 友好 400
         raise HTTPException(
             status_code=400,
@@ -196,7 +196,7 @@ async def upload_file(
     finally:
         try:
             tmp_path.unlink(missing_ok=True)
-        except Exception:
+        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             pass
 
 
@@ -468,14 +468,14 @@ async def upload_batch(
             )
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             results.append(
                 {"filename": f.filename, "status": "failed", "error": str(e)}
             )
         finally:
             try:
                 tmp_path.unlink(missing_ok=True)
-            except Exception:
+            except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
                 pass
     ok = sum(1 for r in results if r["status"] == "imported")
     # M2-08：审计批量导入（聚合一条记录，避免审计表爆炸）

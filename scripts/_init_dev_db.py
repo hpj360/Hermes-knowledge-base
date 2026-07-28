@@ -86,7 +86,7 @@ def main() -> int:
                 status="published",
             )
             seeded += 1
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             failed += 1
             print(f"  ❌ 失败: {recipe['title']} → {e}")
 

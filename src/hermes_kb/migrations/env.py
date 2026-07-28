@@ -77,7 +77,7 @@ def run_migrations_online() -> None:
         # SQLite 迁移期也启用外键 + WAL，保证触发器/级联行为一致
         try:
             _set_sqlite_pragmas(connection)
-        except Exception:  # 非 SQLite（如未来切 PG）无 PRAGMA，忽略
+        except Exception:  # 非 SQLite（如未来切 PG）无 PRAGMA，忽略  # noqa: BLE001 — 软降级，不阻塞主流程
             pass
         context.configure(
             connection=connection,

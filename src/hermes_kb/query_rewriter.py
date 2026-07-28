@@ -104,7 +104,7 @@ class QueryRewriter:
                 return rewritten
             logger.warning("查询改写结果长度异常，回退原 query")
             return query
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 — 软降级，不阻塞主流程
             logger.warning("查询改写异常: %s", e)
             return _heuristic_rewrite(query)
 
