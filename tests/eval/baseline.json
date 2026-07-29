@@ -4,5 +4,43 @@
   "keyword_hit": 50,
   "recall_rate": 0.05,
   "keyword_rate": 0.3571,
-  "harvested_at": "2026-07-29T01:06:58.882682"
+  "harvested_at": "2026-07-29T01:06:58.882682",
+  "note": "原始基线（hash embedding + 无百科文档 + 无 HyDE）。保留作为回归下限参考。",
+  "milestones": [
+    {
+      "stage": "V1-baseline",
+      "recall_rate": 0.05,
+      "keyword_rate": 0.3571,
+      "description": "hash embedding + 无百科文档 + 无 HyDE + 无查询改写"
+    },
+    {
+      "stage": "V1-embedding-upgrade",
+      "recall_rate": 0.107,
+      "keyword_rate": 0.386,
+      "description": "升级到 sentence_transformers (bge-small-zh-v1.5)"
+    },
+    {
+      "stage": "V1-hyde-enabled",
+      "recall_rate": 0.157,
+      "keyword_rate": 0.4,
+      "description": "启用 HyDE 假设文档生成"
+    },
+    {
+      "stage": "V1-encyclopedia-seeded",
+      "recall_rate": 0.7286,
+      "keyword_rate": 0.8071,
+      "description": "导入 15 篇百科种子 + 差异化分片策略（百科 800/120、配方 400/60）"
+    }
+  ],
+  "current_baseline": {
+    "recall_rate": 0.7286,
+    "keyword_rate": 0.8071,
+    "avg_latency_ms": 293.0,
+    "p95_latency_ms": 188.4,
+    "embedding_provider": "sentence_transformers",
+    "hyde_enabled": true,
+    "query_rewrite_enabled": true,
+    "chunk_strategy": "differentiated (encyclopedia=800/120, recipe=400/60, default=500/80)",
+    "updated_at": "2026-07-29T21:29:22"
+  }
 }

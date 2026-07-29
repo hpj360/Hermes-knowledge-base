@@ -604,6 +604,22 @@ class RAGEngine:
 # ---------------------------------------------------------------------------
 # 导入服务
 # ---------------------------------------------------------------------------
+def _get_chunk_strategy(category: str | None) -> tuple[int, int]:
+    """Task 3：根据文档类别返回差异化的 (chunk_size, overlap)。
+
+    - encyclopedia（百科）：大 chunk（800）+ 大 overlap（120），保留段落上下文，
+      避免百科长文被切碎导致语义断裂
+    - recipe（配方）：小 chunk（400）+ 小 overlap（60），保留配方结构完整性
+      （配方名+材料+步骤尽量在同一 chunk），避免材料列表与步骤分离
+    - 其他（默认）：中等 chunk（500）+ 中等 overlap（80），平衡召回率与 chunk 数量
+    """
+    if category == "encyclopedia":
+        return (800, 120)
+    if category == "recipe":
+        return (400, 60)
+    return (500, 80)
+
+
 class ImportService:
     """文档导入：解析 → 分片 → 向量化 → 持久化。"""
 
@@ -670,10 +686,12 @@ class ImportService:
             raise ValueError(f"不支持的 file_type: {file_type}")
 
         settings = get_settings()
+        # Task 3：按文档类别选择差异化分片策略
+        chunk_size, overlap = _get_chunk_strategy(category)
         chunks = self.parser.chunk(
             content,
-            chunk_size=settings.chunk_size,
-            overlap=settings.chunk_overlap,
+            chunk_size=chunk_size,
+            overlap=overlap,
         )
         # 向量化
         chunk_texts = [c[2] for c in chunks]
