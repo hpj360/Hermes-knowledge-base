@@ -138,3 +138,23 @@
 {"id": "q138", "query": "烧酒的酒精度一般是多少", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["16", "25"], "category": "烧酒"}
 {"id": "q139", "query": "烧酒有哪些分类", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["稀释", "蒸馏"], "category": "烧酒"}
 {"id": "q140", "query": "真露和好天好饮是什么品牌", "expected_doc_title": "韩国烧酒 Soju 百科", "expected_keywords": ["真露", "好天好饮"], "category": "烧酒"}
+{"id": "q141", "query": "赤霞珠葡萄的特点", "expected_doc_title": "赤霞珠葡萄", "expected_keywords": ["赤霞珠", "cabernet"], "category": "IMA葡萄品种"}
+{"id": "q142", "query": "黑皮诺葡萄产地", "expected_doc_title": "黑皮诺葡萄", "expected_keywords": ["黑皮诺", "pinot"], "category": "IMA葡萄品种"}
+{"id": "q143", "query": "雷司令葡萄风味", "expected_doc_title": "雷司令葡萄", "expected_keywords": ["雷司令", "riesling"], "category": "IMA葡萄品种"}
+{"id": "q144", "query": "霞多丽葡萄", "expected_doc_title": "霞多丽葡萄", "expected_keywords": ["霞多丽", "chardonnay"], "category": "IMA葡萄品种"}
+{"id": "q145", "query": "长相思葡萄是什么", "expected_doc_title": "长相思葡萄", "expected_keywords": ["长相思", "sauvignon"], "category": "IMA葡萄品种"}
+{"id": "q146", "query": "梅洛葡萄简介", "expected_doc_title": "梅洛葡萄", "expected_keywords": ["梅洛", "merlot"], "category": "IMA葡萄品种"}
+{"id": "q147", "query": "西拉葡萄种植", "expected_doc_title": "西拉葡萄", "expected_keywords": ["西拉", "syrah"], "category": "IMA葡萄品种"}
+{"id": "q148", "query": "莫斯卡托葡萄甜度", "expected_doc_title": "莫斯卡托葡萄", "expected_keywords": ["莫斯卡托", "moscato"], "category": "IMA葡萄品种"}
+{"id": "q149", "query": "波尔多产区葡萄酒", "expected_doc_title": "波尔多产区", "expected_keywords": ["波尔多", "bordeaux"], "category": "IMA产区"}
+{"id": "q150", "query": "勃艮第产区特点", "expected_doc_title": "勃艮第产区", "expected_keywords": ["勃艮第", "burgundy"], "category": "IMA产区"}
+{"id": "q151", "query": "香槟产区起泡酒", "expected_doc_title": "香槟产区", "expected_keywords": ["香槟", "champagne"], "category": "IMA产区"}
+{"id": "q152", "query": "里奥哈产区西班牙", "expected_doc_title": "里奥哈产区", "expected_keywords": ["里奥哈", "rioja"], "category": "IMA产区"}
+{"id": "q153", "query": "托斯卡纳产区意大利", "expected_doc_title": "托斯卡纳产区", "expected_keywords": ["托斯卡纳", "tuscany"], "category": "IMA产区"}
+{"id": "q154", "query": "纳帕产区美国葡萄酒", "expected_doc_title": "纳帕产区", "expected_keywords": ["纳帕", "napa"], "category": "IMA产区"}
+{"id": "q155", "query": "红葡萄酒风格", "expected_doc_title": "红葡萄酒", "expected_keywords": ["红葡萄酒", "red wine"], "category": "IMA葡萄酒类型"}
+{"id": "q156", "query": "白葡萄酒配餐", "expected_doc_title": "白葡萄酒", "expected_keywords": ["白葡萄酒", "white wine"], "category": "IMA葡萄酒类型"}
+{"id": "q157", "query": "桃红葡萄酒怎么喝", "expected_doc_title": "桃红葡萄酒", "expected_keywords": ["桃红", "rosé"], "category": "IMA葡萄酒类型"}
+{"id": "q158", "query": "山楂果酒制作", "expected_doc_title": "山楂果酒", "expected_keywords": ["山楂", "hawthorn"], "category": "IMA果酒"}
+{"id": "q159", "query": "杨梅果酒口感", "expected_doc_title": "杨梅果酒", "expected_keywords": ["杨梅", "yangmei"], "category": "IMA果酒"}
+{"id": "q160", "query": "荔枝果酒风味", "expected_doc_title": "荔枝果酒", "expected_keywords": ["荔枝", "lychee"], "category": "IMA果酒"}
