@@ -1,7 +1,9 @@
 /**
- * HistoryPanel —— 问答历史列表 + 客户端关键词搜索
+ * HistoryPanel —— 问答历史列表 + 时间筛选 + 客户端关键词搜索
  *
- * 后端 /api/history 端点不支持搜索参数，因此搜索在前端对 query + answer 进行过滤。
+ * 后端 /api/history 已支持 date_from/date_to/feedback 等参数：
+ *   - 时间筛选走服务端（更准确，避免客户端全量加载）
+ *   - 关键词搜索保留客户端过滤（保留 highlight 高亮逻辑）
  * 视觉沿用包豪斯风格：BauhausCard / BauhausSectionLabel / BauhausButton / BauhausDisplay。
  * 加载态使用 Skeleton（./Skeleton），空状态显示「暂无问答历史」。
  */
@@ -29,6 +31,46 @@ interface HistoryPanelProps {
 const DEFAULT_LIMIT = 50;
 const ANSWER_SUMMARY_LEN = 100;
 
+/** 时间范围预设 */
+type TimePreset = "all" | "7d" | "30d" | "custom";
+
+const TIME_PRESETS: Array<{ value: TimePreset; label: string }> = [
+  { value: "all", label: "全部" },
+  { value: "7d", label: "近 7 天" },
+  { value: "30d", label: "近 30 天" },
+  { value: "custom", label: "自定义" },
+];
+
+/** 将 Date 格式化为 YYYY-MM-DD（本地时区） */
+function formatDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** 根据预设返回 [date_from, date_to] 字符串（YYYY-MM-DD，含） */
+function presetToRange(preset: TimePreset, customFrom?: string, customTo?: string): {
+  date_from?: string;
+  date_to?: string;
+} {
+  if (preset === "all") return {};
+  if (preset === "custom") {
+    return {
+      date_from: customFrom || undefined,
+      date_to: customTo || undefined,
+    };
+  }
+  const days = preset === "7d" ? 7 : 30;
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - (days - 1));
+  return {
+    date_from: formatDate(start),
+    date_to: formatDate(today),
+  };
+}
+
 /** 将文本按关键词拆分为段，命中片段用 <mark> 包裹（大小写不敏感）。
  *  使用 split(capturingGroup) 让匹配片段作为独立元素进入数组，
  *  再用大小写不敏感的字符串比较判定，避免 RegExp.test 在 g 标志下的 lastIndex 状态问题。 */
@@ -55,18 +97,38 @@ function summarize(answer: string): string {
 
 export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
   const [items, setItems] = useState<HistoryItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [keyword, setKeyword] = useState("");
 
+  // 时间筛选状态
+  const [timePreset, setTimePreset] = useState<TimePreset>("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
+  // 计算当前筛选的 date_from/date_to
+  const { date_from, date_to } = useMemo(
+    () => presetToRange(timePreset, customFrom, customTo),
+    [timePreset, customFrom, customTo]
+  );
+
+  // 时间范围变化时重新请求服务端
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       setError("");
       try {
-        const r = await api.history(DEFAULT_LIMIT);
-        if (!cancelled) setItems(r.items || []);
+        const r = await api.history({
+          limit: DEFAULT_LIMIT,
+          date_from,
+          date_to,
+        });
+        if (!cancelled) {
+          setItems(r.items || []);
+          setTotal(r.total ?? 0);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "加载历史失败");
@@ -78,7 +140,7 @@ export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [date_from, date_to]);
 
   // 客户端过滤：在 query + answer 中匹配关键词（大小写不敏感）
   const filtered = useMemo(() => {
@@ -91,6 +153,8 @@ export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
     );
   }, [items, keyword]);
 
+  const showTotal = items.length > 0;
+
   return (
     <div className="flex flex-col h-full">
       {/* 工具栏 */}
@@ -100,8 +164,10 @@ export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
           <h2 className="section-title text-base">问答历史</h2>
         </div>
         <div className="flex items-center gap-2">
-          {items.length > 0 && (
-            <MetaText className="text-xs">共 {filtered.length} 条</MetaText>
+          {showTotal && (
+            <MetaText className="text-xs">
+              共 {filtered.length} 条{total !== filtered.length ? ` / ${total}` : ""}
+            </MetaText>
           )}
           {onBack && (
             <BauhausButton
@@ -115,8 +181,105 @@ export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
         </div>
       </div>
 
-      {/* 搜索框 */}
-      <div className="px-6 py-3 border-b bg-white border-[color:var(--ink-200)]">
+      {/* 筛选栏：时间范围预设 + 关键词搜索 */}
+      <div className="px-6 py-3 border-b bg-white border-[color:var(--ink-200)] space-y-3">
+        {/* 时间范围预设按钮组 */}
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            className="text-xs"
+            style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}
+            htmlFor="history-time-preset"
+          >
+            时间
+          </label>
+          <div
+            id="history-time-preset"
+            role="group"
+            aria-label="时间范围筛选"
+            className="flex items-center gap-1"
+          >
+            {TIME_PRESETS.map((preset) => {
+              const active = timePreset === preset.value;
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => setTimePreset(preset.value)}
+                  aria-pressed={active}
+                  className="text-xs px-3 py-1 rounded-full border transition-all duration-150"
+                  style={
+                    active
+                      ? {
+                          background: "var(--ink-900)",
+                          color: "#fff",
+                          borderColor: "var(--ink-900)",
+                        }
+                      : {
+                          background: "var(--ink-100)",
+                          color: "var(--ink-600)",
+                          borderColor: "var(--ink-200)",
+                          cursor: "pointer",
+                        }
+                  }
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 自定义日期范围（仅 custom 模式显示） */}
+        {timePreset === "custom" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label
+              className="text-xs"
+              style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}
+              htmlFor="history-date-from"
+            >
+              起
+            </label>
+            <input
+              id="history-date-from"
+              type="date"
+              className="input text-xs"
+              aria-label="起始日期"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              style={{ minWidth: "140px" }}
+            />
+            <span
+              className="text-xs"
+              style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}
+            >
+              至
+            </span>
+            <input
+              id="history-date-to"
+              type="date"
+              className="input text-xs"
+              aria-label="结束日期"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              style={{ minWidth: "140px" }}
+            />
+            {(customFrom || customTo) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomFrom("");
+                  setCustomTo("");
+                }}
+                className="text-xs"
+                style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}
+              >
+                清空
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 关键词搜索框 */}
         <input
           type="search"
           className="input text-sm"
@@ -151,6 +314,8 @@ export function HistoryPanel({ onBack, onSelect }: HistoryPanelProps) {
             <MetaText className="text-sm">
               {keyword.trim()
                 ? "尝试更换搜索关键词"
+                : timePreset !== "all"
+                ? "当前时间范围内无历史记录"
                 : "在问答面板提问后，历史记录会出现在这里"}
             </MetaText>
           </div>

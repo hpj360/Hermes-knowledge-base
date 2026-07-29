@@ -17,6 +17,7 @@ vi.mock("../api", () => ({
       avg_citations: 2.5,
       total_recipes: 57,
     }),
+    labDaily: vi.fn().mockResolvedValue({ title: null, reason: "empty" }),
     history: vi.fn().mockResolvedValue({
       total: 2,
       items: [
@@ -144,5 +145,51 @@ describe("DashboardPanel", () => {
       expect(api.labDashboard).toHaveBeenCalled();
       expect(api.history).toHaveBeenCalledWith(3);
     });
+  });
+
+  it("调用 labDaily API 获取每日推荐", async () => {
+    renderDashboard();
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+  });
+
+  it("今日推荐：labDaily 返回 season reason 时展示「应季推荐」徽章", async () => {
+    vi.mocked(api.labDaily).mockResolvedValueOnce({
+      title: "Mojito",
+      reason: "season",
+      doc_id: "doc-mojito",
+      base_spirit: "rum",
+      difficulty: "easy",
+    });
+    renderDashboard();
+    // 应展示 Mojito 标题与「应季推荐」徽章
+    await waitFor(() => {
+      expect(screen.getByText("Mojito")).toBeInTheDocument();
+    });
+    expect(screen.getByText("应季推荐")).toBeInTheDocument();
+    // 应展示 base_spirit 元信息
+    expect(screen.getByText("rum")).toBeInTheDocument();
+  });
+
+  it("今日推荐：labDaily 返回 hot reason 时展示「本周热门」徽章", async () => {
+    vi.mocked(api.labDaily).mockResolvedValueOnce({
+      title: "Old Fashioned",
+      reason: "hot",
+    });
+    renderDashboard();
+    await waitFor(() => {
+      expect(screen.getByText("Old Fashioned")).toBeInTheDocument();
+    });
+    expect(screen.getByText("本周热门")).toBeInTheDocument();
+  });
+
+  it("今日推荐：labDaily 返回空时不展示推荐卡片", async () => {
+    // mockResolvedValue 默认就是 { title: null, reason: "empty" }
+    renderDashboard();
+    // 等待 useEffect 完成
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+    // labDaily 返回空 title 时不展示推荐 reason 徽章
+    expect(screen.queryByText("应季推荐")).not.toBeInTheDocument();
+    expect(screen.queryByText("本周热门")).not.toBeInTheDocument();
+    expect(screen.queryByText("随机发现")).not.toBeInTheDocument();
   });
 });

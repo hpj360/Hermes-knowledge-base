@@ -196,3 +196,28 @@ class AuditLog(SQLModel, table=True):
     user: str = Field(default="anonymous", max_length=64, index=True)
     meta_json: str = Field(default="{}", sa_column=Column("meta_json", Text))
     created_at: datetime = Field(default_factory=_now_utc, index=True)
+
+
+class RecipeRating(SQLModel, table=True):
+    """V2-Task6：配方评分与调酒笔记。
+
+    用户对配方的评分（1-5 星）+ 文字笔记（替代材料、口感调整、心得）。
+    - 同一用户对同一配方仅保留一条记录（UNIQUE 约束），再次评分 UPSERT 更新
+    - user 未启用认证时为 "anonymous"，启用后为 JWT payload.sub
+    - comment 允许空串（仅评分无笔记）
+    """
+
+    __table_args__ = (
+        UniqueConstraint("doc_id", "user", name="uq_recipe_rating_doc_user"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    doc_id: str = Field(
+        max_length=64,
+        sa_column=Column("doc_id", Text, ForeignKey("document.doc_id", ondelete="CASCADE"), index=True),
+    )
+    user: str = Field(default="anonymous", max_length=64, index=True)
+    score: int = Field(default=0, ge=0, le=5)  # 0-5 星（0 表示仅笔记无评分）
+    comment: str = Field(default="", sa_column=Column("comment", Text))
+    created_at: datetime = Field(default_factory=_now_utc)
+    updated_at: datetime = Field(default_factory=_now_utc)

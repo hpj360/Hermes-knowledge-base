@@ -13,7 +13,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { api } from "../api";
-import type { HealthStatus, LabDashboard, HistoryItem } from "../types";
+import type { HealthStatus, LabDashboard, LabDailyRecipe, HistoryItem } from "../types";
 import { Skeleton } from "./Skeleton";
 import {
   BauhausButton,
@@ -35,6 +35,7 @@ interface DashboardPanelProps {
 export function DashboardPanel({ health, onSeed, seeding, onShowImport }: DashboardPanelProps) {
   const [, navigate] = useLocation();
   const [dashboard, setDashboard] = useState<LabDashboard | null>(null);
+  const [daily, setDaily] = useState<LabDailyRecipe | null>(null);
   const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,12 +43,14 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
     let cancelled = false;
     (async () => {
       try {
-        const [dash, hist] = await Promise.all([
+        const [dash, dailyRecipe, hist] = await Promise.all([
           api.labDashboard().catch(() => null),
+          api.labDaily().catch(() => null),
           api.history(3).catch(() => ({ total: 0, items: [] })),
         ]);
         if (!cancelled) {
           setDashboard(dash);
+          setDaily(dailyRecipe);
           setRecentHistory(hist.items || []);
           setLoading(false);
         }
@@ -59,6 +62,14 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
   }, []);
 
   const isEmpty = health?.doc_count === 0;
+
+  /** 季节性推荐 reason 文案 */
+  const dailyReasonText = (reason?: string): string => {
+    if (reason === "season") return "应季推荐";
+    if (reason === "hot") return "本周热门";
+    if (reason === "random") return "随机发现";
+    return "今日推荐";
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -152,6 +163,66 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
             </BauhausButton>
           </div>
         </div>
+
+        {/* 今日推荐 / 应季推荐 */}
+        {daily && daily.title && (
+          <div className="mb-10">
+            <BauhausSectionLabel className="mb-4">今日推荐</BauhausSectionLabel>
+            <BauhausCard
+              accent={daily.reason === "season" ? "amber" : "wine"}
+              className="cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() =>
+                daily.doc_id
+                  ? navigate(`/recipes?doc_id=${encodeURIComponent(daily.doc_id)}`)
+                  : navigate("/lab")
+              }
+              title={
+                <span style={{ fontFamily: "var(--font-serif)" }}>
+                  {daily.title}
+                </span>
+              }
+              meta={
+                <span>
+                  <span
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{
+                      background: daily.reason === "season" ? "var(--amber)" : "var(--ink-900)",
+                      color: daily.reason === "season" ? "var(--ink-900)" : "#fff",
+                      fontFamily: "var(--font-ui)",
+                    }}
+                    aria-label={`推荐理由：${dailyReasonText(daily.reason)}`}
+                  >
+                    {dailyReasonText(daily.reason)}
+                  </span>
+                  {daily.base_spirit && (
+                    <>
+                      <span className="mx-2">·</span>
+                      <span style={{ fontFamily: "var(--font-mono)" }}>
+                        {daily.base_spirit}
+                      </span>
+                    </>
+                  )}
+                  {daily.difficulty && (
+                    <>
+                      <span className="mx-2">·</span>
+                      <span style={{ fontFamily: "var(--font-mono)" }}>
+                        {daily.difficulty}
+                      </span>
+                    </>
+                  )}
+                </span>
+              }
+            >
+              <BodyText className="text-sm">
+                {daily.reason === "season"
+                  ? "应季配方，跟随节气品味当令风味。"
+                  : daily.reason === "hot"
+                  ? "本周热门配方，社区高频匹配。"
+                  : "从配方库随机发现一杯灵感。"}
+              </BodyText>
+            </BauhausCard>
+          </div>
+        )}
 
         {/* 最近问答 */}
         {recentHistory.length > 0 && (

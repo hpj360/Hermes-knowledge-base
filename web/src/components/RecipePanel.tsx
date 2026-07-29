@@ -253,6 +253,22 @@ const STATUS_VARIANT_MAP: Record<string, "brand" | "gold" | "danger" | "ink"> = 
   draft: "ink",
 };
 
+// Task 5.3：无图片占位符按来源使用领域色
+const SOURCE_PLACEHOLDER_COLOR: Record<string, string> = {
+  iba_dataset: "var(--wine)",
+  thecocktaildb: "var(--amber)",
+  seed: "var(--bronze)",
+  ugc: "var(--ink-400)",
+  local: "var(--ink-400)",
+};
+const SOURCE_PLACEHOLDER_BG: Record<string, string> = {
+  iba_dataset: "var(--wine-bg, #f5ebe8)",
+  thecocktaildb: "var(--amber-bg, #faf5e8)",
+  seed: "var(--bronze-bg, #e8eef0)",
+  ugc: "var(--ink-100)",
+  local: "var(--ink-100)",
+};
+
 function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCardProps) {
   const [imgError, setImgError] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
@@ -267,6 +283,8 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
       default: return recipe.status;
     }
   })();
+  const placeholderColor = SOURCE_PLACEHOLDER_COLOR[recipe.source || "local"] || "var(--ink-400)";
+  const placeholderBg = SOURCE_PLACEHOLDER_BG[recipe.source || "local"] || "var(--ink-100)";
   const statusVariant = STATUS_VARIANT_MAP[recipe.status] ?? "ink";
 
   return (
@@ -287,12 +305,16 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         <div
           className="w-full h-40 mb-2 flex flex-col items-center justify-center"
           style={{
-            background: "var(--ink-100)",
+            background: placeholderBg,
             borderRadius: "var(--r-sm)",
           }}
         >
-          <span style={{ color: "var(--wine)", fontSize: "1.5rem" }}>◆</span>
-          <BauhausSectionLabel className="mt-1">NO IMAGE</BauhausSectionLabel>
+          <span style={{ color: placeholderColor, fontSize: "2rem" }}>◆</span>
+          <BauhausSectionLabel className="mt-1" style={{ color: placeholderColor }}>
+            {recipe.source === "iba_dataset" ? "IBA" :
+             recipe.source === "thecocktaildb" ? "TCDB" :
+             recipe.source === "seed" ? "SEED" : "NO IMAGE"}
+          </BauhausSectionLabel>
         </div>
       )}
       <div className="flex items-start justify-between gap-2 pl-[26px]">

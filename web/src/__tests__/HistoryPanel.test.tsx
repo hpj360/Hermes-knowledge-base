@@ -1,4 +1,4 @@
-/** HistoryPanel 组件测试：渲染 / 搜索过滤 / 关键词高亮 / 空状态 */
+/** HistoryPanel 组件测试：渲染 / 时间筛选 / 搜索过滤 / 关键词高亮 / 空状态 */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -76,8 +76,14 @@ describe("HistoryPanel", () => {
     // 等待 history 加载完成
     await waitFor(() => expect(api.history).toHaveBeenCalled());
 
-    // 应调用 history() 默认 limit=50
-    expect(api.history).toHaveBeenCalledWith(50);
+    // 应调用 history() 并传对象参数（默认 limit=50，无 date_from/date_to）
+    expect(api.history).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 50 })
+    );
+    // 不应传 date_from/date_to（默认 all 模式）
+    const callArgs = vi.mocked(api.history).mock.calls[0][0] as Record<string, unknown>;
+    expect(callArgs.date_from).toBeUndefined();
+    expect(callArgs.date_to).toBeUndefined();
 
     // 应展示两条历史项的 query
     expect(await screen.findByText(/金酒的核心风味是什么/)).toBeInTheDocument();
@@ -97,6 +103,111 @@ describe("HistoryPanel", () => {
 
     // 应展示「共 2 条」计数
     expect(screen.getByText(/共 2 条/)).toBeInTheDocument();
+  });
+
+  it("时间筛选：默认「全部」模式不传 date_from/date_to", async () => {
+    vi.mocked(api.history).mockResolvedValue({
+      total: mockItems.length,
+      items: mockItems,
+    });
+
+    render(<HistoryPanel />);
+    await waitFor(() => expect(api.history).toHaveBeenCalled());
+
+    const callArgs = vi.mocked(api.history).mock.calls[0][0] as Record<string, unknown>;
+    expect(callArgs.date_from).toBeUndefined();
+    expect(callArgs.date_to).toBeUndefined();
+  });
+
+  it("时间筛选：点击「近 7 天」触发重新加载并传 date_from/date_to", async () => {
+    // 第一次：默认 all 模式
+    vi.mocked(api.history).mockResolvedValueOnce({
+      total: mockItems.length,
+      items: mockItems,
+    });
+    // 第二次：7d 模式返回空
+    vi.mocked(api.history).mockResolvedValueOnce({
+      total: 0,
+      items: [],
+    });
+
+    const user = userEvent.setup();
+    render(<HistoryPanel />);
+    await waitFor(() => expect(api.history).toHaveBeenCalledTimes(1));
+
+    // 点击「近 7 天」按钮
+    const btn7d = screen.getByRole("button", { name: "近 7 天" });
+    await user.click(btn7d);
+
+    // 应触发第二次调用，且带 date_from/date_to
+    await waitFor(() => expect(api.history).toHaveBeenCalledTimes(2));
+    const secondCallArgs = vi.mocked(api.history).mock.calls[1][0] as Record<string, unknown>;
+    expect(secondCallArgs.date_from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(secondCallArgs.date_to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("时间筛选：「自定义」模式展示日期输入框并传自定义范围", async () => {
+    vi.mocked(api.history).mockResolvedValue({
+      total: mockItems.length,
+      items: mockItems,
+    });
+
+    const user = userEvent.setup();
+    render(<HistoryPanel />);
+    await waitFor(() => expect(api.history).toHaveBeenCalled());
+
+    // 初始不应展示自定义日期输入
+    expect(screen.queryByLabelText("起始日期")).not.toBeInTheDocument();
+
+    // 点击「自定义」按钮
+    await user.click(screen.getByRole("button", { name: "自定义" }));
+
+    // 应展示日期输入框
+    expect(await screen.findByLabelText("起始日期")).toBeInTheDocument();
+    expect(screen.getByLabelText("结束日期")).toBeInTheDocument();
+
+    // 输入自定义日期范围
+    fireEvent.change(screen.getByLabelText("起始日期"), {
+      target: { value: "2026-07-01" },
+    });
+    fireEvent.change(screen.getByLabelText("结束日期"), {
+      target: { value: "2026-07-31" },
+    });
+
+    // 应触发重新加载，传自定义 date_from/date_to
+    await waitFor(() => {
+      const lastCallArgs = vi.mocked(api.history).mock.calls[
+        vi.mocked(api.history).mock.calls.length - 1
+      ][0] as Record<string, unknown>;
+      expect(lastCallArgs.date_from).toBe("2026-07-01");
+      expect(lastCallArgs.date_to).toBe("2026-07-31");
+    });
+  });
+
+  it("时间筛选：自定义模式无结果时展示范围提示", async () => {
+    // 第一次：默认 all
+    vi.mocked(api.history).mockResolvedValueOnce({
+      total: mockItems.length,
+      items: mockItems,
+    });
+    // 第二次：7d 返回空
+    vi.mocked(api.history).mockResolvedValueOnce({
+      total: 0,
+      items: [],
+    });
+
+    const user = userEvent.setup();
+    render(<HistoryPanel />);
+    await waitFor(() => expect(api.history).toHaveBeenCalled());
+
+    // 点击「近 7 天」
+    await user.click(screen.getByRole("button", { name: "近 7 天" }));
+
+    // 等待第二次加载完成，应展示「当前时间范围内无历史记录」
+    await waitFor(() => {
+      expect(screen.getByText("暂无问答历史")).toBeInTheDocument();
+    });
+    expect(screen.getByText(/当前时间范围内无历史记录/)).toBeInTheDocument();
   });
 
   it("搜索过滤：输入关键词后仅展示匹配项", async () => {

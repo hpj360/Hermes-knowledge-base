@@ -98,6 +98,7 @@ async def list_documents(
                     "file_type": d.file_type,
                     "chunk_count": d.chunk_count,
                     "category": d.category,
+                    "image_url": d.image_url,
                     "tags": tag_map.get(d.doc_id, []),
                     "created_at": d.created_at.isoformat()
                     if d.created_at
@@ -301,6 +302,13 @@ async def get_document(
                 "file_type": doc.file_type,
                 "chunk_count": doc.chunk_count,
                 "category": doc.category,
+                "image_url": doc.image_url,
+                "source": doc.source,
+                "verified": doc.verified,
+                "season": doc.season,
+                "glassware": doc.glassware,
+                "technique": doc.technique,
+                "iba_category": doc.iba_category,
                 "content_length": len(doc.content or ""),
                 "created_at": doc.created_at.isoformat() if doc.created_at else None,
             },

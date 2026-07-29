@@ -14,6 +14,7 @@ import {
   MetaText,
   MonoText,
 } from "./ui";
+import { RecipeRatingPanel } from "./RecipeRatingPanel";
 
 interface DocumentDetailPanelProps {
   docId: string;
@@ -200,6 +201,26 @@ export function DocumentDetailPanel({
         {/* 左侧：元信息 + chunk 目录 — 包豪斯 */}
         <aside className="w-64 overflow-y-auto p-6 flex-shrink-0" style={{ borderRight: "var(--border-medium)", background: "var(--paper)" }}>
           <BauhausSectionLabel className="mb-3">文档信息</BauhausSectionLabel>
+          {/* Task 5.4：配方详情页展示大图 + 来源标注 */}
+          {doc.image_url && (
+            <div className="mb-4">
+              <img
+                src={doc.image_url}
+                alt={doc.title}
+                loading="lazy"
+                className="w-full object-cover"
+                style={{ borderRadius: "var(--r-sm)", maxHeight: "200px" }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              {doc.source && (
+                <MetaText className="text-xs mt-1 block" style={{ color: "var(--ink-400)" }}>
+                  图片来源：{doc.source}
+                </MetaText>
+              )}
+            </div>
+          )}
           <BauhausDisplay as="h2" className="mb-4 break-all" >
             {doc.title}
           </BauhausDisplay>
@@ -207,6 +228,10 @@ export function DocumentDetailPanel({
             <div><MetaText as="dt" className="font-medium">类型</MetaText><dd>{doc.file_type.toUpperCase()}</dd></div>
             <div><MetaText as="dt" className="font-medium">来源</MetaText><dd>{doc.source_type}</dd></div>
             <div><MetaText as="dt" className="font-medium">分类</MetaText><dd>{doc.category || "未分类"}</dd></div>
+            {doc.technique && <div><MetaText as="dt" className="font-medium">技法</MetaText><dd>{doc.technique}</dd></div>}
+            {doc.glassware && <div><MetaText as="dt" className="font-medium">杯型</MetaText><dd>{doc.glassware}</dd></div>}
+            {doc.iba_category && <div><MetaText as="dt" className="font-medium">IBA</MetaText><dd>{doc.iba_category}</dd></div>}
+            {doc.season && <div><MetaText as="dt" className="font-medium">季节</MetaText><dd>{doc.season}</dd></div>}
             <div><MetaText as="dt" className="font-medium">分片</MetaText><dd>{doc.chunk_count}</dd></div>
             <div><MetaText as="dt" className="font-medium">字符</MetaText><dd>{doc.content_length}</dd></div>
           </dl>
@@ -244,6 +269,10 @@ export function DocumentDetailPanel({
                 ))}
               </ol>
             </div>
+          )}
+          {/* V2-Task6：配方评分与笔记面板（仅 recipe 类别显示） */}
+          {doc.category === "recipe" && (
+            <RecipeRatingPanel docId={doc.doc_id} onChanged={onChange} />
           )}
         </aside>
 

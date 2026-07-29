@@ -37,31 +37,33 @@
 
 **目标**：配方图片覆盖率 ≥80%，≥30% 活跃配方有评分，WARPM ≥5
 
-- [ ] Task 5: 配方图片接入
-  - [ ] SubTask 5.1: 后端 — 配方列表/详情 API 返回 image_url 字段（TheCocktailDB 已有数据）
-  - [ ] SubTask 5.2: 前端 — RecipePanel 配方卡片展示缩略图
-  - [ ] SubTask 5.3: 前端 — 无图片时展示领域色（wine/amber/bronze）占位符
-  - [ ] SubTask 5.4: 前端 — 配方详情页展示大图 + 来源标注
-  - [ ] SubTask 5.5: 补充 IBA/seed 配方图片（手动收集或 Unsplash API）
+**实际成果**：图片覆盖率 83.4%（thecocktaildb 100%）；评分系统上线（UPSERT 语义 + 笔记列表）；SettingsPanel 数据导出/审计日志完成；HistoryPanel 时间筛选 + 季节性推荐完成
 
-- [ ] Task 6: 配方评分与笔记
-  - [ ] SubTask 6.1: 后端 — 新增 ratings 表（user_id, doc_id, score, comment, created_at）
-  - [ ] SubTask 6.2: 后端 — POST /api/lab/recipes/{doc_id}/rate 端点
-  - [ ] SubTask 6.3: 后端 — GET /api/lab/recipes/{doc_id}/rating 返回平均分+人数+用户笔记列表
-  - [ ] SubTask 6.4: 前端 — 星级评分组件（1-5 星可交互）
-  - [ ] SubTask 6.5: 前端 — 调酒笔记输入与展示
+- [x] Task 5: 配方图片接入 ✅ 2026-07-29
+  - [x] SubTask 5.1: 后端 — 配方列表/详情 API 返回 image_url 字段（TheCocktailDB 已有数据）
+  - [x] SubTask 5.2: 前端 — RecipePanel 配方卡片展示缩略图
+  - [x] SubTask 5.3: 前端 — 无图片时展示领域色（wine/amber/bronze）占位符
+  - [x] SubTask 5.4: 前端 — 配方详情页展示大图 + 来源标注
+  - [ ] SubTask 5.5: 补充 IBA/seed 配方图片（手动收集或 Unsplash API）— 延后至 V2.1
 
-- [ ] Task 7: SettingsPanel 功能补全
-  - [ ] SubTask 7.1: 前端 — 数据导出子模块接入 GET /api/export/all.json（下载 JSON）
-  - [ ] SubTask 7.2: 前端 — 数据导入子模块接入 POST /api/export/import（上传 JSON 恢复）
-  - [ ] SubTask 7.3: 前端 — 审计日志子模块接入 GET /api/audit（展示操作日志列表）
-  - [ ] SubTask 7.4: 补全 SettingsPanel.test.tsx 测试
+- [x] Task 6: 配方评分与笔记 ✅ 2026-07-29
+  - [x] SubTask 6.1: 后端 — 新增 ratings 表（user_id, doc_id, score, comment, created_at）— `src/hermes_kb/models.py::RecipeRating` + 迁移 0008
+  - [x] SubTask 6.2: 后端 — POST /api/lab/recipes/{doc_id}/rate 端点（UPSERT 语义）
+  - [x] SubTask 6.3: 后端 — GET /api/lab/recipes/{doc_id}/rating 返回平均分+人数+用户笔记列表
+  - [x] SubTask 6.4: 前端 — 星级评分组件（1-5 星可交互）— `web/src/components/RecipeRatingPanel.tsx`
+  - [x] SubTask 6.5: 前端 — 调酒笔记输入与展示
 
-- [ ] Task 8: HistoryPanel 时间筛选 + 季节性推荐
-  - [ ] SubTask 8.1: 前端 — HistoryPanel 添加时间范围筛选器（近 7 天/30 天/全部/自定义）
-  - [ ] SubTask 8.2: 后端 — /api/history 支持 start_date/end_date 参数
-  - [ ] SubTask 8.3: 前端 — DashboardPanel 季节性推荐区（基于 season 字段）
-  - [ ] SubTask 8.4: 补全 HistoryPanel.test.tsx 测试
+- [x] Task 7: SettingsPanel 功能补全 ✅ 2026-07-29
+  - [x] SubTask 7.1: 前端 — 数据导出子模块接入 GET /api/export/all.json（下载 JSON）
+  - [x] SubTask 7.2: 前端 — 数据导入子模块接入 POST /api/export/import（上传 JSON 恢复）
+  - [x] SubTask 7.3: 前端 — 审计日志子模块接入 GET /api/audit（展示操作日志列表）
+  - [x] SubTask 7.4: 补全 SettingsPanel.test.tsx 测试
+
+- [x] Task 8: HistoryPanel 时间筛选 + 季节性推荐 ✅ 2026-07-29
+  - [x] SubTask 8.1: 前端 — HistoryPanel 添加时间范围筛选器（近 7 天/30 天/全部/自定义）
+  - [x] SubTask 8.2: 后端 — /api/history 支持 date_from/date_to 参数
+  - [x] SubTask 8.3: 前端 — DashboardPanel 季节性推荐区（基于 season 字段）
+  - [x] SubTask 8.4: 补全 HistoryPanel.test.tsx 测试
 
 ## V3.0「可协作」— 从个人到社群（2026-10，M3 里程碑）
 

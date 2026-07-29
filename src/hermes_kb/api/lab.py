@@ -6,7 +6,8 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from hermes_kb.api.deps import get_importer, require_age_gate
+from hermes_kb.api.deps import get_importer, require_age_gate, require_auth
+from hermes_kb.audit import extract_user, log_action
 from hermes_kb.daily_recipe import daily_recipe
 from hermes_kb.database import get_session
 from hermes_kb.ingredients import canonicalize
@@ -22,6 +23,7 @@ from hermes_kb.recipe_crud import (
 )
 from hermes_kb.recipe_filter import filter_recipes, hide_recipe, verify_recipe
 from hermes_kb.recipe_match import match_recipes
+from hermes_kb.recipe_ratings import get_rating_summary, upsert_rating
 from hermes_kb.recipe_stats import (
     batch_increment_match_counts,
     get_hot_recipes,
@@ -565,6 +567,70 @@ async def lab_create_variant(doc_id: str, req: dict[str, Any]) -> dict[str, Any]
     if not ok:
         raise HTTPException(status_code=400, detail="关联已存在或配方不存在")
     return {"base_doc_id": doc_id, "variant_doc_id": variant_doc_id, "status": "ok"}
+
+
+# V2-Task6：配方评分与调酒笔记
+class RateRequest(BaseModel):
+    """评分请求。score 或 comment 至少传一个。"""
+    score: int | None = Field(default=None, ge=0, le=5, description="1-5 星，0 表示仅笔记")
+    comment: str | None = Field(default=None, max_length=2000, description="调酒笔记（替代材料/口感/心得）")
+
+
+@router.post("/recipes/{doc_id}/rate", dependencies=[Depends(require_age_gate), Depends(require_auth)])
+async def lab_rate_recipe(
+    doc_id: str,
+    req: RateRequest,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
+    """提交或更新评分/笔记（UPSERT 语义）。
+
+    - 同一用户对同一配方仅保留一条记录
+    - score 或 comment 至少传一个；score=0 表示仅笔记无评分
+    - 仅传 comment 时保留原 score；仅传 score 时保留原 comment
+    """
+    if req.score is None and req.comment is None:
+        raise HTTPException(
+            status_code=422,
+            detail="score 和 comment 不能同时为空，至少提交一项",
+        )
+    user = extract_user(payload)
+    try:
+        result = upsert_rating(
+            doc_id=doc_id,
+            user=user,
+            score=req.score,
+            comment=req.comment,
+        )
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    # 审计评分写操作
+    log_action(
+        action="rate",
+        target_type="recipe",
+        target_id=doc_id,
+        user=user,
+        meta={"score": req.score, "comment_len": len(req.comment) if req.comment else 0},
+    )
+    return result
+
+
+@router.get("/recipes/{doc_id}/rating", dependencies=[Depends(require_age_gate)])
+async def lab_get_rating(
+    doc_id: str,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
+    """获取配方评分摘要 + 笔记列表。
+
+    返回平均分、评分人数、笔记数、当前用户评分（如有）、笔记列表（最多 50 条）。
+    """
+    current_user = extract_user(payload)
+    try:
+        return get_rating_summary(doc_id, current_user=current_user)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 # P1: LLM 翻译配方标题

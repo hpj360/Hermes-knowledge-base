@@ -36,6 +36,7 @@ export interface DocumentItem {
   file_type: string;
   chunk_count: number;
   category: string;
+  image_url?: string | null;
   tags: TagInfo[];
   created_at: string | null;
 }
@@ -68,6 +69,13 @@ export interface DocumentDetail {
     file_type: string;
     chunk_count: number;
     category: string;
+    image_url?: string | null;
+    source?: string;
+    verified?: boolean;
+    season?: string | null;
+    glassware?: string;
+    technique?: string;
+    iba_category?: string;
     content_length: number;
     created_at: string | null;
   };
@@ -277,4 +285,78 @@ export interface LabTranslateResult {
   skipped: number;
   failed: number;
   model_used: string;
+}
+
+// ---------------------------------------------------------------------------
+// M2-08/M2-09：数据导出 / 导入恢复 / 审计日志（SettingsPanel）
+// ---------------------------------------------------------------------------
+
+/** POST /api/export/import 导入恢复结果 */
+export interface ImportBackupResult {
+  status: string;
+  version: string;
+  counts: Record<string, number>;
+  failed_counts: Record<string, number>;
+  errors: Array<{
+    table: string;
+    row_index: number;
+    reason: string;
+  }>;
+  unknown_fields: Record<string, string[]>;
+  total: number;
+  total_failed: number;
+}
+
+/** /api/audit 单条审计日志 */
+export interface AuditLogItem {
+  id: number;
+  action: string;
+  target_type: string;
+  target_id: string;
+  user: string;
+  meta: Record<string, unknown>;
+  created_at: string;
+}
+
+/** /api/audit 列表响应 */
+export interface AuditListResult {
+  total: number;
+  limit: number;
+  offset: number;
+  items: AuditLogItem[];
+}
+
+// ---------------------------------------------------------------------------
+// V2-Task6：配方评分与调酒笔记
+// ---------------------------------------------------------------------------
+
+/** POST /api/lab/recipes/{doc_id}/rate 响应 */
+export interface RecipeRatingResponse {
+  doc_id: string;
+  user: string;
+  score: number;
+  comment: string;
+  status: "created" | "updated";
+}
+
+/** /api/lab/recipes/{doc_id}/rating 单条笔记 */
+export interface RecipeNote {
+  user: string;
+  score: number;
+  comment: string;
+  updated_at: string | null;
+}
+
+/** /api/lab/recipes/{doc_id}/rating 摘要响应 */
+export interface RecipeRatingSummary {
+  doc_id: string;
+  average_score: number;
+  rating_count: number;
+  note_count: number;
+  current_user_rating: {
+    score: number;
+    comment: string;
+    updated_at: string | null;
+  } | null;
+  notes: RecipeNote[];
 }

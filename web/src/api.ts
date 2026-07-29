@@ -10,6 +10,8 @@ import type {
   IMASearchItem,
   IMASyncResult,
   IMAKnowledgeBase,
+  ImportBackupResult,
+  AuditListResult,
   LabDashboard,
   LabDailyRecipe,
   LabHotRecipe,
@@ -20,6 +22,8 @@ import type {
   LabSyncResult,
   LabTranslateResult,
   RAGAnswer,
+  RecipeRatingResponse,
+  RecipeRatingSummary,
   SSEEvent,
   SeedResult,
   TagInfo,
@@ -258,8 +262,30 @@ export const api = {
   // -------------------------------------------------------------------------
   // 历史 + 反馈
   // -------------------------------------------------------------------------
-  async history(limit = 50): Promise<{ total: number; items: HistoryItem[] }> {
-    return request(`/api/history?limit=${limit}`);
+
+  /** /api/history 查询参数 */
+  async history(
+    params?: number | {
+      limit?: number;
+      offset?: number;
+      q?: string;
+      feedback?: number;
+      date_from?: string;  // YYYY-MM-DD（含）
+      date_to?: string;    // YYYY-MM-DD（含）
+    }
+  ): Promise<{ total: number; items: HistoryItem[] }> {
+    // 向后兼容：history(50) → history({ limit: 50 })
+    const p: Record<string, unknown> =
+      typeof params === "number" ? { limit: params } : (params || {});
+    const sp = new URLSearchParams();
+    if (p.limit !== undefined) sp.set("limit", String(p.limit));
+    if (p.offset !== undefined) sp.set("offset", String(p.offset));
+    if (p.q) sp.set("q", String(p.q));
+    if (p.feedback !== undefined) sp.set("feedback", String(p.feedback));
+    if (p.date_from) sp.set("date_from", String(p.date_from));
+    if (p.date_to) sp.set("date_to", String(p.date_to));
+    const qs = sp.toString();
+    return request(`/api/history${qs ? "?" + qs : ""}`);
   },
 
   async feedback(logId: number, feedback: number): Promise<{ status: string }> {
@@ -574,5 +600,97 @@ export const api = {
         limit: params.limit ?? 50,
       }),
     });
+  },
+
+  // -------------------------------------------------------------------------
+  // M2-08/M2-09：数据导出 / 导入恢复 / 审计日志（SettingsPanel）
+  // -------------------------------------------------------------------------
+
+  /** 全量导出 JSON 备份（管理员），返回 Blob */
+  async exportAll(): Promise<Blob> {
+    const resp = await fetch(`${BASE}/api/export/all.json`, {
+      headers: authHeaders(),
+    });
+    if (resp.status === 401) {
+      localStorage.removeItem("hermes_kb_token");
+      onUnauthorized?.();
+      throw new Error("登录已过期，请重新登录");
+    }
+    if (!resp.ok) {
+      let detail = `HTTP ${resp.status}`;
+      try {
+        const body = await resp.json();
+        detail = body.detail || body.error || detail;
+      } catch {
+        // ignore
+      }
+      throw new Error(detail);
+    }
+    return resp.blob();
+  },
+
+  /** 上传 JSON 备份文件恢复数据（管理员，幂等） */
+  async importBackup(file: File): Promise<ImportBackupResult> {
+    const form = new FormData();
+    form.append("file", file);
+    const resp = await fetch(`${BASE}/api/export/import`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: form,
+    });
+    if (resp.status === 401) {
+      localStorage.removeItem("hermes_kb_token");
+      onUnauthorized?.();
+      throw new Error("登录已过期，请重新登录");
+    }
+    if (!resp.ok) {
+      let detail = `HTTP ${resp.status}`;
+      try {
+        const body = await resp.json();
+        detail = body.detail || body.error || detail;
+      } catch {
+        // ignore
+      }
+      throw new Error(detail);
+    }
+    return resp.json();
+  },
+
+  /** 查询审计日志（管理员，带筛选 + 分页） */
+  async listAudit(params?: {
+    limit?: number;
+    offset?: number;
+    action?: string;
+    target_type?: string;
+    user?: string;
+  }): Promise<AuditListResult> {
+    const sp = new URLSearchParams();
+    if (params?.limit !== undefined) sp.set("limit", String(params.limit));
+    if (params?.offset !== undefined) sp.set("offset", String(params.offset));
+    if (params?.action) sp.set("action", params.action);
+    if (params?.target_type) sp.set("target_type", params.target_type);
+    if (params?.user) sp.set("user", params.user);
+    const qs = sp.toString();
+    return request(`/api/audit${qs ? "?" + qs : ""}`);
+  },
+
+  // -------------------------------------------------------------------------
+  // V2-Task6：配方评分与调酒笔记
+  // -------------------------------------------------------------------------
+
+  /** POST /api/lab/recipes/{doc_id}/rate — 提交/更新评分（UPSERT 语义） */
+  async labRateRecipe(
+    docId: string,
+    data: { score?: number; comment?: string }
+  ): Promise<RecipeRatingResponse> {
+    return request(`/api/lab/recipes/${encodeURIComponent(docId)}/rate`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  /** GET /api/lab/recipes/{doc_id}/rating — 获取评分摘要 + 笔记列表 */
+  async labGetRating(docId: string): Promise<RecipeRatingSummary> {
+    return request(`/api/lab/recipes/${encodeURIComponent(docId)}/rating`);
   },
 };

@@ -135,6 +135,58 @@ def test_documents_delete_nonexistent(client):
     assert r.status_code == 404
 
 
+# ---------------------------------------------------------------------------
+# Task 5: 配方图片接入 — API 返回 image_url 字段
+# ---------------------------------------------------------------------------
+def test_documents_list_returns_image_url(client):
+    """列表 API 应返回 image_url 字段（Task 5.1）。"""
+    r = client.post(
+        "/api/documents/import-text",
+        json={"title": "图片测试", "content": "测试内容" * 20, "category": "recipe"},
+    )
+    assert r.status_code == 200
+    doc_id = r.json()["doc_id"]
+
+    r2 = client.get("/api/documents")
+    assert r2.status_code == 200
+    items = r2.json()["items"]
+    item = next(d for d in items if d["doc_id"] == doc_id)
+    assert "image_url" in item
+
+
+def test_documents_detail_returns_image_url(client):
+    """详情 API 应返回 image_url 及治理字段（Task 5.1/5.4）。"""
+    r = client.post(
+        "/api/documents/import-text",
+        json={"title": "详情图片测试", "content": "详情内容" * 20, "category": "recipe"},
+    )
+    doc_id = r.json()["doc_id"]
+
+    r2 = client.get(f"/api/documents/{doc_id}")
+    assert r2.status_code == 200
+    doc = r2.json()["doc"]
+    assert "image_url" in doc
+    assert "source" in doc
+    assert "verified" in doc
+    assert "season" in doc
+    assert "glassware" in doc
+    assert "technique" in doc
+    assert "iba_category" in doc
+
+
+def test_documents_detail_image_url_null_for_no_image(client):
+    """无图片的文档 image_url 应为 None。"""
+    r = client.post(
+        "/api/documents/import-text",
+        json={"title": "无图测试", "content": "无图内容" * 20},
+    )
+    doc_id = r.json()["doc_id"]
+
+    r2 = client.get(f"/api/documents/{doc_id}")
+    doc = r2.json()["doc"]
+    assert doc["image_url"] is None
+
+
 def test_ask_empty_query(client):
     """空 query 应返回 400。"""
     r = client.post("/api/ask", json={"query": ""})

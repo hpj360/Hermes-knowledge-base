@@ -330,6 +330,7 @@ describe("产品重构：分组导航与 IA", () => {
   it("handleSelectDoc：点击文档列表中的文档标题跳转到 /docs/:id", async () => {
     const { api } = await import("../api");
     vi.mocked(api.listDocuments).mockResolvedValueOnce({
+      total: 1,
       items: [
         {
           doc_id: "doc-1",
