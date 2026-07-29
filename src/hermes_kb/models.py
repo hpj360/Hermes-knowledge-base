@@ -63,7 +63,7 @@ class Document(SQLModel, table=True):
 
 # 类创建完成后挂载 `metadata` 只读 property（避开 SQLAlchemy 在类声明期对
 # `metadata` 保留名的检查，同时不破坏 `cls.metadata` 在建表阶段返回 MetaData）。
-def _get_metadata(self: "Document") -> str:
+def _get_metadata(self: Document) -> str:
     return self.meta
 
 
@@ -221,3 +221,61 @@ class RecipeRating(SQLModel, table=True):
     comment: str = Field(default="", sa_column=Column("comment", Text))
     created_at: datetime = Field(default_factory=_now_utc)
     updated_at: datetime = Field(default_factory=_now_utc)
+
+
+# ---------------------------------------------------------------------------
+# V3-Task9：多用户数据模型
+# ---------------------------------------------------------------------------
+# 角色层级：owner > member > viewer
+# - owner: 团队所有者，可生成邀请码、管理成员、审核 UGC（原 admin 升级）
+# - member: 团队成员，可创建/编辑自己的 UGC、评分、提问
+# - viewer: 只读成员，仅可浏览/搜索/提问，不能创建 UGC
+USER_ROLES = ("owner", "member", "viewer")
+
+
+class User(SQLModel, table=True):
+    """V3-Task9：用户表（多用户协作）。
+
+    - 启用 KB_MULTIUSER 后，登录改为用户名+密码（校验 password_hash）
+    - 未启用时，仍走旧的单用户密码模式（KB_AUTH_PASSWORD），本表不生效
+    - username 唯一约束，password_hash 使用 pbkdf2_hmac(sha256) + 随机 salt
+    - role 为 owner/member/viewer 之一
+    """
+
+    __table_args__ = (
+        UniqueConstraint("username", name="uq_user_username"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    username: str = Field(max_length=64, index=True)
+    password_hash: str = Field(default="", sa_column=Column("password_hash", Text))
+    role: str = Field(default="member", max_length=16, index=True)  # owner/member/viewer
+    # 邀请人（owner 用户名），用于追溯团队关系；自注册为空
+    invited_by: str = Field(default="", max_length=64)
+    is_active: bool = Field(default=True)  # 软禁用：False 时拒绝登录
+    created_at: datetime = Field(default_factory=_now_utc)
+    updated_at: datetime = Field(default_factory=_now_utc)
+
+
+class InviteCode(SQLModel, table=True):
+    """V3-Task10：邀请码表（owner 生成，一次性使用）。
+
+    - code: 随机生成的邀请码（URL 安全）
+    - role: 注册后分配的角色（member/viewer，不允许邀请 owner）
+    - created_by: 生成邀请码的 owner 用户名
+    - used_by: 使用者用户名（NULL 表示未使用）
+    - expires_at: 过期时间（NULL 表示永久有效）
+    """
+
+    __table_args__ = (
+        UniqueConstraint("code", name="uq_invite_code"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    code: str = Field(max_length=64, index=True)
+    role: str = Field(default="member", max_length=16)  # member/viewer
+    created_by: str = Field(default="", max_length=64, index=True)
+    used_by: str | None = Field(default=None, max_length=64)
+    expires_at: datetime | None = Field(default=None)
+    created_at: datetime = Field(default_factory=_now_utc)
+    used_at: datetime | None = Field(default=None)

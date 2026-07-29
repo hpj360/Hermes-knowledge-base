@@ -107,6 +107,7 @@ export interface HealthStatus {
   embedding_provider: string;
   embedding_available: boolean;
   auth_enabled: boolean;
+  multiuser?: boolean;
   age_gate_enabled: boolean;
 }
 
@@ -206,6 +207,19 @@ export interface LabRecipeInput {
   base_spirit?: string;
   difficulty?: string;
   season?: string | null;
+}
+
+/** V3-Task11: /api/lab/recipes/my 个人配方库单条 */
+export interface MyRecipeItem {
+  doc_id: string;
+  title: string;
+  source: string;
+  status: string;            // draft / pending / published / rejected
+  created_at?: string | null;
+  author?: string;
+  reviewer?: string;
+  reviewed_at?: string | null;
+  reject_reason?: string;
 }
 
 /** /api/lab/recipes/{doc_id}/variants 单条变体 */
@@ -359,4 +373,50 @@ export interface RecipeRatingSummary {
     updated_at: string | null;
   } | null;
   notes: RecipeNote[];
+}
+
+// ---------------------------------------------------------------------------
+// V3-Task10：多用户认证
+// ---------------------------------------------------------------------------
+
+/** POST /api/auth/multi-login 响应 */
+export interface MultiLoginResult {
+  token: string;
+  auth_enabled: boolean;
+  multiuser: boolean;
+  username: string;
+  role: string;
+  expires_in: number;
+}
+
+/** POST /api/auth/register 响应（与 multi-login 一致） */
+export interface RegisterResult extends MultiLoginResult {}
+
+/** POST /api/auth/invite 响应 */
+export interface InviteCodeItem {
+  code: string;
+  role: string;
+  created_by: string;
+  expires_at: string | null;
+}
+
+/** /api/auth/users 用户列表项 */
+export interface UserItem {
+  id: number;
+  username: string;
+  role: string;
+  invited_by: string;
+  is_active: boolean;
+  created_at: string | null;
+}
+
+/** /api/auth/invites 邀请码列表项 */
+export interface InviteCodeListItem {
+  code: string;
+  role: string;
+  created_by: string;
+  used_by: string | null;
+  expires_at: string | null;
+  used_at: string | null;
+  created_at: string | null;
 }

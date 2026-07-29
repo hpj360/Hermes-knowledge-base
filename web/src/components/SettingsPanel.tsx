@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import type { AuditLogItem, ImportBackupResult } from "../types";
+import type { AuditLogItem, HealthStatus, ImportBackupResult } from "../types";
 import { TagPanel } from "./TagPanel";
+import { UserAdminPanel } from "./UserAdminPanel";
 import { showToast } from "./Toast";
 import {
   BauhausButton,
@@ -18,18 +19,27 @@ interface SettingsPanelProps {
   onChange: () => void;
 }
 
-type SettingsTab = "tags" | "export" | "audit";
+type SettingsTab = "tags" | "export" | "audit" | "users";
 
-// 设置中心三个子模块 tab
-const TABS: ReadonlyArray<{ key: SettingsTab; label: string }> = [
+// 设置中心子模块 tab（users 仅 multiuser 模式显示）
+const TABS: ReadonlyArray<{ key: SettingsTab; label: string; multiuserOnly?: boolean }> = [
   { key: "tags", label: "标签管理" },
   { key: "export", label: "数据导出" },
   { key: "audit", label: "审计日志" },
+  { key: "users", label: "用户管理", multiuserOnly: true },
 ];
 
-/** 设置中心：聚合标签管理、数据导出、审计日志三个子模块的容器。 */
+/** 设置中心：聚合标签管理、数据导出、审计日志、用户管理子模块的容器。 */
 export function SettingsPanel({ onChange }: SettingsPanelProps) {
   const [active, setActive] = useState<SettingsTab>("tags");
+  const [health, setHealth] = useState<HealthStatus | null>(null);
+
+  // V3-Task10：检查 multiuser 模式（决定是否显示"用户管理"tab）
+  useEffect(() => {
+    api.health().then(setHealth).catch(() => {});
+  }, []);
+
+  const visibleTabs = TABS.filter((t) => !t.multiuserOnly || health?.multiuser);
 
   return (
     <div>
@@ -44,7 +54,7 @@ export function SettingsPanel({ onChange }: SettingsPanelProps) {
           className="flex items-center gap-1 border-b border-ink-200"
           aria-label="设置子模块"
         >
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const isActive = active === tab.key;
             return (
               <button
@@ -73,6 +83,12 @@ export function SettingsPanel({ onChange }: SettingsPanelProps) {
       {active === "audit" && (
         <div className="p-8 max-w-3xl mx-auto">
           <AuditPanel />
+        </div>
+      )}
+
+      {active === "users" && (
+        <div className="p-8 max-w-3xl mx-auto">
+          <UserAdminPanel />
         </div>
       )}
     </div>

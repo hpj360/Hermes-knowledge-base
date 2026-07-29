@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { BauhausCard, BauhausChip, BauhausButton, BauhausDisplay, BauhausSectionLabel } from "./ui";
+import { showToast } from "./Toast";
 
 interface RecipeEditorPanelProps {
   /** 编辑模式：传入 docId 加载已有配方（仅 draft/rejected 可编辑）。 */
@@ -54,6 +55,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
   const [status, setStatus] = useState<string>("draft");
   const [currentDocId, setCurrentDocId] = useState<string | undefined>(docId);
   const [saving, setSaving] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
   const [resultMsg, setResultMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
   // 编辑模式：加载已有配方元信息
@@ -187,6 +189,28 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
         return { background: "var(--ink-100)", color: "var(--ink-600)", borderColor: "var(--ink-200)" };
     }
   })();
+
+  /** V3-Task11: 重新提交（rejected → draft）。仅作者可操作。 */
+  const handleResubmit = async () => {
+    if (!currentDocId) return;
+    setResubmitting(true);
+    setResultMsg(null);
+    try {
+      await api.labResubmitRecipe(currentDocId);
+      setStatus("draft");
+      setResultMsg({
+        kind: "ok",
+        text: `已回到草稿状态（${currentDocId}），可编辑后重新提交审核。`,
+      });
+      showToast("已回到草稿状态，可编辑后重新提交", "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setResultMsg({ kind: "err", text: `重新提交失败：${msg}` });
+      showToast(`重新提交失败：${msg}`, "danger");
+    } finally {
+      setResubmitting(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -343,7 +367,7 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               <BauhausButton
                 variant="outline"
                 onClick={() => saveRecipe(false)}
-                disabled={!canEdit || saving}
+                disabled={!canEdit || saving || resubmitting}
                 className="text-sm"
               >
                 {saving ? "保存中..." : "保存草稿"}
@@ -351,11 +375,22 @@ export function RecipeEditorPanel({ docId, onSaved, onCancel }: RecipeEditorPane
               <BauhausButton
                 variant="solid"
                 onClick={() => saveRecipe(true)}
-                disabled={!canEdit || saving}
+                disabled={!canEdit || saving || resubmitting}
                 className="text-sm"
               >
                 {saving ? "提交中..." : "提交审核"}
               </BauhausButton>
+              {status === "rejected" && (
+                <BauhausButton
+                  variant="outline"
+                  onClick={handleResubmit}
+                  disabled={saving || resubmitting}
+                  className="text-sm"
+                  aria-label="重新提交（回到草稿状态）"
+                >
+                  {resubmitting ? "处理中..." : "重新提交（回到草稿）"}
+                </BauhausButton>
+              )}
             </>
           ) : (
             <BauhausButton

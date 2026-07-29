@@ -7,6 +7,7 @@ import type {
   LabMatchItem,
   LabMatchResult,
   LabTranslateResult,
+  MyRecipeItem,
 } from "../types";
 import { Modal } from "./Modal";
 import { showToast } from "./Toast";
@@ -23,10 +24,12 @@ import {
 interface LabPanelProps {
   onJumpToDoc?: (docId: string, chunkRowid?: number) => void;
   onCreateRecipe?: () => void;
+  /** V3-Task11: 跳转到配方编辑器（编辑已有配方）。 */
+  onEditRecipe?: (docId: string) => void;
 }
 
 /** M3 实验室主面板：今日推荐 + 材料选择 + 匹配结果 + 替代原料 + 制作步骤 + IMA 同步。 */
-export function LabPanel({ onJumpToDoc, onCreateRecipe }: LabPanelProps) {
+export function LabPanel({ onJumpToDoc, onCreateRecipe, onEditRecipe }: LabPanelProps) {
   const [daily, setDaily] = useState<LabDailyRecipe | null>(null);
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
@@ -39,6 +42,9 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe }: LabPanelProps) {
 
   // P1: LLM 翻译配方标题入口
   const [showTranslateModal, setShowTranslateModal] = useState(false);
+
+  // V3-Task11: 个人配方库入口
+  const [showMyRecipesModal, setShowMyRecipesModal] = useState(false);
 
   // 加载今日推荐
   useEffect(() => {
@@ -168,6 +174,16 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe }: LabPanelProps) {
               aria-label="创作配方"
             >
               ✏️ 创作配方
+            </BauhausButton>
+          )}
+          {onEditRecipe && (
+            <BauhausButton
+              variant="outline"
+              className="text-xs"
+              onClick={() => setShowMyRecipesModal(true)}
+              aria-label="查看我的配方"
+            >
+              📂 我的配方
             </BauhausButton>
           )}
         </div>
@@ -377,6 +393,17 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe }: LabPanelProps) {
           onTranslated={() => {
             // 翻译后清空匹配结果，让用户重新匹配以拿到新标题
             setResult(null);
+          }}
+        />
+      )}
+
+      {/* V3-Task11: 个人配方库 Modal */}
+      {showMyRecipesModal && (
+        <MyRecipesDialog
+          onClose={() => setShowMyRecipesModal(false)}
+          onEditRecipe={(docId) => {
+            setShowMyRecipesModal(false);
+            onEditRecipe?.(docId);
           }}
         />
       )}
@@ -916,6 +943,153 @@ function TranslateDialog({ onClose, onTranslated }: TranslateDialogProps) {
             />
           </div>
         </div>
+      )}
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// V3-Task11: 个人配方库弹窗
+// ---------------------------------------------------------------------------
+interface MyRecipesDialogProps {
+  onClose: () => void;
+  onEditRecipe: (docId: string) => void;
+}
+
+/** 状态 → 中文标签 + 配色（与 RecipeEditorPanel 状态横幅一致） */
+const MY_RECIPE_STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  draft: { label: "草稿", color: "var(--ink-600)", bg: "var(--ink-100)" },
+  pending: { label: "待审核", color: "var(--amber)", bg: "var(--gold-100)" },
+  published: { label: "已发布", color: "var(--wine)", bg: "var(--brand-50)" },
+  rejected: { label: "已驳回", color: "var(--danger)", bg: "rgba(179, 38, 30, 0.08)" },
+};
+
+function MyRecipesDialog({ onClose, onEditRecipe }: MyRecipesDialogProps) {
+  const [items, setItems] = useState<MyRecipeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const resp = await api.labMyRecipes(100);
+      setItems(resp.items || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="我的配方"
+      maxWidth={640}
+      footer={
+        <>
+          <BauhausButton variant="outline" onClick={onClose}>关闭</BauhausButton>
+          <BauhausButton variant="outline" onClick={load} disabled={loading}>
+            {loading ? "刷新中..." : "刷新"}
+          </BauhausButton>
+        </>
+      }
+    >
+      <MetaText className="text-sm mb-4">
+        查看自己创建的 UGC 配方。点击「编辑」可进入编辑器修改草稿或重新提交被驳回的配方。
+      </MetaText>
+
+      {loading && (
+        <MetaText className="text-sm text-center py-6">加载中…</MetaText>
+      )}
+
+      {!loading && error && (
+        <div
+          className="text-xs mb-3 p-2 rounded"
+          style={{
+            background: "rgba(179, 38, 30, 0.08)",
+            color: "var(--danger)",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && items.length === 0 && (
+        <MetaText className="text-sm text-center py-6">
+          暂无配方。点击实验室右上角的「✏️ 创作配方」开始你的第一杯特调。
+        </MetaText>
+      )}
+
+      {!loading && !error && items.length > 0 && (
+        <ul className="divide-y divide-ink-100" data-testid="my-recipes-list">
+          {items.map((r) => {
+            const meta = MY_RECIPE_STATUS_META[r.status] || MY_RECIPE_STATUS_META.draft;
+            const canEdit = r.status === "draft" || r.status === "rejected";
+            return (
+              <li
+                key={r.doc_id}
+                className="py-3 flex items-center justify-between gap-3"
+                data-doc-id={r.doc_id}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="font-medium text-sm truncate"
+                      style={{ fontFamily: "var(--font-serif)", color: "var(--ink-900)" }}
+                      title={r.title}
+                    >
+                      {r.title || "(未命名)"}
+                    </span>
+                    <span
+                      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+                      style={{ background: meta.bg, color: meta.color, fontFamily: "var(--font-ui)" }}
+                    >
+                      {meta.label}
+                    </span>
+                  </div>
+                  <MetaText as="div" className="text-xs truncate">
+                    {r.doc_id}
+                    {r.created_at ? ` · 创建于 ${new Date(r.created_at).toLocaleDateString("zh-CN")}` : ""}
+                  </MetaText>
+                  {r.status === "rejected" && r.reject_reason && (
+                    <MetaText
+                      as="div"
+                      className="text-xs mt-1"
+                      style={{ color: "var(--danger)" }}
+                    >
+                      驳回理由：{r.reject_reason}
+                    </MetaText>
+                  )}
+                  {r.status === "published" && r.reviewer && (
+                    <MetaText
+                      as="div"
+                      className="text-xs mt-1"
+                      style={{ color: "var(--ink-400)" }}
+                    >
+                      审核人：{r.reviewer}
+                    </MetaText>
+                  )}
+                </div>
+                <BauhausButton
+                  variant={canEdit ? "solid" : "outline"}
+                  onClick={() => onEditRecipe(r.doc_id)}
+                  disabled={!canEdit}
+                  className="text-xs flex-shrink-0"
+                  aria-label={`编辑 ${r.title || r.doc_id}`}
+                >
+                  {canEdit ? "编辑" : "查看"}
+                </BauhausButton>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </Modal>
   );

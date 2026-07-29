@@ -4,6 +4,7 @@ import { api, setUnauthorizedHandler } from "./api";
 import type { HealthStatus } from "./types";
 import { AgeGate } from "./components/AgeGate";
 import { Login } from "./components/Login";
+import { MultiLogin } from "./components/MultiLogin";
 import { ChatPanel } from "./components/ChatPanel";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentDetailPanel } from "./components/DocumentDetailPanel";
@@ -121,6 +122,10 @@ export default function App() {
 
   // 需要登录
   if (needLogin) {
+    // V3-Task10：multiuser 模式用 MultiLogin，否则用单用户 Login
+    if (health?.multiuser) {
+      return <MultiLogin onLogin={() => { setNeedLogin(false); refreshHealth(); }} />;
+    }
     return <Login onLogin={() => { setNeedLogin(false); refreshHealth(); }} />;
   }
 
@@ -243,6 +248,7 @@ export default function App() {
             <LabPanel
               onJumpToDoc={jumpToDocChunk}
               onCreateRecipe={() => navigate("/recipes/new")}
+              onEditRecipe={(docId) => navigate(`/recipes/${docId}/edit`)}
             />
           </Route>
           {/* /recipes/new 必须在 /recipes/:id/edit 与 /recipes 之前以避免歧义 */}

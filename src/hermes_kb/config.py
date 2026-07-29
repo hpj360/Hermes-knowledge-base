@@ -141,6 +141,9 @@ class Settings:
     jwt_secret: str = field(default_factory=lambda: _resolve_jwt_secret())
     jwt_ttl_hours: int = field(default_factory=lambda: _env_int("KB_JWT_TTL_HOURS", 24))
 
+    # V3-Task9/10：多用户协作（feature flag，默认关闭，保持单用户模式向后兼容）
+    multiuser: bool = field(default_factory=lambda: _env_bool("KB_MULTIUSER", False))
+
     # 未成年保护（M1-08）
     age_gate_enabled: bool = field(default_factory=lambda: _env_bool("KB_AGE_GATE", True))
     # 年龄门 cookie 安全（P2-5）：生产 HTTPS 应置 True，开发 HTTP 置 False

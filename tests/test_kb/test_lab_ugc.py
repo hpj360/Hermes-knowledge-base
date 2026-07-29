@@ -7,8 +7,8 @@ from sqlmodel import select
 
 def test_recipe_variant_model(tmp_db):
     """RecipeVariant 表可创建并写入（FK 约束要求 doc 必须存在）。"""
-    from hermes_kb.models import Document, RecipeVariant
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document, RecipeVariant
 
     with get_session() as session:
         # FK 约束要求 base/variant doc 必须先存在
@@ -50,8 +50,8 @@ def test_create_ugc_recipe(tmp_db):
     assert result["doc_id"] is not None
     assert result["status"] == "draft"
 
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = session.get(Document, result["doc_id"])
@@ -65,9 +65,9 @@ def test_create_ugc_recipe(tmp_db):
 
 def test_submit_recipe(tmp_db):
     """提交审核（draft → pending）。"""
-    from hermes_kb.recipe_crud import create_recipe, submit_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import create_recipe, submit_recipe
 
     created = create_recipe(
         title="待审核配方",
@@ -88,9 +88,9 @@ def test_submit_recipe(tmp_db):
 
 def test_approve_recipe(tmp_db):
     """审核通过（pending → published, verified=True）。"""
-    from hermes_kb.recipe_crud import create_recipe, submit_recipe, approve_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import approve_recipe, create_recipe, submit_recipe
 
     created = create_recipe(
         title="将通过",
@@ -112,9 +112,9 @@ def test_approve_recipe(tmp_db):
 
 def test_reject_recipe(tmp_db):
     """审核驳回（pending → rejected）。"""
-    from hermes_kb.recipe_crud import create_recipe, submit_recipe, reject_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import create_recipe, reject_recipe, submit_recipe
 
     created = create_recipe(
         title="将驳回",
@@ -136,9 +136,9 @@ def test_reject_recipe(tmp_db):
 
 def test_update_recipe(tmp_db):
     """编辑配方（仅 draft 状态可编辑）。"""
-    from hermes_kb.recipe_crud import create_recipe, update_recipe, submit_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import create_recipe, submit_recipe, update_recipe
 
     created = create_recipe(
         title="原配方",
@@ -355,9 +355,9 @@ def test_import_text_governance_atomic(tmp_db):
     验证 verified/status/source/category/source_id/image_url 一次性写入，
     避免崩溃残留模型默认（verified=True/status=published）绕过治理意图。
     """
-    from hermes_kb.rag import ImportService
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.rag import ImportService
 
     importer = ImportService()
     result = importer.import_text(
@@ -389,9 +389,9 @@ def test_import_text_governance_atomic(tmp_db):
 
 def test_import_text_governance_defaults_preserved(tmp_db):
     """P2-3: 不传治理字段时保留模型默认（向后兼容）。"""
-    from hermes_kb.rag import ImportService
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.rag import ImportService
 
     importer = ImportService()
     result = importer.import_text(
@@ -408,9 +408,9 @@ def test_import_text_governance_defaults_preserved(tmp_db):
 
 def test_create_recipe_governance_atomic(tmp_db):
     """P2-3: create_recipe 落地 verified=False/status=draft 原子（无残留 published）。"""
-    from hermes_kb.recipe_crud import create_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import create_recipe
 
     result = create_recipe(
         title="UGC 原子测试",
@@ -430,9 +430,9 @@ def test_create_recipe_governance_atomic(tmp_db):
 
 def test_recipe_variant_cascade_on_delete(base_and_variant):
     """P0-2: 删除 base 配方后，RecipeVariant 关联应级联删除（不留孤儿）。"""
-    from hermes_kb.recipe_variants import create_variant_link
-    from hermes_kb.models import Document, RecipeVariant
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document, RecipeVariant
+    from hermes_kb.recipe_variants import create_variant_link
 
     base, variant = base_and_variant
     create_variant_link(base["doc_id"], variant["doc_id"], "测试级联")
@@ -458,9 +458,9 @@ def test_recipe_variant_cascade_on_delete(base_and_variant):
 
 def test_recipe_variant_cascade_on_delete_variant(base_and_variant):
     """P0-2: 删除 variant 配方后，RecipeVariant 关联也应级联删除。"""
-    from hermes_kb.recipe_variants import create_variant_link
-    from hermes_kb.models import Document, RecipeVariant
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document, RecipeVariant
+    from hermes_kb.recipe_variants import create_variant_link
 
     base, variant = base_and_variant
     create_variant_link(base["doc_id"], variant["doc_id"], "测试级联")
@@ -481,3 +481,472 @@ def test_recipe_variant_cascade_on_delete_variant(base_and_variant):
             select(RecipeVariant).where(RecipeVariant.variant_doc_id == variant["doc_id"])
         ).all()
         assert len(links_after) == 0
+
+
+# ---------------------------------------------------------------------------
+# V3-Task11: UGC 审核流完善（author/reviewer/resubmit/list_my_recipes）
+# ---------------------------------------------------------------------------
+
+
+def test_create_recipe_records_author_in_meta(tmp_db):
+    """V3-Task11: create_recipe 将 author 写入 meta JSON。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import _read_meta, create_recipe
+
+    result = create_recipe(
+        title="作者测试",
+        ingredients=["金酒"],
+        content="# 作者测试\n\n## 配方\n- 金酒 50ml",
+        author="alice",
+    )
+    with get_session() as session:
+        doc = session.get(Document, result["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["author"] == "alice"
+
+
+def test_create_recipe_default_author_anonymous(tmp_db):
+    """V3-Task11: 未传 author 时默认 "anonymous"（向后兼容）。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import _read_meta, create_recipe
+
+    result = create_recipe(
+        title="匿名测试",
+        ingredients=["金酒"],
+        content="# 匿名测试",
+    )
+    with get_session() as session:
+        doc = session.get(Document, result["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["author"] == "anonymous"
+
+
+def test_approve_recipe_records_reviewer(tmp_db):
+    """V3-Task11: approve_recipe 将 reviewer 和 reviewed_at 写入 meta。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import (
+        _read_meta,
+        approve_recipe,
+        create_recipe,
+        submit_recipe,
+    )
+
+    created = create_recipe(
+        title="审核人测试",
+        ingredients=["金酒"],
+        content="# 审核人测试",
+        author="alice",
+    )
+    submit_recipe(created["doc_id"])
+    ok = approve_recipe(created["doc_id"], reviewer="owner_bob")
+    assert ok is True
+
+    with get_session() as session:
+        doc = session.get(Document, created["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["reviewer"] == "owner_bob"
+        assert meta["reviewed_at"] is not None
+        assert doc.status == "published"
+        assert doc.verified is True
+
+
+def test_reject_recipe_records_reviewer_and_reason(tmp_db):
+    """V3-Task11: reject_recipe 将 reviewer/reject_reason/reviewed_at 写入 meta。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import (
+        _read_meta,
+        create_recipe,
+        reject_recipe,
+        submit_recipe,
+    )
+
+    created = create_recipe(
+        title="驳回理由测试",
+        ingredients=["金酒"],
+        content="# 驳回理由测试",
+        author="alice",
+    )
+    submit_recipe(created["doc_id"])
+    ok = reject_recipe(
+        created["doc_id"],
+        reason="材料比例不对",
+        reviewer="owner_bob",
+    )
+    assert ok is True
+
+    with get_session() as session:
+        doc = session.get(Document, created["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["reviewer"] == "owner_bob"
+        assert meta["reject_reason"] == "材料比例不对"
+        assert meta["reviewed_at"] is not None
+        assert doc.status == "rejected"
+
+
+def test_resubmit_recipe_rejected_to_draft(tmp_db):
+    """V3-Task11: resubmit_recipe 将 rejected → draft。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import (
+        create_recipe,
+        reject_recipe,
+        resubmit_recipe,
+        submit_recipe,
+    )
+
+    created = create_recipe(
+        title="重新提交测试",
+        ingredients=["金酒"],
+        content="# 重新提交测试",
+    )
+    submit_recipe(created["doc_id"])
+    reject_recipe(created["doc_id"], reason="需修改")
+
+    # rejected → draft
+    ok = resubmit_recipe(created["doc_id"])
+    assert ok is True
+    with get_session() as session:
+        doc = session.get(Document, created["doc_id"])
+        assert doc.status == "draft"
+
+
+def test_resubmit_recipe_only_from_rejected(tmp_db):
+    """V3-Task11: resubmit_recipe 仅 rejected 状态可调用，其他状态返回 False。"""
+    from hermes_kb.recipe_crud import (
+        create_recipe,
+        resubmit_recipe,
+        submit_recipe,
+    )
+
+    created = create_recipe(
+        title="状态测试",
+        ingredients=["金酒"],
+        content="# 状态测试",
+    )
+    # draft 状态不可 resubmit
+    assert resubmit_recipe(created["doc_id"]) is False
+
+    # pending 状态不可 resubmit
+    submit_recipe(created["doc_id"])
+    assert resubmit_recipe(created["doc_id"]) is False
+
+
+def test_resubmit_recipe_nonexistent_returns_false(tmp_db):
+    """V3-Task11: resubmit_recipe 对不存在的 doc_id 返回 False。"""
+    from hermes_kb.recipe_crud import resubmit_recipe
+
+    assert resubmit_recipe("doc-nonexistent-xyz") is False
+
+
+def test_list_my_recipes_filters_by_author(tmp_db):
+    """V3-Task11: list_my_recipes 按 author 筛选个人配方库。"""
+    from hermes_kb.recipe_crud import create_recipe, list_my_recipes
+
+    # alice 创建 2 个配方
+    create_recipe(
+        title="Alice 配方 1",
+        ingredients=["金酒"],
+        content="# Alice 1",
+        author="alice",
+    )
+    create_recipe(
+        title="Alice 配方 2",
+        ingredients=["金酒"],
+        content="# Alice 2",
+        author="alice",
+    )
+    # bob 创建 1 个配方
+    create_recipe(
+        title="Bob 配方 1",
+        ingredients=["金酒"],
+        content="# Bob 1",
+        author="bob",
+    )
+
+    alice_recipes = list_my_recipes(author="alice")
+    assert len(alice_recipes) == 2
+    assert all(r["author"] == "alice" for r in alice_recipes)
+    titles = {r["title"] for r in alice_recipes}
+    assert "Alice 配方 1" in titles
+    assert "Alice 配方 2" in titles
+    assert "Bob 配方 1" not in titles
+
+    bob_recipes = list_my_recipes(author="bob")
+    assert len(bob_recipes) == 1
+    assert bob_recipes[0]["title"] == "Bob 配方 1"
+
+
+def test_list_my_recipes_returns_empty_for_unknown_author(tmp_db):
+    """V3-Task11: 未知作者返回空列表。"""
+    from hermes_kb.recipe_crud import list_my_recipes
+
+    result = list_my_recipes(author="nobody")
+    assert result == []
+
+
+def test_list_my_recipes_excludes_non_ugc(tmp_db):
+    """V3-Task11: list_my_recipes 仅返回 source=ugc 的配方，排除其他来源。"""
+    from hermes_kb.rag import ImportService
+    from hermes_kb.recipe_crud import create_recipe, list_my_recipes
+
+    # 创建 UGC 配方
+    create_recipe(
+        title="UGC 配方",
+        ingredients=["金酒"],
+        content="# UGC",
+        author="alice",
+    )
+    # 创建非 UGC 配方（iba）
+    importer = ImportService()
+    importer.import_text(
+        content="# IBA 配方",
+        title="IBA 配方",
+        category="recipe",
+        source="iba",
+        verified=True,
+        status="published",
+    )
+
+    alice_recipes = list_my_recipes(author="alice")
+    assert len(alice_recipes) == 1
+    assert alice_recipes[0]["title"] == "UGC 配方"
+
+
+def test_list_my_recipes_summary_includes_meta_fields(tmp_db):
+    """V3-Task11: _recipe_summary 包含 author/reviewer/reject_reason 字段。"""
+    from hermes_kb.recipe_crud import (
+        create_recipe,
+        list_my_recipes,
+        reject_recipe,
+        submit_recipe,
+    )
+
+    created = create_recipe(
+        title="摘要测试",
+        ingredients=["金酒"],
+        content="# 摘要测试",
+        author="alice",
+    )
+    submit_recipe(created["doc_id"])
+    reject_recipe(created["doc_id"], reason="不行", reviewer="bob")
+
+    alice_recipes = list_my_recipes(author="alice")
+    assert len(alice_recipes) == 1
+    item = alice_recipes[0]
+    assert item["author"] == "alice"
+    assert item["reviewer"] == "bob"
+    assert item["reject_reason"] == "不行"
+    assert item["status"] == "rejected"
+    assert item["doc_id"] == created["doc_id"]
+
+
+def test_get_recipe_author_returns_meta_author(tmp_db):
+    """V3-Task11: get_recipe_author 从 meta 读取作者。"""
+    from hermes_kb.recipe_crud import create_recipe, get_recipe_author
+
+    created = create_recipe(
+        title="作者读取测试",
+        ingredients=["金酒"],
+        content="# 作者读取",
+        author="carol",
+    )
+    assert get_recipe_author(created["doc_id"]) == "carol"
+
+
+def test_get_recipe_author_returns_anonymous_for_legacy(tmp_db):
+    """V3-Task11: 旧配方（无 meta.author）返回 "anonymous"。"""
+    from hermes_kb.rag import ImportService
+    from hermes_kb.recipe_crud import get_recipe_author
+
+    result = ImportService().import_text(
+        content="# 旧配方",
+        title="旧配方",
+        category="recipe",
+        source="ugc",
+    )
+    # 旧配方 meta 默认 "{}"，无 author 字段
+    assert get_recipe_author(result["doc_id"]) == "anonymous"
+
+
+def test_get_recipe_author_returns_empty_for_nonexistent(tmp_db):
+    """V3-Task11: 不存在的 doc_id 返回空串。"""
+    from hermes_kb.recipe_crud import get_recipe_author
+
+    assert get_recipe_author("doc-no-such") == ""
+
+
+# ---------------------------------------------------------------------------
+# V3-Task11: API 端点测试
+# ---------------------------------------------------------------------------
+
+
+def test_api_create_recipe_records_author_anonymous(client):
+    """V3-Task11: POST /api/lab/recipes 未启用认证时 author="anonymous"。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import _read_meta
+
+    resp = client.post("/api/lab/recipes", json={
+        "title": "API 作者测试",
+        "ingredients": ["金酒"],
+        "content": "# API 作者测试",
+    })
+    assert resp.status_code == 200
+    doc_id = resp.json()["doc_id"]
+
+    with get_session() as session:
+        doc = session.get(Document, doc_id)
+        meta = _read_meta(doc)
+        assert meta["author"] == "anonymous"
+
+
+def test_api_my_recipes_returns_ugc(client):
+    """V3-Task11: GET /api/lab/recipes/my 返回当前用户的 UGC 配方。"""
+    # 创建 2 个 UGC 配方
+    client.post("/api/lab/recipes", json={
+        "title": "我的配方 A",
+        "ingredients": ["金酒"],
+        "content": "# 配方 A",
+    })
+    client.post("/api/lab/recipes", json={
+        "title": "我的配方 B",
+        "ingredients": ["朗姆酒"],
+        "content": "# 配方 B",
+    })
+
+    resp = client.get("/api/lab/recipes/my")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["author"] == "anonymous"
+    titles = {item["title"] for item in data["items"]}
+    assert "我的配方 A" in titles
+    assert "我的配方 B" in titles
+
+
+def test_api_my_recipes_empty(client):
+    """V3-Task11: GET /api/lab/recipes/my 无 UGC 配方时返回空列表。"""
+    resp = client.get("/api/lab/recipes/my")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["items"] == []
+    assert data["total"] == 0
+
+
+def test_api_resubmit_recipe_rejected_to_draft(client):
+    """V3-Task11: POST /api/lab/recipes/{doc_id}/resubmit rejected → draft。"""
+    # 创建 → 提交 → 驳回 → 重新提交
+    created = client.post("/api/lab/recipes", json={
+        "title": "重新提交 API 测试",
+        "ingredients": ["金酒"],
+        "content": "# 重新提交 API",
+    }).json()
+    doc_id = created["doc_id"]
+
+    client.post(f"/api/lab/recipes/{doc_id}/submit")
+    client.post(f"/api/lab/recipes/{doc_id}/reject", json={"reason": "需修改"})
+
+    resp = client.post(f"/api/lab/recipes/{doc_id}/resubmit")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "draft"
+
+
+def test_api_resubmit_recipe_wrong_status_returns_400(client):
+    """V3-Task11: resubmit 非 rejected 状态返回 400。"""
+    created = client.post("/api/lab/recipes", json={
+        "title": "状态错误测试",
+        "ingredients": ["金酒"],
+        "content": "# 状态错误",
+    }).json()
+
+    # draft 状态不可 resubmit
+    resp = client.post(f"/api/lab/recipes/{created['doc_id']}/resubmit")
+    assert resp.status_code == 400
+    assert "rejected" in resp.json()["detail"]
+
+
+def test_api_approve_recipe_records_reviewer(client):
+    """V3-Task11: POST /api/lab/recipes/{doc_id}/approve 记录 reviewer。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import _read_meta
+
+    created = client.post("/api/lab/recipes", json={
+        "title": "审核人 API 测试",
+        "ingredients": ["金酒"],
+        "content": "# 审核人 API",
+    }).json()
+    client.post(f"/api/lab/recipes/{created['doc_id']}/submit")
+    client.post(f"/api/lab/recipes/{created['doc_id']}/approve")
+
+    with get_session() as session:
+        doc = session.get(Document, created["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["reviewer"] == "anonymous"
+        assert meta["reviewed_at"] is not None
+
+
+def test_api_reject_recipe_records_reviewer_and_reason(client):
+    """V3-Task11: POST /api/lab/recipes/{doc_id}/reject 记录 reviewer 和 reason。"""
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_crud import _read_meta
+
+    created = client.post("/api/lab/recipes", json={
+        "title": "驳回 API 测试",
+        "ingredients": ["金酒"],
+        "content": "# 驳回 API",
+    }).json()
+    client.post(f"/api/lab/recipes/{created['doc_id']}/submit")
+    client.post(
+        f"/api/lab/recipes/{created['doc_id']}/reject",
+        json={"reason": "配方不完整"},
+    )
+
+    with get_session() as session:
+        doc = session.get(Document, created["doc_id"])
+        meta = _read_meta(doc)
+        assert meta["reviewer"] == "anonymous"
+        assert meta["reject_reason"] == "配方不完整"
+        assert meta["reviewed_at"] is not None
+
+
+def test_api_my_recipes_limit_param(client):
+    """V3-Task11: GET /api/lab/recipes/my?limit=N 限制返回数量。"""
+    # 创建 3 个 UGC 配方
+    for i in range(3):
+        client.post("/api/lab/recipes", json={
+            "title": f"限制测试 {i}",
+            "ingredients": ["金酒"],
+            "content": f"# 限制 {i}",
+        })
+
+    # limit=2 应只返回 2 条
+    resp = client.get("/api/lab/recipes/my?limit=2")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["items"]) <= 2
+
+
+def test_api_my_recipes_shows_reject_reason(client):
+    """V3-Task11: /api/lab/recipes/my 返回的 rejected 配方包含 reject_reason。"""
+    created = client.post("/api/lab/recipes", json={
+        "title": "驳回理由展示",
+        "ingredients": ["金酒"],
+        "content": "# 驳回理由展示",
+    }).json()
+    client.post(f"/api/lab/recipes/{created['doc_id']}/submit")
+    client.post(
+        f"/api/lab/recipes/{created['doc_id']}/reject",
+        json={"reason": "材料太少"},
+    )
+
+    resp = client.get("/api/lab/recipes/my")
+    data = resp.json()
+    rejected_items = [i for i in data["items"] if i["status"] == "rejected"]
+    assert len(rejected_items) >= 1
+    target = next(i for i in rejected_items if i["doc_id"] == created["doc_id"])
+    assert target["reject_reason"] == "材料太少"

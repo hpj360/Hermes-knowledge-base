@@ -21,6 +21,12 @@ import type {
   LabRecipeVariant,
   LabSyncResult,
   LabTranslateResult,
+  MultiLoginResult,
+  MyRecipeItem,
+  RegisterResult,
+  InviteCodeItem,
+  UserItem,
+  InviteCodeListItem,
   RAGAnswer,
   RecipeRatingResponse,
   RecipeRatingSummary,
@@ -480,6 +486,23 @@ export const api = {
     });
   },
 
+  // V3-Task11: 17. GET /api/lab/recipes/my — 个人配方库（按 author 筛选）
+  async labMyRecipes(
+    limit?: number
+  ): Promise<{ items: MyRecipeItem[]; total: number; author: string }> {
+    const qs = limit ? `?limit=${limit}` : "";
+    return request(`/api/lab/recipes/my${qs}`);
+  },
+
+  // V3-Task11: 18. POST /api/lab/recipes/{doc_id}/resubmit — 重新提交（rejected→draft）
+  async labResubmitRecipe(
+    docId: string
+  ): Promise<{ doc_id: string; status: string }> {
+    return request(`/api/lab/recipes/${encodeURIComponent(docId)}/resubmit`, {
+      method: "POST",
+    });
+  },
+
   // 17. GET /api/lab/recipes/{doc_id}/variants — 配方变体列表
   async labListVariants(docId: string): Promise<{ items: LabRecipeVariant[]; count: number }> {
     return request(`/api/lab/recipes/${encodeURIComponent(docId)}/variants`);
@@ -692,5 +715,62 @@ export const api = {
   /** GET /api/lab/recipes/{doc_id}/rating — 获取评分摘要 + 笔记列表 */
   async labGetRating(docId: string): Promise<RecipeRatingSummary> {
     return request(`/api/lab/recipes/${encodeURIComponent(docId)}/rating`);
+  },
+
+  // -------------------------------------------------------------------------
+  // V3-Task10：多用户认证
+  // -------------------------------------------------------------------------
+
+  /** POST /api/auth/multi-login — 多用户模式登录（用户名 + 密码） */
+  async multiLogin(username: string, password: string): Promise<MultiLoginResult> {
+    return request("/api/auth/multi-login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+  },
+
+  /** POST /api/auth/register — 邀请码注册新用户 */
+  async register(
+    inviteCode: string,
+    username: string,
+    password: string
+  ): Promise<RegisterResult> {
+    return request("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        invite_code: inviteCode,
+        username,
+        password,
+      }),
+    });
+  },
+
+  /** POST /api/auth/invite — owner 生成邀请码 */
+  async createInvite(
+    role: string = "member",
+    ttlHours?: number
+  ): Promise<InviteCodeItem> {
+    return request("/api/auth/invite", {
+      method: "POST",
+      body: JSON.stringify({ role, ttl_hours: ttlHours ?? null }),
+    });
+  },
+
+  /** GET /api/auth/users — owner 查看用户列表 */
+  async listUsers(): Promise<{ items: UserItem[] }> {
+    return request("/api/auth/users");
+  },
+
+  /** GET /api/auth/invites — owner 查看邀请码列表 */
+  async listInvites(): Promise<{ items: InviteCodeListItem[] }> {
+    return request("/api/auth/invites");
+  },
+
+  /** POST /api/auth/users/{username}/role — owner 修改用户角色 */
+  async updateUserRole(username: string, role: string): Promise<{ username: string; role: string; status: string }> {
+    return request(`/api/auth/users/${encodeURIComponent(username)}/role`, {
+      method: "POST",
+      body: JSON.stringify({ role }),
+    });
   },
 };

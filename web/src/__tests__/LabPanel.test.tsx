@@ -9,6 +9,7 @@ vi.mock("../api", () => ({
     labDaily: vi.fn(),
     labMatch: vi.fn(),
     labTranslateTitles: vi.fn(),
+    labMyRecipes: vi.fn(),
   },
 }));
 
@@ -378,5 +379,213 @@ describe("LabPanel: P1 翻译配方标题 UI", () => {
       model_used: "mock-llm",
     });
     await waitFor(() => expect(submitBtn).not.toBeDisabled());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// V3-Task11: LabPanel「我的配方」个人配方库
+// ---------------------------------------------------------------------------
+describe("LabPanel: V3-Task11 我的配方库", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(api.labDaily).mockResolvedValue({ title: null, reason: "empty" });
+  });
+
+  it("未传入 onEditRecipe 时不渲染「我的配方」按钮", async () => {
+    render(<LabPanel />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "查看我的配方" })).not.toBeInTheDocument();
+  });
+
+  it("传入 onEditRecipe 时渲染「我的配方」按钮，点击打开弹窗", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [],
+      total: 0,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={() => {}} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    const btn = screen.getByRole("button", { name: "查看我的配方" });
+    await user.click(btn);
+
+    await waitFor(() => {
+      expect(api.labMyRecipes).toHaveBeenCalled();
+      expect(screen.getByText("我的配方")).toBeInTheDocument();
+    });
+  });
+
+  it("加载个人配方列表并展示标题与状态标签", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-1",
+          title: "我的马天尼",
+          source: "ugc",
+          status: "draft",
+          created_at: "2026-07-30T10:00:00Z",
+          author: "anonymous",
+        },
+        {
+          doc_id: "doc-2",
+          title: "夏日特调",
+          source: "ugc",
+          status: "rejected",
+          created_at: "2026-07-29T10:00:00Z",
+          author: "anonymous",
+          reject_reason: "材料太少",
+          reviewer: "owner",
+        },
+        {
+          doc_id: "doc-3",
+          title: "已发布配方",
+          source: "ugc",
+          status: "published",
+          created_at: "2026-07-28T10:00:00Z",
+          author: "anonymous",
+          reviewer: "owner",
+        },
+      ],
+      total: 3,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={() => {}} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "查看我的配方" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("我的马天尼")).toBeInTheDocument();
+      expect(screen.getByText("夏日特调")).toBeInTheDocument();
+      expect(screen.getByText("已发布配方")).toBeInTheDocument();
+      // 状态标签
+      expect(screen.getByText("草稿")).toBeInTheDocument();
+      expect(screen.getByText("已驳回")).toBeInTheDocument();
+      expect(screen.getByText("已发布")).toBeInTheDocument();
+    });
+
+    // rejected 状态展示驳回理由
+    expect(screen.getByText(/驳回理由：材料太少/)).toBeInTheDocument();
+  });
+
+  it("空列表显示空状态文案", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [],
+      total: 0,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={() => {}} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "查看我的配方" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/暂无配方。点击实验室右上角的「✏️ 创作配方」开始你的第一杯特调。/),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("加载失败展示错误信息", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labMyRecipes).mockRejectedValue(new Error("网络错误"));
+    render(<LabPanel onEditRecipe={() => {}} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "查看我的配方" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("网络错误")).toBeInTheDocument();
+    });
+  });
+
+  it("点击「编辑」按钮触发 onEditRecipe 回调并关闭弹窗", async () => {
+    const user = userEvent.setup();
+    const onEditRecipe = vi.fn();
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-edit-1",
+          title: "可编辑草稿",
+          source: "ugc",
+          status: "draft",
+          created_at: null,
+          author: "anonymous",
+        },
+      ],
+      total: 1,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={onEditRecipe} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "查看我的配方" }));
+    await waitFor(() => expect(screen.getByText("可编辑草稿")).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "编辑 可编辑草稿" }));
+    expect(onEditRecipe).toHaveBeenCalledWith("doc-edit-1");
+    // 弹窗关闭（标题不再可见）
+    await waitFor(() => {
+      expect(screen.queryByText("可编辑草稿")).not.toBeInTheDocument();
+    });
+  });
+
+  it("published 状态的配方「编辑」按钮被禁用（显示为「查看」但不可点）", async () => {
+    const user = userEvent.setup();
+    const onEditRecipe = vi.fn();
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-pub-1",
+          title: "我的招牌配方",
+          source: "ugc",
+          status: "published",
+          created_at: null,
+          author: "anonymous",
+        },
+      ],
+      total: 1,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={onEditRecipe} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    await user.click(screen.getByRole("button", { name: "查看我的配方" }));
+    await waitFor(() => expect(screen.getByText("我的招牌配方")).toBeInTheDocument());
+
+    // published 不可编辑，按钮文案为「查看」且禁用
+    const viewBtn = screen.getByRole("button", { name: "编辑 我的招牌配方" });
+    expect(viewBtn).toBeDisabled();
+    await user.click(viewBtn);
+    expect(onEditRecipe).not.toHaveBeenCalled();
+  });
+
+  it("pending 状态的配方不可编辑", async () => {
+    vi.mocked(api.labMyRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-pending-1",
+          title: "审核中的配方",
+          source: "ugc",
+          status: "pending",
+          created_at: null,
+          author: "anonymous",
+        },
+      ],
+      total: 1,
+      author: "anonymous",
+    });
+    render(<LabPanel onEditRecipe={() => {}} />);
+    await waitFor(() => expect(api.labDaily).toHaveBeenCalled());
+
+    const btn = screen.getByRole("button", { name: "查看我的配方" });
+    fireEvent.click(btn);
+
+    await waitFor(() => expect(screen.getByText("审核中的配方")).toBeInTheDocument());
+    const viewBtn = screen.getByRole("button", { name: "编辑 审核中的配方" });
+    expect(viewBtn).toBeDisabled();
   });
 });

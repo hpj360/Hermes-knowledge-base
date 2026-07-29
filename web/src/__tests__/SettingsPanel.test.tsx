@@ -15,6 +15,7 @@ vi.mock("../api", () => ({
     }),
     exportAll: vi.fn(),
     importBackup: vi.fn(),
+    health: vi.fn().mockResolvedValue({ multiuser: false }),
   },
 }));
 

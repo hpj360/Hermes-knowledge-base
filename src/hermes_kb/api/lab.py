@@ -17,7 +17,10 @@ from hermes_kb.rag import ImportService
 from hermes_kb.recipe_crud import (
     approve_recipe,
     create_recipe,
+    get_recipe_author,
+    list_my_recipes,
     reject_recipe,
+    resubmit_recipe,
     submit_recipe,
     update_recipe,
 )
@@ -483,13 +486,18 @@ async def lab_hide_recipe(doc_id: str, hidden: bool = True) -> dict[str, Any]:
 async def lab_create_recipe(
     req: dict[str, Any],
     importer: ImportService = Depends(get_importer),
+    payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
-    """创建 UGC 配方（draft 状态）。"""
+    """创建 UGC 配方（draft 状态）。
+
+    V3-Task11: 从 JWT payload 提取 author 写入 meta（未启用认证时为 "anonymous"）。
+    """
     title = (req.get("title") or "").strip()
     content = req.get("content") or ""
     if not title or not content.strip():
         raise HTTPException(status_code=400, detail="title 和 content 必填")
     ingredients = req.get("ingredients") or []
+    author = extract_user(payload)
     result = create_recipe(
         title=title,
         ingredients=ingredients,
@@ -498,6 +506,14 @@ async def lab_create_recipe(
         difficulty=req.get("difficulty", "easy"),
         season=req.get("season"),
         importer=importer,
+        author=author,
+    )
+    log_action(
+        action="create_recipe",
+        target_type="recipe",
+        target_id=result.get("doc_id", ""),
+        user=author,
+        meta={"title": title},
     )
     return result
 
@@ -531,22 +547,101 @@ async def lab_submit_recipe(doc_id: str) -> dict[str, Any]:
 
 
 @router.post("/recipes/{doc_id}/approve", dependencies=[Depends(require_age_gate)])
-async def lab_approve_recipe(doc_id: str) -> dict[str, Any]:
-    """审核通过（pending → published）。"""
-    ok = approve_recipe(doc_id)
+async def lab_approve_recipe(
+    doc_id: str,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
+    """审核通过（pending → published）。
+
+    V3-Task11: 记录 reviewer 到 meta（未启用认证时为 "anonymous"）。
+    """
+    reviewer = extract_user(payload)
+    ok = approve_recipe(doc_id, reviewer=reviewer)
     if not ok:
         raise HTTPException(status_code=400, detail="仅 pending 状态可审核")
+    log_action(
+        action="approve_recipe",
+        target_type="recipe",
+        target_id=doc_id,
+        user=reviewer,
+    )
     return {"doc_id": doc_id, "status": "ok"}
 
 
 @router.post("/recipes/{doc_id}/reject", dependencies=[Depends(require_age_gate)])
-async def lab_reject_recipe(doc_id: str, req: dict[str, Any]) -> dict[str, Any]:
-    """审核驳回（pending → rejected）。"""
+async def lab_reject_recipe(
+    doc_id: str,
+    req: dict[str, Any],
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
+    """审核驳回（pending → rejected）。
+
+    V3-Task11: 记录 reviewer 和 reject_reason 到 meta。
+    """
     reason = req.get("reason", "")
-    ok = reject_recipe(doc_id, reason=reason)
+    reviewer = extract_user(payload)
+    ok = reject_recipe(doc_id, reason=reason, reviewer=reviewer)
     if not ok:
         raise HTTPException(status_code=400, detail="仅 pending 状态可驳回")
+    log_action(
+        action="reject_recipe",
+        target_type="recipe",
+        target_id=doc_id,
+        user=reviewer,
+        meta={"reason": reason},
+    )
     return {"doc_id": doc_id, "status": "rejected", "reason": reason}
+
+
+# V3-Task11：个人配方库 + 重新提交
+@router.get("/recipes/my", dependencies=[Depends(require_age_gate)])
+async def lab_my_recipes(
+    payload: dict[str, Any] | None = Depends(require_auth),
+    limit: int = 50,
+) -> dict[str, Any]:
+    """V3-Task11: 列出当前用户的配方（个人配方库）。
+
+    - 未启用 multiuser 时 author="anonymous"，返回所有 UGC 配方
+    - 启用 multiuser 后按 JWT payload.sub 筛选作者
+    """
+    author = extract_user(payload)
+    limit = max(1, min(limit, 200))
+    items = list_my_recipes(author=author, limit=limit)
+    return {"items": items, "total": len(items), "author": author}
+
+
+@router.post("/recipes/{doc_id}/resubmit", dependencies=[Depends(require_age_gate)])
+async def lab_resubmit_recipe(
+    doc_id: str,
+    payload: dict[str, Any] | None = Depends(require_auth),
+) -> dict[str, Any]:
+    """V3-Task11: 重新提交（rejected → draft）。
+
+    作者修订被驳回的配方后回到 draft 状态，再 edit + submit。
+    multiuser 模式下校验仅作者可重新提交自己的配方。
+    """
+    from hermes_kb.config import get_settings
+
+    settings = get_settings()
+    if settings.multiuser:
+        author = extract_user(payload)
+        recipe_author = get_recipe_author(doc_id)
+        if recipe_author and recipe_author != "anonymous" and recipe_author != author:
+            raise HTTPException(
+                status_code=403,
+                detail=f"仅作者可重新提交：当前 {author}，作者 {recipe_author}",
+            )
+    ok = resubmit_recipe(doc_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail="仅 rejected 状态可重新提交")
+    user = extract_user(payload)
+    log_action(
+        action="resubmit_recipe",
+        target_type="recipe",
+        target_id=doc_id,
+        user=user,
+    )
+    return {"doc_id": doc_id, "status": "draft"}
 
 
 @router.get("/recipes/{doc_id}/variants", dependencies=[Depends(require_age_gate)])

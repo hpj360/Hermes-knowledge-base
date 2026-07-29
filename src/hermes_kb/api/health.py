@@ -46,6 +46,7 @@ async def health() -> dict[str, Any]:
         "embedding_provider": settings.embedding_provider,
         "embedding_available": settings.embedding_available,
         "auth_enabled": settings.auth_enabled,
+        "multiuser": settings.multiuser,
         "age_gate_enabled": settings.age_gate_enabled,
     }
 

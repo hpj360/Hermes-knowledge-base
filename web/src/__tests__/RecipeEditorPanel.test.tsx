@@ -9,10 +9,16 @@ vi.mock("../api", () => ({
     labCreateRecipe: vi.fn(),
     labUpdateRecipe: vi.fn(),
     labSubmitRecipe: vi.fn(),
+    labResubmitRecipe: vi.fn(),
   },
 }));
 
+vi.mock("../components/Toast", () => ({
+  showToast: vi.fn(),
+}));
+
 import { api } from "../api";
+import { showToast } from "../components/Toast";
 import { RecipeEditorPanel } from "../components/RecipeEditorPanel";
 
 beforeEach(() => {
@@ -146,5 +152,170 @@ describe("RecipeEditorPanel", () => {
     await user.click(screen.getByRole("button", { name: "创建草稿" }));
 
     expect(await screen.findByText(/操作失败：后端 500/)).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// V3-Task11: RecipeEditorPanel「重新提交」按钮（rejected → draft）
+// ---------------------------------------------------------------------------
+describe("RecipeEditorPanel: V3-Task11 重新提交", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejected 状态下渲染「重新提交（回到草稿）」按钮", async () => {
+    vi.mocked(api.labRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-rej-1",
+          title: "被驳回配方",
+          source: "ugc",
+          verified: false,
+          hidden: false,
+          status: "rejected",
+        },
+      ],
+    });
+
+    render(<RecipeEditorPanel docId="doc-rej-1" />);
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：已驳回（rejected）/)).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "重新提交（回到草稿状态）" })).toBeInTheDocument();
+  });
+
+  it("非 rejected 状态不渲染「重新提交」按钮", async () => {
+    vi.mocked(api.labRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-draft-1",
+          title: "草稿配方",
+          source: "ugc",
+          verified: false,
+          hidden: false,
+          status: "draft",
+        },
+      ],
+    });
+
+    render(<RecipeEditorPanel docId="doc-draft-1" />);
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：草稿（draft）/)).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("button", { name: "重新提交（回到草稿状态）" })).not.toBeInTheDocument();
+  });
+
+  it("点击重新提交：调用 labResubmitRecipe，成功后状态切回 draft 并展示提示", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-rej-2",
+          title: "可重新提交",
+          source: "ugc",
+          verified: false,
+          hidden: false,
+          status: "rejected",
+        },
+      ],
+    });
+    vi.mocked(api.labResubmitRecipe).mockResolvedValue({
+      doc_id: "doc-rej-2",
+      status: "draft",
+    });
+
+    render(<RecipeEditorPanel docId="doc-rej-2" />);
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：已驳回（rejected）/)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "重新提交（回到草稿状态）" }));
+
+    await waitFor(() => {
+      expect(api.labResubmitRecipe).toHaveBeenCalledWith("doc-rej-2");
+    });
+    // 状态切回 draft
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：草稿（draft）— 未提交/)).toBeInTheDocument();
+    });
+    // 成功提示
+    expect(screen.getByText(/已回到草稿状态（doc-rej-2），可编辑后重新提交审核。/)).toBeInTheDocument();
+    // Toast 成功提示
+    expect(showToast).toHaveBeenCalledWith("已回到草稿状态，可编辑后重新提交", "success");
+  });
+
+  it("重新提交失败：展示错误信息并保留 rejected 状态", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-rej-3",
+          title: "重新提交失败",
+          source: "ugc",
+          verified: false,
+          hidden: false,
+          status: "rejected",
+        },
+      ],
+    });
+    vi.mocked(api.labResubmitRecipe).mockRejectedValue(new Error("无权限"));
+
+    render(<RecipeEditorPanel docId="doc-rej-3" />);
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：已驳回（rejected）/)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "重新提交（回到草稿状态）" }));
+
+    expect(await screen.findByText(/重新提交失败：无权限/)).toBeInTheDocument();
+    // 状态仍为 rejected
+    expect(screen.getByText(/当前状态：已驳回（rejected）/)).toBeInTheDocument();
+    // Toast 错误提示
+    expect(showToast).toHaveBeenCalledWith("重新提交失败：无权限", "danger");
+  });
+
+  it("重新提交进行中：按钮显示「处理中...」并禁用其他操作按钮", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.labRecipes).mockResolvedValue({
+      items: [
+        {
+          doc_id: "doc-rej-4",
+          title: "处理中测试",
+          source: "ugc",
+          verified: false,
+          hidden: false,
+          status: "rejected",
+        },
+      ],
+    });
+    // 让 promise 悬挂，保持 resubmitting 状态
+    let resolveFn!: (v: unknown) => void;
+    vi.mocked(api.labResubmitRecipe).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFn = resolve;
+        }) as Promise<any>,
+    );
+
+    render(<RecipeEditorPanel docId="doc-rej-4" />);
+    await waitFor(() => {
+      expect(screen.getByText(/当前状态：已驳回（rejected）/)).toBeInTheDocument();
+    });
+
+    const resubmitBtn = screen.getByRole("button", { name: "重新提交（回到草稿状态）" });
+    const saveBtn = screen.getByRole("button", { name: "保存草稿" });
+    await user.click(resubmitBtn);
+
+    await waitFor(() => {
+      // resubmitting 时按钮文案变为「处理中...」且仍带 aria-label，按钮被禁用
+      expect(resubmitBtn).toBeDisabled();
+      expect(resubmitBtn).toHaveTextContent("处理中...");
+      // 保存草稿 / 提交审核 也被禁用（resubmitting 时禁用）
+      expect(saveBtn).toBeDisabled();
+    });
+
+    // 释放悬挂的 promise，避免后续测试泄漏
+    resolveFn({ doc_id: "doc-rej-4", status: "draft" });
+    await waitFor(() => expect(saveBtn).not.toBeDisabled());
   });
 });
