@@ -203,11 +203,16 @@ def _generic_enrich(title: str, original_content: str) -> str:
 
     clean_title = title
     # "酒博士·酒博士MAS·知识·XXX·通用端" → "XXX"
+    # "旧架构方法论·高手用AI的4个动作·知识" → "高手用AI的4个动作"
     if "·" in clean_title:
-        parts = [p.strip() for p in clean_title.split("·") if p.strip()]
-        # 取倒数第二段（通常是核心标题）
-        if len(parts) >= 2:
-            clean_title = parts[-2] if "通用端" in parts[-1] else parts[-1]
+        title_parts = [p.strip() for p in clean_title.split("·") if p.strip()]
+        # 去除末尾通用后缀（通用端 / 知识），取核心标题段
+        while len(title_parts) >= 2 and (
+            "通用端" in title_parts[-1] or title_parts[-1] == "知识"
+        ):
+            title_parts.pop()
+        if title_parts:
+            clean_title = title_parts[-1]
 
     # 去除版本号、日期后缀
     clean_title = _re.sub(r"\s*v\d+\.\d+", "", clean_title, flags=_re.IGNORECASE)
@@ -229,7 +234,8 @@ def _generic_enrich(title: str, original_content: str) -> str:
             header_lines.append(line)
 
     parts = [f"# {title}\n"]
-    parts.append(f"本文档标题为「{title}」。")
+    # 用清理后的标题嵌入正文，提升可检索性（原始多段标题保留在 # 头部用于溯源）
+    parts.append(f"本文档标题为「{clean_title}」。")
 
     if alcohol_descs:
         parts.append("\n相关酒类知识：")
@@ -242,14 +248,23 @@ def _generic_enrich(title: str, original_content: str) -> str:
         category_label = "行业资料"
 
     parts.append("")
-    for h in header_lines:
-        parts.append(h)
+    parts.extend(header_lines)
     parts.append(f"\n类别：{category_label}")
     parts.append(_ENRICHED_MARKER)
     return "\n".join(parts)
 
 
 def main() -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="IMA 文档内容富化")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="强制重新富化（忽略已有的 enriched 标记，用于应用 _generic_enrich 修复）",
+    )
+    args = parser.parse_args()
+
     enriched = 0
     skipped = 0
     no_match = 0
@@ -257,9 +272,9 @@ def main() -> int:
 
     with get_session() as s:
         docs = s.exec(select(Document).where(Document.source == "ima")).all()
-        print(f"扫描 {len(docs)} 篇 IMA 文档...")
+        print(f"扫描 {len(docs)} 篇 IMA 文档..." + ("（--force 模式）" if args.force else ""))
         for doc in docs:
-            if _ENRICHED_MARKER in (doc.content or ""):
+            if _ENRICHED_MARKER in (doc.content or "") and not args.force:
                 skipped += 1
                 continue
             new_content = _enrich_content(doc.title or "", doc.content or "")

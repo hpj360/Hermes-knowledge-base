@@ -40,13 +40,15 @@ def main() -> int:
 
     rechunked = 0
     total_chunks = 0
+    skipped_hidden = 0
 
     with get_session() as s:
         docs = s.exec(select(Document).where(Document.source == "ima")).all()
         print(f"扫描 {len(docs)} 篇 IMA 文档...")
 
         for doc in docs:
-            # 删除旧 chunks（含 chunk_vec 通过 CASCADE 或手动）
+            # 始终删除旧 chunks（含 chunk_vec 通过 CASCADE 或手动），
+            # 确保隐藏文档的旧 chunks 也被清理（避免被检索召回）
             old_chunks = s.exec(select(Chunk).where(Chunk.doc_id == doc.doc_id)).all()
             for c in old_chunks:
                 # 删除 chunk_vec JSON
@@ -64,6 +66,13 @@ def main() -> int:
                     except Exception:  # noqa: BLE001,S110 — 表可能不存在
                         pass
                 s.delete(c)
+
+            # 隐藏文档（如已标记的重复条目）不创建新 chunks，避免重复内容被检索
+            if doc.hidden:
+                doc.chunk_count = 0
+                s.add(doc)
+                skipped_hidden += 1
+                continue
 
             # 重新分片
             chunks = parser.chunk(
@@ -120,7 +129,8 @@ def main() -> int:
 
         s.commit()
 
-    print(f"重新分片完成：{rechunked} 篇文档，共 {total_chunks} 个 chunks")
+    print(f"重新分片完成：{rechunked} 篇文档，共 {total_chunks} 个 chunks"
+          f"（{skipped_hidden} 篇隐藏文档跳过分片）")
     return 0
 
 

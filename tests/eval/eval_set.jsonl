@@ -158,3 +158,23 @@
 {"id": "q158", "query": "山楂果酒制作", "expected_doc_title": "山楂果酒", "expected_keywords": ["山楂", "hawthorn"], "category": "IMA果酒"}
 {"id": "q159", "query": "杨梅果酒口感", "expected_doc_title": "杨梅果酒", "expected_keywords": ["杨梅", "yangmei"], "category": "IMA果酒"}
 {"id": "q160", "query": "荔枝果酒风味", "expected_doc_title": "荔枝果酒", "expected_keywords": ["荔枝", "lychee"], "category": "IMA果酒"}
+{"id": "q161", "query": "朗姆酒是什么酒", "expected_doc_title": "酒博士·酒博士MAS·知识·朗姆酒（Rum）知识体系 v1.0·通用端", "expected_keywords": ["朗姆酒", "rum"], "category": "IMA酒类知识"}
+{"id": "q162", "query": "金酒的风味特点", "expected_doc_title": "酒博士·酒博士MAS·知识·金酒（Gin）知识体系 v1.0·通用端", "expected_keywords": ["金酒", "gin"], "category": "IMA酒类知识"}
+{"id": "q163", "query": "伏特加怎么酿造", "expected_doc_title": "酒博士·酒博士MAS·知识·伏特加（Vodka）知识体系 v1.0·通用端", "expected_keywords": ["伏特加", "vodka"], "category": "IMA酒类知识"}
+{"id": "q164", "query": "龙舌兰酒分类", "expected_doc_title": "酒博士·酒医生·知识·龙舌兰酿造体系_2026-04·B端", "expected_keywords": ["龙舌兰", "tequila"], "category": "IMA酒类知识"}
+{"id": "q165", "query": "威士忌产区有哪些", "expected_doc_title": "全球威士忌知识体系 v1.0", "expected_keywords": ["威士忌", "whisky"], "category": "IMA酒类知识"}
+{"id": "q166", "query": "威士忌酿造工艺", "expected_doc_title": "酒博士·酒医生·知识·威士忌酿造体系_2026-04·B端", "expected_keywords": ["威士忌", "whisky"], "category": "IMA酒类知识"}
+{"id": "q167", "query": "白兰地知识体系", "expected_doc_title": "白兰地与全球烈酒知识体系 v1.0", "expected_keywords": ["白兰地", "brandy"], "category": "IMA酒类知识"}
+{"id": "q168", "query": "白酒固态法和液态法区别", "expected_doc_title": "酒博士·酒博士MAS·知识·白酒的固态法和液态法的区别？·通用端", "expected_keywords": ["白酒", "固态法", "液态法"], "category": "IMA酒类知识"}
+{"id": "q169", "query": "中国白酒发展趋势", "expected_doc_title": "酒博士·酒博士MAS·知识·中国白酒的降时代·通用端", "expected_keywords": ["白酒", "中国白酒"], "category": "IMA酒类知识"}
+{"id": "q170", "query": "啤酒文化与消费", "expected_doc_title": "啤酒文化与情感互动知识库 v1.0", "expected_keywords": ["啤酒", "beer"], "category": "IMA酒类知识"}
+{"id": "q171", "query": "啤酒酿造工艺流程", "expected_doc_title": "啤酒酿造工艺体系 v1.0", "expected_keywords": ["啤酒", "酿造"], "category": "IMA酒类知识"}
+{"id": "q172", "query": "清酒知识体系", "expected_doc_title": "全球清酒知识体系 v1.0", "expected_keywords": ["清酒", "sake"], "category": "IMA酒类知识"}
+{"id": "q173", "query": "梅酒新锐品牌", "expected_doc_title": "白名单公众号提炼_果酒梅酒新锐品牌_2025-2026", "expected_keywords": ["梅酒", "umeshu"], "category": "IMA酒类知识"}
+{"id": "q174", "query": "中国黄酒历史与酿造", "expected_doc_title": "酒博士·酒博士MAS·知识·中国黄酒知识体系 v1.0·通用端", "expected_keywords": ["黄酒", "yellow wine"], "category": "IMA酒类知识"}
+{"id": "q175", "query": "鸡尾酒调酒技法", "expected_doc_title": "酒博士·酒博士MAS·知识·鸡尾酒与调酒技法知识体系_2026-05·通用端", "expected_keywords": ["鸡尾酒", "cocktail"], "category": "IMA酒类知识"}
+{"id": "q176", "query": "经典鸡尾酒配方", "expected_doc_title": "酒博士·酒医生·知识·02_经典鸡尾酒配方库·B端", "expected_keywords": ["鸡尾酒", "配方"], "category": "IMA酒类知识"}
+{"id": "q177", "query": "利口酒配制酒体系", "expected_doc_title": "酒博士·酒BOSS·知识·配制酒与利口酒体系_2026-05·B端", "expected_keywords": ["利口酒", "liqueur"], "category": "IMA酒类知识"}
+{"id": "q178", "query": "香槟产区在哪里", "expected_doc_title": "香槟产区", "expected_keywords": ["香槟", "champagne"], "category": "IMA酒类知识"}
+{"id": "q179", "query": "味美思开胃酒", "expected_doc_title": "酒水知识|配制酒：开胃酒、甜食酒、利口酒芒果椰汁奶 芒果椰汁奶2024年10月1日 00:32 广西", "expected_keywords": ["味美思", "vermouth", "开胃酒"], "category": "IMA酒类知识"}
+{"id": "q180", "query": "梅斯卡尔与龙舌兰", "expected_doc_title": "白名单公众号提炼_龙舌兰梅斯卡尔_2025-2026", "expected_keywords": ["梅斯卡尔", "mezcal"], "category": "IMA酒类知识"}
