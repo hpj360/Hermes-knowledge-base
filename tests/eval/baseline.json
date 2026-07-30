@@ -1,79 +1,10 @@
 {
-  "total": 180,
-  "recall_hit": 90,
-  "keyword_hit": 261,
-  "recall_rate": 0.5,
-  "keyword_rate": 0.719,
-  "top1_acc": 0.2056,
-  "top3_acc": 0.5,
-  "harvested_at": "2026-07-31T10:00:00",
-  "note": "真实 embedding (sentence_transformers bge-small-zh-v1.5) 基线 + 180 条评估集 + IMA 607 篇 + 元数据回填后。recall_rate=50% 较 V1-encyclopedia-seeded(72.86%) 显著下降，主因：(1) 评估集扩展到 180 条（新增 40 条 IMA 条目，IMA top3 仅 10%）；(2) IMA 607 篇文档参与检索竞争，稀释配方/百科检索，recipe_match 仅 4/30=13.3% top3。keyword_coverage 71.9% 仍较高，说明关键词层面命中但 RRF 排序未把目标文档排进 top3。",
-  "milestones": [
-    {
-      "stage": "V1-baseline",
-      "recall_rate": 0.05,
-      "keyword_rate": 0.3571,
-      "description": "hash embedding + 无百科文档 + 无 HyDE + 140 条评估集"
-    },
-    {
-      "stage": "V1-embedding-upgrade",
-      "recall_rate": 0.107,
-      "keyword_rate": 0.386,
-      "description": "升级到 sentence_transformers (bge-small-zh-v1.5)"
-    },
-    {
-      "stage": "V1-hyde-enabled",
-      "recall_rate": 0.157,
-      "keyword_rate": 0.4,
-      "description": "启用 HyDE 假设文档生成"
-    },
-    {
-      "stage": "V1-encyclopedia-seeded",
-      "recall_rate": 0.7286,
-      "keyword_rate": 0.8071,
-      "description": "导入 15 篇百科种子 + 差异化分片策略（百科 800/120、配方 400/60）+ 140 条评估集 + sentence_transformers"
-    },
-    {
-      "stage": "V2-ima-enriched",
-      "recall_rate": 0.25,
-      "keyword_rate": 0.3551,
-      "description": "IMA 82 篇文档内容富化 + 重新分片向量化 + 评估集扩展到 160 条（+20 IMA 条目）。hash embedding 下 IMA 类别 0→40% top3 命中率。sentence_transformers 基线待重测。"
-    },
-    {
-      "stage": "V2-real-embedding-180",
-      "recall_rate": 0.5,
-      "keyword_rate": 0.719,
-      "top1_acc": 0.2056,
-      "top3_acc": 0.5,
-      "description": "真实 embedding (bge-small-zh-v1.5) + 180 条评估集 + IMA 607 篇 + 元数据回填后",
-      "embedding_provider": "sentence_transformers",
-      "hyde_enabled": false,
-      "eval_set_size": 180,
-      "ima_docs_count": 607,
-      "metadata_backfilled": true
-    }
-  ],
-  "current_baseline": {
-    "recall_rate": 0.5,
-    "keyword_rate": 0.719,
-    "top1_acc": 0.2056,
-    "top3_acc": 0.5,
-    "avg_latency_ms": null,
-    "embedding_provider": "sentence_transformers",
-    "hyde_enabled": false,
-    "query_rewrite_enabled": false,
-    "chunk_strategy": "differentiated (encyclopedia=800/120, recipe=400/60, IMA资料=500/80, default=500/80)",
-    "eval_set_size": 180,
-    "ima_docs_count": 607,
-    "ima_enriched": true,
-    "metadata_backfilled": true,
-    "updated_at": "2026-07-31T10:00:00"
-  },
-  "ima_category_breakdown": {
-    "IMA产区": {"total": 6, "top1_hit": 0, "top3_hit": 0, "top3_rate": 0.0},
-    "IMA果酒": {"total": 3, "top1_hit": 0, "top3_hit": 0, "top3_rate": 0.0},
-    "IMA葡萄品种": {"total": 8, "top1_hit": 0, "top3_hit": 2, "top3_rate": 0.25},
-    "IMA葡萄酒类型": {"total": 3, "top1_hit": 0, "top3_hit": 0, "top3_rate": 0.0},
-    "IMA酒类知识": {"total": 20, "top1_hit": 2, "top3_hit": 2, "top3_rate": 0.1}
-  }
+  "total": 201,
+  "recall_hit": 30,
+  "keyword_hit": 103,
+  "recall_rate": 0.1493,
+  "keyword_rate": 0.5124,
+  "harvested_at": "2026-07-31T01:45:39.342152",
+  "embedding_provider": "hash",
+  "note": "hash embedding baseline; spec requires real embedding (bge-small-zh-v1.5) baseline in production"
 }

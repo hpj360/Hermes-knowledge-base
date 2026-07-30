@@ -221,15 +221,22 @@ def main() -> int:
     print("\n=== 3. 内容质量 ===")
     empty_ok = content["empty_count"] == 0
     short_ok = content["short_count"] == 0
-    ima_rate_ok = _check_threshold(
-        content["ima_enriched"], content["ima_total"], _IMA_ENRICHMENT_THRESHOLD
-    )
+    # IMA 文档数为 0 时跳过富化率检查（IMA 同步需要单独 API 凭证，非 seed 流程必需）
+    if content["ima_total"] > 0:
+        ima_rate_ok = _check_threshold(
+            content["ima_enriched"], content["ima_total"], _IMA_ENRICHMENT_THRESHOLD
+        )
+    else:
+        ima_rate_ok = True  # 无 IMA 文档时跳过
     print(f"空内容: {content['empty_count']} {'✅' if empty_ok else '❌'}")
     print(f"短内容(<50字): {content['short_count']} {'✅' if short_ok else '❌'}")
-    print(
-        f"IMA 富化率: {_fmt_pct(content['ima_enriched'], content['ima_total'])} "
-        f"{'✅' if ima_rate_ok else '❌'}"
-    )
+    if content["ima_total"] > 0:
+        print(
+            f"IMA 富化率: {_fmt_pct(content['ima_enriched'], content['ima_total'])} "
+            f"{'✅' if ima_rate_ok else '❌'}"
+        )
+    else:
+        print("IMA 富化率: 跳过（无 IMA 文档） ⏭️")
     if not empty_ok:
         failures.append(f"空内容 {content['empty_count']} 篇（阈值 0）")
     if not short_ok:
