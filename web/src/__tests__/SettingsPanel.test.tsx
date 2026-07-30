@@ -13,6 +13,12 @@ vi.mock("../api", () => ({
       offset: 0,
       items: [],
     }),
+    feedbackList: vi.fn().mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    }),
     exportAll: vi.fn(),
     importBackup: vi.fn(),
     health: vi.fn().mockResolvedValue({ multiuser: false }),
@@ -41,6 +47,7 @@ const mockListTags = vi.mocked(api.listTags);
 const mockListAudit = vi.mocked(api.listAudit);
 const mockExportAll = vi.mocked(api.exportAll);
 const mockImportBackup = vi.mocked(api.importBackup);
+const mockFeedbackList = vi.mocked(api.feedbackList);
 
 describe("SettingsPanel", () => {
   let originalCreateObjectURL: typeof URL.createObjectURL;
@@ -403,6 +410,151 @@ describe("SettingsPanel", () => {
     // ObsidianPanel 内部会调用 obsidianStatus
     await waitFor(() => {
       expect(api.obsidianStatus).toHaveBeenCalled();
+    });
+  });
+});
+
+// ==========================================================================
+// V5：意见反馈汇总子模块（FeedbackListPanel）
+// ==========================================================================
+describe("SettingsPanel 意见反馈子模块", () => {
+  beforeEach(() => {
+    mockFeedbackList.mockReset();
+    mockFeedbackList.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    });
+    vi.mocked(api.health).mockResolvedValue({ multiuser: false } as any);
+  });
+
+  it("渲染「意见反馈」tab 并可切换", async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    // FeedbackListPanel 描述文本出现（说明面板已渲染）
+    await waitFor(() => {
+      expect(screen.getByText(/查看用户提交的结构化反馈/)).toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", { name: "意见反馈" }),
+    ).toHaveAttribute("aria-current", "page");
+  });
+
+  it("空列表展示 EMPTY 占位", async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("暂无反馈")).toBeInTheDocument();
+    });
+  });
+
+  it("渲染列表项（👍/👎 + 标签 + query + comment）", async () => {
+    mockFeedbackList.mockResolvedValueOnce({
+      items: [
+        {
+          log_id: 101,
+          query: "金酒的核心风味是什么？",
+          feedback: -1,
+          comment: "答案把伏特加和金酒搞混了",
+          tag: "inaccurate",
+          created_at: "2026-07-31T10:00:00Z",
+        },
+      ],
+      total: 1,
+      limit: 50,
+      offset: 0,
+    });
+
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("金酒的核心风味是什么？")).toBeInTheDocument();
+    });
+    expect(screen.getByText("答案把伏特加和金酒搞混了")).toBeInTheDocument();
+    // log_id 渲染为 #101
+    expect(screen.getByText("#101")).toBeInTheDocument();
+  });
+
+  it("点击标签筛选触发重新加载并重置 offset", async () => {
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    await waitFor(() => expect(mockFeedbackList).toHaveBeenCalledTimes(1));
+
+    // 点击「答案不准」筛选按钮
+    await user.click(screen.getByRole("button", { name: "答案不准" }));
+
+    await waitFor(() => expect(mockFeedbackList).toHaveBeenCalledTimes(2));
+    const calls = mockFeedbackList.mock.calls;
+    const lastCall = calls[calls.length - 1];
+    // feedbackList(tag?, limit?, offset?) — tag="inaccurate", offset=0
+    expect(lastCall[0]).toBe("inaccurate");
+    expect(lastCall[2]).toBe(0);
+  });
+
+  it("加载失败显示错误", async () => {
+    mockFeedbackList.mockRejectedValueOnce(new Error("网络错误"));
+
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("网络错误");
+    });
+  });
+
+  it("分页 — 点击下一页增加 offset", async () => {
+    // FEEDBACK_PAGE_SIZE=50，需要 total > 50 才显示分页
+    mockFeedbackList.mockResolvedValue({
+      items: Array.from({ length: 50 }, (_, i) => ({
+        log_id: i + 1,
+        query: `问题 ${i}`,
+        feedback: -1,
+        comment: `评论 ${i}`,
+        tag: "other",
+        created_at: "2026-07-31T10:00:00Z",
+      })),
+      total: 75,
+      limit: 50,
+      offset: 0,
+    });
+
+    const user = userEvent.setup();
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByText("创建新标签")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "意见反馈" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/共 75 条/)).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "下一页" }));
+
+    await waitFor(() => {
+      const calls = mockFeedbackList.mock.calls;
+      const lastCall = calls[calls.length - 1];
+      expect(lastCall[2]).toBe(50); // offset=50
     });
   });
 });

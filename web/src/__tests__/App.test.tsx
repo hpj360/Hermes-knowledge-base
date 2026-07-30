@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
@@ -371,3 +371,92 @@ describe("产品重构：分组导航与 IA", () => {
     });
   });
 });
+
+// ════════════════════════════════════════════════════════════════════
+// 移动端响应式导航：底部 tab bar 与顶部 nav 根据视口宽度切换
+// ════════════════════════════════════════════════════════════════════
+describe("响应式导航：底部 tab bar 与顶部 nav 切换", () => {
+  /** mock window.matchMedia：jsdom 不实现媒体查询，需手动控制 matches 值 */
+  function mockMatchMedia(matches: boolean) {
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+  }
+
+  // 保存原始 matchMedia 以便 afterEach 恢复，避免污染其他 describe 块
+  let originalMatchMedia: typeof window.matchMedia;
+
+  beforeEach(() => {
+    originalMatchMedia = window.matchMedia;
+    // 默认桌面端（与 setup.ts 一致）
+    mockMatchMedia(false);
+  });
+
+  afterEach(() => {
+    window.matchMedia = originalMatchMedia;
+  });
+
+  it("移动端 (<768px)：渲染底部 tab bar（移动导航），隐藏顶部主导航", async () => {
+    mockMatchMedia(true);
+    render(<App />);
+    await waitForAppReady();
+
+    // 底部 tab bar 渲染
+    const bottomNav = screen.getByRole("navigation", { name: "移动导航" });
+    expect(bottomNav).toBeInTheDocument();
+
+    // 顶部主导航不渲染
+    expect(screen.queryByRole("navigation", { name: "主导航" })).toBeNull();
+  });
+
+  it("移动端：底部 tab bar 包含 5 个 tab（首页/问答/配方/实验室/设置）", async () => {
+    mockMatchMedia(true);
+    render(<App />);
+    await waitForAppReady();
+
+    const bottomNav = screen.getByRole("navigation", { name: "移动导航" });
+    const links = bottomNav.querySelectorAll("a");
+    expect(links.length).toBe(5);
+    expect(bottomNav).toHaveTextContent("首页");
+    expect(bottomNav).toHaveTextContent("问答");
+    expect(bottomNav).toHaveTextContent("配方");
+    expect(bottomNav).toHaveTextContent("实验室");
+    expect(bottomNav).toHaveTextContent("设置");
+  });
+
+  it("桌面端 (≥768px)：渲染顶部主导航，隐藏底部 tab bar", async () => {
+    mockMatchMedia(false);
+    render(<App />);
+    await waitForAppReady();
+
+    // 顶部主导航渲染
+    const topNav = screen.getByRole("navigation", { name: "主导航" });
+    expect(topNav).toBeInTheDocument();
+
+    // 底部 tab bar 不渲染
+    expect(screen.queryByRole("navigation", { name: "移动导航" })).toBeNull();
+  });
+
+  it("移动端：点击底部 tab「配方」导航到 /recipes", async () => {
+    mockMatchMedia(true);
+    const user = userEvent.setup();
+    render(<App />);
+    await waitForAppReady();
+
+    const bottomNav = screen.getByRole("navigation", { name: "移动导航" });
+    const recipeLink = bottomNav.querySelector('a[href="/recipes"]') as HTMLAnchorElement;
+    expect(recipeLink).not.toBeNull();
+    await user.click(recipeLink);
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/recipes");
+    });
+  });
+});
+

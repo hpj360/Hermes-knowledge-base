@@ -5,6 +5,7 @@ import type { HealthStatus } from "./types";
 import { AgeGate } from "./components/AgeGate";
 import { Login } from "./components/Login";
 import { MultiLogin } from "./components/MultiLogin";
+import { OfflineBanner } from "./components/OfflineBanner";
 import { ChatPanel } from "./components/ChatPanel";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentDetailPanel } from "./components/DocumentDetailPanel";
@@ -16,7 +17,29 @@ import { RecipeEditorPanel } from "./components/RecipeEditorPanel";
 import { DashboardPanel } from "./components/DashboardPanel";
 import { Skeleton } from "./components/Skeleton";
 import { ToastHost, showToast } from "./components/Toast";
+import { BottomTabBar } from "./components/BottomTabBar";
 import { Logo, useConfirm, BauhausBrandMark, BauhausButton, BauhausGeometry } from "./components/ui";
+
+/**
+ * 移动端断点检测：匹配 Tailwind md: 断点（< 768px 视为移动端）。
+ *
+ * 用途：条件渲染顶部 nav（仅桌面）与底部 BottomTabBar（仅移动）。
+ * 测试时通过 mock window.matchMedia 控制返回值。
+ */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return false;
+    return window.matchMedia("(max-width: 767px)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
 
 /**
  * 产品重构：分组导航 — 首页 + 知识区(问答/文档) + 调酒区(配方/实验室) + 设置
@@ -70,6 +93,7 @@ export default function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
 
   // R2: 替代 window.confirm 的异步确认对话框
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -163,6 +187,7 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col relative" style={{ background: "var(--paper-bg)" }}>
+      <OfflineBanner />
       {/* 顶部栏 — 包豪斯导航栏：白底 + 3px 黑色底边 + brand mark 实色方块 */}
       <header className="navbar px-6 py-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -206,9 +231,12 @@ export default function App() {
         </div>
       </header>
 
-      {/* 水平导航 — 分组：首页 | 知识区(问答/文档) | 调酒区(配方/实验室) | 设置 */}
+      {/* 水平导航 — 分组：首页 | 知识区(问答/文档) | 调酒区(配方/实验室) | 设置
+          移动端 (<768px) 隐藏，改用底部 BottomTabBar；桌面端 (≥768px) 显示。
+          hidden md:flex 提供 CSS 级隐藏，!isMobile 提供条件渲染（jsdom 测试用）。 */}
+      {!isMobile && (
       <nav
-        className="flex items-center gap-1 px-6 border-b border-ink-200 flex-shrink-0 overflow-x-auto"
+        className="hidden md:flex items-center gap-1 px-6 border-b border-ink-200 flex-shrink-0 overflow-x-auto"
         aria-label="主导航"
         style={{ background: "var(--paper)" }}
       >
@@ -227,9 +255,11 @@ export default function App() {
           </div>
         ))}
       </nav>
+      )}
 
-      {/* 内容区 — 路由驱动，包豪斯几何装饰 */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      {/* 内容区 — 路由驱动，包豪斯几何装饰
+          移动端 pb-14 给底部 tab bar 留空间（约 56px），桌面端 md:pb-0 */}
+      <main className="flex-1 flex flex-col overflow-hidden relative pb-14 md:pb-0">
         <BauhausGeometry positions={["tr", "br"]} />
         <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
           <Switch>
@@ -301,6 +331,14 @@ export default function App() {
           </Switch>
         </div>
       </main>
+
+      {/* 移动端底部 tab bar — 仅 <768px 显示（md:hidden CSS 隐藏 + isMobile 条件渲染）
+          已通过 ageConfirmed && authReady && !needLogin 检查（在此 return 分支内） */}
+      {isMobile && (
+        <div className="md:hidden">
+          <BottomTabBar />
+        </div>
+      )}
 
       {/* 导入对话框 */}
       {showImport && (

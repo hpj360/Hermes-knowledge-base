@@ -5,6 +5,7 @@ import type {
   CategoryInfo,
   DocumentDetail,
   DocumentItem,
+  FeedbackListResult,
   HealthStatus,
   HistoryItem,
   IMASearchItem,
@@ -297,11 +298,39 @@ export const api = {
     return request(`/api/history${qs ? "?" + qs : ""}`);
   },
 
-  async feedback(logId: number, feedback: number): Promise<{ status: string }> {
+  /**
+   * V5：提交结构化反馈。
+   * - feedback: 1=up / -1=down / 0=none
+   * - comment: 可选评论（≤500 字）
+   * - tag: 可选问题标签（inaccurate / not_found / wrong_citation / other）
+   */
+  async feedback(
+    logId: number,
+    feedback: number,
+    comment?: string,
+    tag?: string,
+  ): Promise<{ id: number; feedback: number; status: string }> {
+    const body: Record<string, unknown> = { feedback };
+    if (comment !== undefined) body.comment = comment;
+    if (tag !== undefined) body.tag = tag;
     return request(`/api/feedback/${logId}`, {
       method: "POST",
-      body: JSON.stringify({ feedback }),
+      body: JSON.stringify(body),
     });
+  },
+
+  /** V5：反馈汇总列表（仅 owner/admin） */
+  async feedbackList(
+    tag?: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<FeedbackListResult> {
+    const sp = new URLSearchParams();
+    if (tag) sp.set("tag", tag);
+    if (limit !== undefined) sp.set("limit", String(limit));
+    if (offset !== undefined) sp.set("offset", String(offset));
+    const qs = sp.toString();
+    return request(`/api/feedback/list${qs ? "?" + qs : ""}`);
   },
 
   // -------------------------------------------------------------------------

@@ -69,44 +69,56 @@
 
 **目标**：≥3 个团队试用，每个团队 ≥3 人活跃
 
-- [ ] Task 9: 用户数据模型
-  - [ ] SubTask 9.1: 后端 — 新增 users 表（id, username, password_hash, role, created_at）
-  - [ ] SubTask 9.2: 后端 — Alembic migration 脚本
-  - [ ] SubTask 9.3: 后端 — 密码哈希（bcrypt/argon2）
-  - [ ] SubTask 9.4: 后端 — 现有 admin 用户迁移为 owner 角色
+**实际成果**：用户模型+认证+UGC审核流完成，多用户 feature flag 默认关闭保持向后兼容
 
-- [ ] Task 10: 认证流程升级
-  - [ ] SubTask 10.1: 后端 — POST /api/auth/register（邀请码注册）
-  - [ ] SubTask 10.2: 后端 — POST /api/auth/invite（owner 生成邀请链接）
-  - [ ] SubTask 10.3: 后端 — 权限中间件 require_owner/require_member/require_viewer
-  - [ ] SubTask 10.4: 前端 — 注册页面
-  - [ ] SubTask 10.5: 前端 — 登录页支持用户名+密码（替代单一密码）
-  - [ ] SubTask 10.6: Feature flag 控制（KB_MULTIUSER=true/false，默认关闭）
+- [x] Task 9: 用户数据模型 ✅ 2026-07-30
+  - [x] SubTask 9.1: 后端 — User 表（username/password_hash/role/invited_by/is_active）+ InviteCode 表
+  - [x] SubTask 9.2: 后端 — 迁移 0009_add_users_table
+  - [x] SubTask 9.3: 后端 — pbkdf2_sha256 密码哈希（200k 迭代 + 16 字节 salt）
+  - [x] SubTask 9.4: 后端 — ensure_owner_initialized 单用户平滑迁移
 
-- [ ] Task 11: UGC 审核流完善
-  - [ ] SubTask 11.1: 后端 — 配方 draft→pending→published/rejected 状态机完善
-  - [ ] SubTask 11.2: 前端 — PendingReviewPanel 接入多审核人
-  - [ ] SubTask 11.3: 后端 — 审核通知（站内消息或邮件）
-  - [ ] SubTask 11.4: 前端 — 个人配方库 vs 公共配方库分离
+- [x] Task 10: 认证流程升级 ✅ 2026-07-30
+  - [x] SubTask 10.1: 后端 — POST /api/auth/register（邀请码注册）
+  - [x] SubTask 10.2: 后端 — POST /api/auth/invite（owner 生成邀请码）
+  - [x] SubTask 10.3: 后端 — require_role 权限中间件（owner/member/viewer 层级）
+  - [x] SubTask 10.4: 前端 — MultiLogin 组件（用户名+密码登录 + 邀请码注册）
+  - [x] SubTask 10.5: 前端 — UserAdminPanel 用户管理界面
+  - [x] SubTask 10.6: Feature flag KB_MULTIUSER（默认关闭）
+
+- [x] Task 11: UGC 审核流完善 ✅ 2026-07-30
+  - [x] SubTask 11.1: 后端 — 状态机扩展 resubmit(rejected→draft) + author/reviewer 元数据
+  - [x] SubTask 11.2: 后端 — /recipes/my 个人配方库 + /recipes/{doc_id}/resubmit 端点
+  - [x] SubTask 11.3: 后端 — multiuser 模式下仅作者可重新提交
+  - [x] SubTask 11.4: 前端 — LabPanel MyRecipesDialog + RecipeEditorPanel 重新提交按钮
+
+## V3.5「可连接」— Obsidian vault 集成（2026-07，插空迭代）
+
+**目标**：接入 Obsidian vault，实现本地知识双向同步
+
+**实际成果**：文件系统直连方案 Phase 1+2 完整交付
+
+- [x] Task V3.5: Obsidian vault 集成 ✅ 2026-07-30
+  - [x] Phase 1: obsidian_sync.py（scan/sync/watch + frontmatter + wikilink）+ API 4 端点 + ObsidianPanel
+  - [x] Phase 2: 反向同步 export_recipe_to_vault + 双链解析 resolve_wikilinks→DocumentTag
 
 ## V4.0「随身」— 移动端适配与 PWA（2026-11，M4 里程碑）
 
 **目标**：移动端 Lighthouse ≥80，分享卡片生成 ≤2s
 
-- [ ] Task 12: 响应式布局
-  - [ ] SubTask 12.1: 前端 — 导航栏移动端折叠为底部 tab bar
-  - [ ] SubTask 12.2: 前端 — 配方卡片网格响应式（桌面 3 列/平板 2 列/手机 1 列）
-  - [ ] SubTask 12.3: 前端 — 问答面板移动端优化（输入框固定底部）
-  - [ ] SubTask 12.4: 前端 — 实验室材料选择器移动端横向滚动
+- [x] Task 12: 响应式布局 ✅ 2026-07-31
+  - [x] SubTask 12.1: 前端 — 导航栏移动端折叠为底部 tab bar
+  - [x] SubTask 12.2: 前端 — 配方卡片网格响应式（桌面 3 列/平板 2 列/手机 1 列）
+  - [x] SubTask 12.3: 前端 — 问答面板移动端优化（输入框固定底部）
+  - [x] SubTask 12.4: 前端 — 实验室材料选择器移动端横向滚动
 
-- [ ] Task 13: PWA 离线缓存
-  - [ ] SubTask 13.1: 前端 — manifest.json 配置
-  - [ ] SubTask 13.2: 前端 — Service Worker 缓存已访问配方
-  - [ ] SubTask 13.3: 前端 — 离线提示与降级 UI
+- [x] Task 13: PWA 离线缓存 ✅ 2026-07-31
+  - [x] SubTask 13.1: 前端 — manifest.json 配置
+  - [x] SubTask 13.2: 前端 — Service Worker 缓存已访问配方
+  - [x] SubTask 13.3: 前端 — 离线提示与降级 UI
 
-- [ ] Task 14: 分享卡片
-  - [ ] SubTask 14.1: 前端 — 配方一键生成分享图片（Canvas/SVG → PNG）
-  - [ ] SubTask 14.2: 前端 — 分享卡片包含配方名+材料+领域色背景
+- [x] Task 14: 分享卡片 ✅ 2026-07-31
+  - [x] SubTask 14.1: 前端 — 配方一键生成分享图片（Canvas/SVG → PNG）
+  - [x] SubTask 14.2: 前端 — 分享卡片包含配方名+材料+领域色背景
 
 ## V4.1「复盘」— 年终版（2026-12，M5 里程碑）
 
@@ -117,12 +129,12 @@
 
 ## 通用：用户反馈收集机制（贯穿全周期）
 
-- [ ] Task 16: 反馈机制建设
-  - [ ] SubTask 16.1: 前端 — 问答反馈按钮增加可选评论框 + 问题标签
-  - [ ] SubTask 16.2: 后端 — feedback 表增加 comment + tag 字段
-  - [ ] SubTask 16.3: 前端 — SettingsPanel 新增「意见反馈」入口
-  - [ ] SubTask 16.4: 后端 — 反馈汇总 API（admin 可查看反馈列表）
-  - [ ] SubTask 16.5: 数据反馈 — 埋点（配方详情停留时长、材料匹配使用率、UGC 完成率）
+- [x] Task 16: 反馈机制建设 ✅ 2026-07-31
+  - [x] SubTask 16.1: 前端 — 问答反馈按钮增加可选评论框 + 问题标签
+  - [x] SubTask 16.2: 后端 — feedback 表增加 comment + tag 字段
+  - [x] SubTask 16.3: 前端 — SettingsPanel 新增「意见反馈」入口
+  - [x] SubTask 16.4: 后端 — 反馈汇总 API（admin 可查看反馈列表）
+  - [ ] SubTask 16.5: 数据反馈 — 埋点（配方详情停留时长、材料匹配使用率、UGC 完成率）— 延后至 V4.1
 
 # Task Dependencies
 - [Task 2/3] 依赖 [Task 1]（embedding 升级后再优化改写/分片）

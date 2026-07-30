@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import type { AuditLogItem, HealthStatus, ImportBackupResult } from "../types";
+import type { AuditLogItem, FeedbackItem, HealthStatus, ImportBackupResult } from "../types";
 import { ObsidianPanel } from "./ObsidianPanel";
 import { TagPanel } from "./TagPanel";
 import { UserAdminPanel } from "./UserAdminPanel";
@@ -20,13 +20,14 @@ interface SettingsPanelProps {
   onChange: () => void;
 }
 
-type SettingsTab = "tags" | "export" | "audit" | "users" | "obsidian";
+type SettingsTab = "tags" | "export" | "audit" | "feedback" | "users" | "obsidian";
 
 // 设置中心子模块 tab（users 仅 multiuser 模式显示，obsidian 仅 vault 启用时显示）
 const TABS: ReadonlyArray<{ key: SettingsTab; label: string; multiuserOnly?: boolean; vaultOnly?: boolean }> = [
   { key: "tags", label: "标签管理" },
   { key: "export", label: "数据导出" },
   { key: "audit", label: "审计日志" },
+  { key: "feedback", label: "意见反馈" },
   { key: "users", label: "用户管理", multiuserOnly: true },
   { key: "obsidian", label: "Obsidian", vaultOnly: true },
 ];
@@ -87,6 +88,12 @@ export function SettingsPanel({ onChange }: SettingsPanelProps) {
       {active === "audit" && (
         <div className="p-8 max-w-3xl mx-auto">
           <AuditPanel />
+        </div>
+      )}
+
+      {active === "feedback" && (
+        <div className="p-8 max-w-3xl mx-auto">
+          <FeedbackListPanel />
         </div>
       )}
 
@@ -530,4 +537,221 @@ function formatTime(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+// ---------------------------------------------------------------------------
+// V5：意见反馈汇总子模块
+// ---------------------------------------------------------------------------
+
+/** 标签筛选选项（与后端约定一致） */
+const FEEDBACK_TAG_FILTERS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "全部" },
+  { value: "inaccurate", label: "答案不准" },
+  { value: "not_found", label: "找不到文档" },
+  { value: "wrong_citation", label: "引用错误" },
+  { value: "other", label: "其他" },
+];
+
+/** 标签 → 中文标签映射（用于列表项展示） */
+const TAG_LABELS: Record<string, string> = {
+  inaccurate: "答案不准",
+  not_found: "找不到文档",
+  wrong_citation: "引用错误",
+  other: "其他",
+};
+
+const FEEDBACK_PAGE_SIZE = 50;
+
+function FeedbackListPanel() {
+  const [items, setItems] = useState<FeedbackItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [tagFilter, setTagFilter] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const resp = await api.feedbackList(
+        tagFilter || undefined,
+        FEEDBACK_PAGE_SIZE,
+        offset,
+      );
+      setItems(resp.items || []);
+      setTotal(resp.total ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "加载反馈失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offset, tagFilter]);
+
+  const handleTagFilterChange = (value: string) => {
+    setTagFilter(value);
+    setOffset(0);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / FEEDBACK_PAGE_SIZE));
+  const currentPage = Math.floor(offset / FEEDBACK_PAGE_SIZE) + 1;
+
+  return (
+    <div>
+      <BauhausSectionLabel className="mb-2">FEEDBACK</BauhausSectionLabel>
+      <BauhausDisplay as="h2" className="mb-2">意见反馈</BauhausDisplay>
+      <BodyText className="text-sm mb-6" style={{ color: "var(--ink-400)" }}>
+        查看用户提交的结构化反馈（评论 + 问题标签），用于指导知识库内容与检索质量优化。
+      </BodyText>
+
+      {/* 标签筛选栏 */}
+      <div
+        className="flex flex-wrap items-center gap-2 mb-6"
+        role="group"
+        aria-label="反馈标签筛选"
+      >
+        <label
+          className="text-xs"
+          style={{ color: "var(--ink-400)", fontFamily: "var(--font-ui)" }}
+          htmlFor="feedback-tag-filter"
+        >
+          标签
+        </label>
+        <div id="feedback-tag-filter" className="flex items-center gap-1">
+          {FEEDBACK_TAG_FILTERS.map((f) => {
+            const active = tagFilter === f.value;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => handleTagFilterChange(f.value)}
+                aria-pressed={active}
+                className="text-xs px-3 py-1 rounded-full border transition-all duration-150"
+                style={
+                  active
+                    ? {
+                        background: "var(--ink-900)",
+                        color: "#fff",
+                        borderColor: "var(--ink-900)",
+                      }
+                    : {
+                        background: "var(--ink-100)",
+                        color: "var(--ink-600)",
+                        borderColor: "var(--ink-200)",
+                        cursor: "pointer",
+                      }
+                }
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {error && <div className="mb-4"><ErrorBanner>{error}</ErrorBanner></div>}
+
+      {/* 反馈列表 */}
+      {items.length === 0 && !loading && !error ? (
+        <BauhausCard className="p-12 text-center">
+          <div className="text-2xl mb-2 text-gold-500">◆</div>
+          <BauhausSectionLabel className="mb-2">EMPTY</BauhausSectionLabel>
+          <BodyText className="text-sm">暂无反馈</BodyText>
+        </BauhausCard>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <BauhausCard
+              key={item.log_id}
+              className="p-4"
+              accent={item.feedback === 1 ? "amber" : "wine"}
+            >
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                {/* 反馈类型：👍/👎 */}
+                <span
+                  className="text-sm"
+                  aria-label={item.feedback === 1 ? "赞" : "踩"}
+                >
+                  {item.feedback === 1 ? "👍" : "👎"}
+                </span>
+                {/* 问题标签 */}
+                {item.tag && (
+                  <span
+                    className="text-xs px-2 py-1"
+                    style={{
+                      background: "var(--ink-100)",
+                      color: "var(--ink-600)",
+                      borderRadius: "var(--r-sm)",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                  >
+                    {TAG_LABELS[item.tag] || item.tag}
+                  </span>
+                )}
+                <MetaText className="text-xs ml-auto">
+                  <MonoText>#{item.log_id}</MonoText>
+                  {item.created_at && (
+                    <>
+                      <span className="mx-2">·</span>
+                      <MonoText>{formatTime(item.created_at)}</MonoText>
+                    </>
+                  )}
+                </MetaText>
+              </div>
+              {/* 问询摘要 */}
+              <BodyText className="text-sm mb-2" style={{ fontWeight: 500 }}>
+                {item.query}
+              </BodyText>
+              {/* 评论 */}
+              {item.comment && (
+                <BodyText
+                  as="p"
+                  className="text-sm"
+                  style={{
+                    color: "var(--ink-600)",
+                    background: "var(--paper)",
+                    padding: "var(--sp-2) var(--sp-3)",
+                    borderRadius: "var(--r-sm)",
+                    border: "1px solid var(--ink-100)",
+                  }}
+                >
+                  {item.comment}
+                </BodyText>
+              )}
+            </BauhausCard>
+          ))}
+        </div>
+      )}
+
+      {/* 分页 */}
+      {total > FEEDBACK_PAGE_SIZE && (
+        <div className="flex items-center justify-between mt-6">
+          <MetaText className="text-xs">
+            共 {total} 条 · 第 {currentPage} / {totalPages} 页
+          </MetaText>
+          <div className="flex gap-2">
+            <BauhausButton
+              variant="outline"
+              onClick={() => setOffset(Math.max(0, offset - FEEDBACK_PAGE_SIZE))}
+              disabled={offset === 0 || loading}
+            >
+              上一页
+            </BauhausButton>
+            <BauhausButton
+              variant="outline"
+              onClick={() => setOffset(offset + FEEDBACK_PAGE_SIZE)}
+              disabled={offset + FEEDBACK_PAGE_SIZE >= total || loading}
+            >
+              下一页
+            </BauhausButton>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

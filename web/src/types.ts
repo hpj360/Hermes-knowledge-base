@@ -123,6 +123,24 @@ export interface HistoryItem {
   feedback?: number;
 }
 
+/** V5: /api/feedback/list 单条结构化反馈项 */
+export interface FeedbackItem {
+  log_id: number;
+  query: string;        // 截断 100 字
+  feedback: number;     // 1=up / -1=down / 0=none
+  comment: string;
+  tag: string;          // inaccurate / not_found / wrong_citation / other / 空串
+  created_at: string;
+}
+
+/** V5: /api/feedback/list 响应 */
+export interface FeedbackListResult {
+  items: FeedbackItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 export interface SeedResult {
   seeded: number;
   failed: number;

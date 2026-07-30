@@ -243,7 +243,7 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe, onEditRecipe }: LabPanel
               <span className="eyebrow">{cat.label}</span>
               <span style={{ fontFamily: "var(--font-mono)" }}>{cat.items.length}</span>
             </div>
-            <div className="chip-list">
+            <div className="chip-list !flex-nowrap md:!flex-wrap overflow-x-auto md:overflow-visible [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
               {cat.items.map((name) => {
                 const isSelected = !!selected[name];
                 // P0.1 修复：用 .chip-chip.cat-{category}.selected 触发 _components.css 4 色分类规则
@@ -252,7 +252,7 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe, onEditRecipe }: LabPanel
                     key={name}
                     type="button"
                     onClick={() => toggleMaterial(name, cat.id)}
-                    className={`chip-chip cat-${cat.id}${isSelected ? " selected" : ""}`}
+                    className={`chip-chip cat-${cat.id}${isSelected ? " selected" : ""} flex-shrink-0 whitespace-nowrap`}
                     aria-pressed={isSelected}
                   >
                     {name}

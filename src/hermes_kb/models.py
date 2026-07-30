@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import Column, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, String, Text, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 # P2 修复：PRESET_CATEGORIES 已移至 config.py，此处仅做向后兼容重导出
@@ -120,6 +120,9 @@ class QueryLog(SQLModel, table=True):
     model_used: str = Field(default="mock", max_length=64)
     latency_ms: int = Field(default=0)
     feedback: int = Field(default=0)  # 1=up / -1=down / 0=none
+    # V5：结构化反馈——评论（≤500字）+ 问题标签（≤32字）
+    feedback_comment: str = Field(default="", sa_column=Column("feedback_comment", Text))
+    feedback_tag: str = Field(default="", sa_column=Column("feedback_tag", String(32)))
     # M2-10：token 用量统计（默认 0，向后兼容旧记录）
     prompt_tokens: int = Field(default=0)
     completion_tokens: int = Field(default=0)

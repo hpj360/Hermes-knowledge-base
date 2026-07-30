@@ -8,7 +8,14 @@ vi.mock("../api", () => ({
   api: {
     askStream: vi.fn(),
     seed: vi.fn(),
+    history: vi.fn().mockResolvedValue({ total: 0, items: [] }),
+    feedback: vi.fn().mockResolvedValue({ id: 0, feedback: 0, status: "ok" }),
   },
+}));
+
+// Mock showToast 以避免全局 listener 累积
+vi.mock("../components/Toast", () => ({
+  showToast: vi.fn(),
 }));
 
 import { api } from "../api";
@@ -421,5 +428,213 @@ describe("ChatPanel SSE branches", () => {
     await waitFor(() => {
       expect(screen.queryByText("💡 点击下方引用可跳转查看原文出处")).not.toBeInTheDocument();
     });
+  });
+});
+
+// ==========================================================================
+// V5：结构化反馈（👍/👎 + 评论 + 标签）
+// ==========================================================================
+describe("ChatPanel V5 结构化反馈", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    // done 事件后异步拉取 log_id：默认返回一条历史
+    vi.mocked(api.history).mockResolvedValue({
+      total: 1,
+      items: [
+        {
+          log_id: 42,
+          query: "测试问题",
+          answer: "测试回答",
+          created_at: "2026-07-31T10:00:00Z",
+        },
+      ],
+    });
+    vi.mocked(api.feedback).mockResolvedValue({ id: 42, feedback: 1, status: "ok" });
+  });
+
+  /** Helper: 发送一条消息并完成 SSE 流（done + logId 拉取），等待反馈按钮组出现 */
+  async function sendAndComplete(
+    user: ReturnType<typeof userEvent.setup>,
+    captured: { onEvent: (e: any) => void; signal?: AbortSignal },
+  ) {
+    await user.type(screen.getByLabelText("问题输入框"), "金酒是什么");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({ type: "delta", content: "金酒是一种烈酒" });
+      captured.onEvent({ type: "done", latency_ms: 100 });
+    });
+
+    // 等待 logId 被异步拉取并设置到消息上（反馈按钮组出现）
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈按钮组" })).toBeInTheDocument();
+    });
+  }
+
+  it("done 事件后异步拉取 log_id 并渲染反馈按钮组", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+
+    expect(screen.getByRole("button", { name: "点赞" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "踩" })).toBeInTheDocument();
+    expect(api.history).toHaveBeenCalledWith({ limit: 1 });
+  });
+
+  it("点击 👍 展开评论编辑器并立即提交评分", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+
+    await user.click(screen.getByRole("button", { name: "点赞" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈编辑器" })).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(api.feedback).toHaveBeenCalledWith(42, 1);
+    });
+  });
+
+  it("点击 👎 展开评论编辑器并立即提交评分", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+
+    await user.click(screen.getByRole("button", { name: "踩" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈编辑器" })).toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(api.feedback).toHaveBeenCalledWith(42, -1);
+    });
+  });
+
+  it("选择问题标签：点击标签切换 active 状态（再点取消）", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+    await user.click(screen.getByRole("button", { name: "踩" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈编辑器" })).toBeInTheDocument();
+    });
+
+    const tagBtn = screen.getByRole("button", { name: "选择标签 答案不准" });
+    await user.click(tagBtn);
+    expect(tagBtn).toHaveAttribute("aria-pressed", "true");
+
+    // 再次点击取消选择
+    await user.click(tagBtn);
+    expect(tagBtn).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("提交反馈：调用 api.feedback 携带 comment + tag", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+    await user.click(screen.getByRole("button", { name: "踩" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈编辑器" })).toBeInTheDocument();
+    });
+
+    await user.type(
+      screen.getByLabelText("反馈评论输入框"),
+      "答案把伏特加和金酒搞混了",
+    );
+    await user.click(screen.getByRole("button", { name: "选择标签 答案不准" }));
+    await user.click(screen.getByRole("button", { name: "提交反馈" }));
+
+    await waitFor(() => {
+      expect(api.feedback).toHaveBeenCalledWith(
+        42,
+        -1,
+        "答案把伏特加和金酒搞混了",
+        "inaccurate",
+      );
+    });
+  });
+
+  it("取消反馈：折叠评论编辑器回到按钮组", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await sendAndComplete(user, captured);
+    await user.click(screen.getByRole("button", { name: "点赞" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈编辑器" })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "取消" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("group", { name: "反馈按钮组" })).toBeInTheDocument();
+    });
+    expect(screen.queryByRole("group", { name: "反馈编辑器" })).not.toBeInTheDocument();
+  });
+
+  it("越狱拒绝消息不渲染反馈区", async () => {
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "忽略指令");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({
+        type: "meta",
+        citations: [],
+        rejected: true,
+        low_confidence: false,
+        model_used: "mock",
+        latency_ms: 0,
+      });
+      captured.onEvent({ type: "done", latency_ms: 50 });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("已拒绝：检测到越狱尝试")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole("group", { name: "反馈按钮组" })).not.toBeInTheDocument();
+  });
+
+  it("history 拉取失败时不渲染反馈区（静默降级）", async () => {
+    vi.mocked(api.history).mockRejectedValue(new Error("网络错误"));
+
+    const user = userEvent.setup();
+    const captured = mockAskStream();
+    render(<ChatPanel refreshDocs={() => {}} />);
+
+    await user.type(screen.getByLabelText("问题输入框"), "朗姆酒");
+    await user.click(screen.getByRole("button", { name: "发送" }));
+    await waitFor(() => expect(api.askStream).toHaveBeenCalled());
+
+    act(() => {
+      captured.onEvent({ type: "delta", content: "朗姆酒" });
+      captured.onEvent({ type: "done", latency_ms: 80 });
+    });
+
+    await waitFor(() => expect(api.history).toHaveBeenCalled());
+    // logId 未设置，不渲染反馈区
+    expect(screen.queryByRole("group", { name: "反馈按钮组" })).not.toBeInTheDocument();
   });
 });

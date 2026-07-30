@@ -29,6 +29,10 @@ interface Message {
   latencyMs?: number;
   streaming?: boolean;
   externalRefs?: ExternalRef[];  // B6+: IMA「酒博士」外部参考
+  // V5：结构化反馈
+  logId?: number;               // 关联 QueryLog.id（done 后异步拉取）
+  feedbackGiven?: number;       // 已提交的评分：1=up / -1=down / 0=none
+  feedbackExpanded?: boolean;   // 是否展开评论+标签编辑器
 }
 
 /** 问答面板（M1-03：SSE 流式生成）。 */
@@ -121,6 +125,26 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
               };
               return copy;
             });
+            // V5：done 后异步拉取 log_id（取最近一条历史，即本次问答）
+            // 失败时静默降级——只是不显示反馈按钮，不影响主流程
+            (async () => {
+              try {
+                const hist = await api.history({ limit: 1 });
+                if (hist.items && hist.items.length > 0) {
+                  const fetchedLogId = hist.items[0].log_id;
+                  setMessages((m) => {
+                    const copy = [...m];
+                    const last = copy[copy.length - 1];
+                    if (last && last.role === "assistant") {
+                      copy[copy.length - 1] = { ...last, logId: fetchedLogId };
+                    }
+                    return copy;
+                  });
+                }
+              } catch {
+                // 静默降级：网络/认证失败时不显示反馈按钮
+              }
+            })();
           } else if (evt.type === "error") {
             setMessages((m) => {
               const copy = [...m];
@@ -173,10 +197,58 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
     }
   };
 
+  // V5：结构化反馈——点击 👍/👎 立即提交评分，并展开评论+标签编辑器
+  const handleFeedbackClick = (msgIdx: number, feedback: number) => {
+    setMessages((m) => {
+      const copy = [...m];
+      const msg = copy[msgIdx];
+      if (!msg || msg.logId === undefined) return m;
+      copy[msgIdx] = {
+        ...msg,
+        feedbackGiven: feedback,
+        feedbackExpanded: true,
+      };
+      return copy;
+    });
+    // 立即提交评分（不阻塞 UI）
+    const msg = messages[msgIdx];
+    if (msg?.logId !== undefined) {
+      api.feedback(msg.logId, feedback).catch(() => {
+        // 静默失败：用户可在展开的编辑器中再次提交
+      });
+    }
+  };
+
+  // V5：提交带评论+标签的反馈
+  const submitFeedback = async (msgIdx: number, comment: string, tag: string) => {
+    const msg = messages[msgIdx];
+    if (!msg || msg.logId === undefined || msg.feedbackGiven === undefined) return;
+    try {
+      await api.feedback(msg.logId, msg.feedbackGiven, comment, tag);
+      showToast("反馈已提交，感谢您的意见", "success");
+      setMessages((m) => {
+        const copy = [...m];
+        copy[msgIdx] = { ...copy[msgIdx], feedbackExpanded: false };
+        return copy;
+      });
+    } catch (err) {
+      showToast(`反馈提交失败：${err instanceof Error ? err.message : err}`, "danger");
+    }
+  };
+
+  // V5：取消反馈编辑（折叠评论区）
+  const cancelFeedback = (msgIdx: number) => {
+    setMessages((m) => {
+      const copy = [...m];
+      copy[msgIdx] = { ...copy[msgIdx], feedbackExpanded: false };
+      return copy;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* 工具栏 */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-[color:var(--ink-50)] border-[color:var(--ink-200)]">
+      <div className="flex items-center justify-between px-3 md:px-6 py-3 border-b bg-[color:var(--ink-50)] border-[color:var(--ink-200)]">
         <div className="flex items-baseline gap-3">
           <BauhausSectionLabel>Q&amp;A</BauhausSectionLabel>
           <h2 className="section-title text-base">问答</h2>
@@ -215,7 +287,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       ) : (
         <>
       {/* 消息列表 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
             <div className="text-center max-w-lg">
@@ -388,6 +460,16 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                       {m.modelUsed} · {m.latencyMs}ms
                     </MonoText>
                   )}
+                  {/* V5：结构化反馈区——👍/👎 按钮 + 可展开评论+标签编辑器 */}
+                  {m.logId !== undefined && !m.streaming && !m.rejected && (
+                    <FeedbackArea
+                      message={m}
+                      msgIdx={i}
+                      onFeedbackClick={handleFeedbackClick}
+                      onSubmit={submitFeedback}
+                      onCancel={cancelFeedback}
+                    />
+                  )}
                 </>
               )}
             </div>
@@ -395,8 +477,8 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
         ))}
       </div>
 
-      {/* 输入区 */}
-      <div className="border-t p-4 bg-white">
+      {/* 输入区 — sticky bottom-0 确保移动端始终可见，桌面端无副作用 */}
+      <div className="sticky bottom-0 border-t p-3 md:p-4 bg-white">
         <div className="flex gap-2">
           <textarea
             className="input flex-1 resize-none"
@@ -426,6 +508,151 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       </div>
         </>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// V5：结构化反馈区——👍/👎 按钮 + 可展开评论+标签编辑器
+// ---------------------------------------------------------------------------
+
+/** 反馈标签选项（与后端约定：inaccurate/not_found/wrong_citation/other） */
+const FEEDBACK_TAGS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "inaccurate", label: "答案不准" },
+  { value: "not_found", label: "找不到文档" },
+  { value: "wrong_citation", label: "引用错误" },
+  { value: "other", label: "其他" },
+];
+
+interface FeedbackAreaProps {
+  message: Message;
+  msgIdx: number;
+  onFeedbackClick: (msgIdx: number, feedback: number) => void;
+  onSubmit: (msgIdx: number, comment: string, tag: string) => void;
+  onCancel: (msgIdx: number) => void;
+}
+
+function FeedbackArea({ message, msgIdx, onFeedbackClick, onSubmit, onCancel }: FeedbackAreaProps) {
+  const [comment, setComment] = useState("");
+  const [selectedTag, setSelectedTag] = useState("");
+
+  // 已展开评论编辑器
+  if (message.feedbackExpanded && message.feedbackGiven !== undefined) {
+    const isUp = message.feedbackGiven === 1;
+    return (
+      <div
+        className="mt-3 pt-3 border-t border-[color:var(--ink-100)] space-y-3"
+        role="group"
+        aria-label="反馈编辑器"
+      >
+        <MetaText as="div" className="text-xs">
+          {isUp ? "👍 感谢好评！可选填补充说明" : "👎 感谢反馈！请描述问题以便改进"}
+        </MetaText>
+        <textarea
+          className="input resize-none w-full"
+          rows={3}
+          maxLength={500}
+          placeholder="可选：描述问题（≤500字）"
+          aria-label="反馈评论输入框"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <MetaText as="span" className="text-xs">问题标签</MetaText>
+          {FEEDBACK_TAGS.map((t) => {
+            const active = selectedTag === t.value;
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setSelectedTag(active ? "" : t.value)}
+                aria-pressed={active}
+                aria-label={`选择标签 ${t.label}`}
+                className="text-xs px-3 py-1 rounded-full border transition-all duration-150"
+                style={
+                  active
+                    ? {
+                        background: "var(--ink-900)",
+                        color: "#fff",
+                        borderColor: "var(--ink-900)",
+                      }
+                    : {
+                        background: "var(--ink-100)",
+                        color: "var(--ink-600)",
+                        borderColor: "var(--ink-200)",
+                        cursor: "pointer",
+                      }
+                }
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2">
+          <BauhausButton
+            variant="solid"
+            onClick={() => onSubmit(msgIdx, comment, selectedTag)}
+          >
+            提交反馈
+          </BauhausButton>
+          <BauhausButton
+            variant="outline"
+            onClick={() => onCancel(msgIdx)}
+          >
+            取消
+          </BauhausButton>
+        </div>
+      </div>
+    );
+  }
+
+  // 默认：显示 👍/👎 按钮
+  return (
+    <div
+      className="mt-2 pt-2 border-t border-[color:var(--ink-100)] flex items-center gap-2"
+      role="group"
+      aria-label="反馈按钮组"
+    >
+      <MetaText as="span" className="text-xs mr-1">回答是否有帮助？</MetaText>
+      <button
+        type="button"
+        onClick={() => onFeedbackClick(msgIdx, 1)}
+        aria-label="点赞"
+        aria-pressed={message.feedbackGiven === 1}
+        className="text-sm px-2 py-1 rounded border transition-all duration-150"
+        style={
+          message.feedbackGiven === 1
+            ? { background: "var(--wine)", color: "#fff", borderColor: "var(--wine)" }
+            : {
+                background: "transparent",
+                color: "var(--ink-600)",
+                borderColor: "var(--ink-200)",
+                cursor: "pointer",
+              }
+        }
+      >
+        👍
+      </button>
+      <button
+        type="button"
+        onClick={() => onFeedbackClick(msgIdx, -1)}
+        aria-label="踩"
+        aria-pressed={message.feedbackGiven === -1}
+        className="text-sm px-2 py-1 rounded border transition-all duration-150"
+        style={
+          message.feedbackGiven === -1
+            ? { background: "var(--ink-900)", color: "#fff", borderColor: "var(--ink-900)" }
+            : {
+                background: "transparent",
+                color: "var(--ink-600)",
+                borderColor: "var(--ink-200)",
+                cursor: "pointer",
+              }
+        }
+      >
+        👎
+      </button>
     </div>
   );
 }

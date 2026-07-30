@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { LabRecipe, LabRecipeVariant } from "../types";
 import { PendingReviewPanel } from "./PendingReviewPanel";
+import { ShareCardButton } from "./ShareCardButton";
 import { SkeletonList } from "./Skeleton";
 import { showToast } from "./Toast";
 import {
@@ -358,6 +359,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         <BauhausButton variant="outline" onClick={onToggleHide} disabled={busy}>
           {recipe.hidden ? "取消隐藏" : "隐藏"}
         </BauhausButton>
+        <ShareCardButton recipe={recipe} />
         {onEdit && (recipe.status === "draft" || recipe.status === "rejected") && (
           <BauhausButton variant="solid" onClick={onEdit} disabled={busy} className="ml-auto">
             编辑

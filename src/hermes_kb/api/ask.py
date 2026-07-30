@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, text as sa_text
 from sqlmodel import Session, select
 
-from hermes_kb.api.deps import get_importer, get_rag, require_age_gate, require_auth
+from hermes_kb.api.deps import get_importer, get_rag, require_age_gate, require_auth, require_role
 from hermes_kb.audit import extract_user, log_action, log_ask_sampled
 from hermes_kb.database import get_session
 from hermes_kb.models import Document, QueryLog
@@ -34,6 +34,9 @@ class AskReq(BaseModel):
 
 class FeedbackReq(BaseModel):
     feedback: int = Field(..., ge=-1, le=1)  # 1=up / -1=down / 0=none
+    # V5：结构化反馈——可选评论（≤500字）+ 问题标签
+    comment: str | None = Field(default=None, max_length=500)
+    tag: str | None = Field(default=None, max_length=32)
 
 
 @router.post("/ask", dependencies=[Depends(require_auth), Depends(require_age_gate)])
@@ -424,6 +427,11 @@ async def feedback(
         if not log:
             raise HTTPException(status_code=404, detail="问答记录不存在")
         log.feedback = req.feedback
+        # V5：结构化反馈——同步更新评论与标签（None 表示未提交，保持原值）
+        if req.comment is not None:
+            log.feedback_comment = req.comment[:500]
+        if req.tag is not None:
+            log.feedback_tag = req.tag
         session.add(log)
         session.commit()
     # M2-08：审计 feedback 写操作（之前遗漏，导致反馈篡改无法追溯）
@@ -435,6 +443,59 @@ async def feedback(
         meta={"feedback": req.feedback},
     )
     return {"id": log_id, "feedback": req.feedback, "status": "ok"}
+
+
+# V5：结构化反馈汇总——仅 owner/admin 可访问
+@router.get("/feedback/list", dependencies=[Depends(require_role("owner"))])
+async def feedback_list(
+    tag: str | None = Query(default=None, max_length=32, description="按问题标签筛选"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    payload: dict[str, Any] | None = Depends(require_role("owner")),
+) -> dict[str, Any]:
+    """V5：反馈汇总列表。
+
+    - 仅 owner/admin（multiuser 模式下 require_role 校验；单用户模式放行）可访问
+    - 仅返回 feedback_comment 非空的记录（即用户提交了评论的反馈）
+    - 支持 tag 筛选（inaccurate/not_found/wrong_citation/other）
+    - 每项含 log_id / query（截断 100 字）/ feedback / comment / tag / created_at
+    """
+    with get_session() as session:
+        stmt = select(QueryLog).where(QueryLog.feedback_comment != "")
+        if tag:
+            stmt = stmt.where(QueryLog.feedback_tag == tag)
+        # 总数下推到 SQL COUNT(*)，避免全量加载
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = session.exec(count_stmt).one()
+        # 分页 + 倒序
+        stmt = stmt.order_by(QueryLog.created_at.desc()).offset(offset).limit(limit)
+        logs = session.exec(stmt).all()
+
+        items: list[dict[str, Any]] = []
+        for log_entry in logs:
+            created_at = log_entry.created_at
+            if isinstance(created_at, datetime):
+                created_at = created_at.isoformat()
+            elif created_at is not None:
+                created_at = str(created_at)
+            query_text = log_entry.query or ""
+            if len(query_text) > 100:
+                query_text = query_text[:100] + "…"
+            items.append({
+                "log_id": log_entry.id,
+                "query": query_text,
+                "feedback": log_entry.feedback,
+                "comment": log_entry.feedback_comment,
+                "tag": log_entry.feedback_tag,
+                "created_at": created_at,
+            })
+
+    return {
+        "items": items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 # 种子数据
