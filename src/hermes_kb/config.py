@@ -167,6 +167,14 @@ class Settings:
     # 同步时每页拉取条数（IMA OpenAPI 默认上限 50）
     ima_page_size: int = field(default_factory=lambda: _env_int("KB_IMA_PAGE_SIZE", 50))
 
+    # V4-Phase1：Obsidian vault 集成（文件系统直连方案）
+    # vault_path 为 Obsidian vault 根目录绝对路径；留空表示未启用
+    vault_path: str = field(default_factory=lambda: _env_str("KB_VAULT_PATH", ""))
+    # 是否启用 watchdog 实时监听（False 时仅手动触发扫描）
+    vault_watch: bool = field(default_factory=lambda: _env_bool("KB_VAULT_WATCH", True))
+    # 排除的子目录/文件模式（glob，逗号分隔），默认排除 .obsidian 配置目录与附件
+    vault_exclude: str = field(default_factory=lambda: _env_str("KB_VAULT_EXCLUDE", ".obsidian,.trash,*.png,*.jpg,*.jpeg,*.gif,*.pdf,*.svg"))
+
     @property
     def llm_available(self) -> bool:
         """是否启用真实 LLM。"""
@@ -198,6 +206,22 @@ class Settings:
     def ima_enabled(self) -> bool:
         """是否启用 IMA 知识库同步（client_id + api_key 都配置）。"""
         return bool(self.ima_client_id and self.ima_api_key)
+
+    @property
+    def vault_enabled(self) -> bool:
+        """V4-Phase1：是否启用 Obsidian vault 集成（vault_path 非空且存在）。"""
+        if not self.vault_path.strip():
+            return False
+        from pathlib import Path
+
+        return Path(self.vault_path).expanduser().is_dir()
+
+    @property
+    def vault_exclude_patterns(self) -> list[str]:
+        """V4-Phase1：解析 vault_exclude 为 glob 模式列表。"""
+        if not self.vault_exclude.strip():
+            return []
+        return [p.strip() for p in self.vault_exclude.split(",") if p.strip()]
 
     @property
     def cors_credentials_allowed(self) -> bool:

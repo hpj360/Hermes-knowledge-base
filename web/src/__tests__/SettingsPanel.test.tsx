@@ -16,6 +16,15 @@ vi.mock("../api", () => ({
     exportAll: vi.fn(),
     importBackup: vi.fn(),
     health: vi.fn().mockResolvedValue({ multiuser: false }),
+    obsidianStatus: vi.fn().mockResolvedValue({
+      enabled: false,
+      vault_path: "",
+      watch_enabled: false,
+      watchdog_available: false,
+      watching: false,
+      synced_docs: 0,
+      last_sync: null,
+    }),
   },
 }));
 
@@ -365,6 +374,35 @@ describe("SettingsPanel", () => {
       const calls = mockListAudit.mock.calls;
       const lastCall = calls[calls.length - 1]?.[0];
       expect(lastCall).toMatchObject({ offset: 20 });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // V4-Phase1：Obsidian vault tab 集成
+  // -------------------------------------------------------------------------
+  it("vault 未启用时不渲染 Obsidian tab", async () => {
+    vi.mocked(api.health).mockResolvedValue({ multiuser: false, vault_enabled: false } as any);
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(api.health).toHaveBeenCalled());
+    expect(screen.queryByRole("button", { name: "Obsidian" })).not.toBeInTheDocument();
+  });
+
+  it("vault 启用时渲染 Obsidian tab 并可切换", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.health).mockResolvedValue({
+      multiuser: false,
+      vault_enabled: true,
+    } as any);
+    render(<SettingsPanel onChange={() => {}} />);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Obsidian" })).toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Obsidian" }));
+
+    // ObsidianPanel 内部会调用 obsidianStatus
+    await waitFor(() => {
+      expect(api.obsidianStatus).toHaveBeenCalled();
     });
   });
 });

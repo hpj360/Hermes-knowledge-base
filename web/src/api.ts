@@ -33,6 +33,9 @@ import type {
   SSEEvent,
   SeedResult,
   TagInfo,
+  VaultExportResult,
+  VaultStatus,
+  VaultSyncResult,
 } from "./types";
 
 const BASE = import.meta.env.VITE_API_BASE || "";
@@ -771,6 +774,34 @@ export const api = {
     return request(`/api/auth/users/${encodeURIComponent(username)}/role`, {
       method: "POST",
       body: JSON.stringify({ role }),
+    });
+  },
+
+  // -------------------------------------------------------------------------
+  // V4-Phase1：Obsidian vault 集成
+  // -------------------------------------------------------------------------
+
+  /** GET /api/obsidian/status — 查询 vault 集成状态 */
+  async obsidianStatus(): Promise<VaultStatus> {
+    return request("/api/obsidian/status");
+  },
+
+  /** POST /api/obsidian/sync — 触发全量/增量扫描同步 */
+  async obsidianSync(incremental: boolean = true): Promise<VaultSyncResult> {
+    const qs = `?incremental=${incremental}`;
+    return request(`/api/obsidian/sync${qs}`, { method: "POST" });
+  },
+
+  /** POST /api/obsidian/watch?enable=true|false — 启动/停止实时监听 */
+  async obsidianWatch(enable: boolean): Promise<{ status: string; watching: boolean }> {
+    return request(`/api/obsidian/watch?enable=${enable}`, { method: "POST" });
+  },
+
+  /** POST /api/obsidian/export — UGC 配方导出到 vault */
+  async obsidianExport(docId: string): Promise<VaultExportResult> {
+    return request("/api/obsidian/export", {
+      method: "POST",
+      body: JSON.stringify({ doc_id: docId }),
     });
   },
 };

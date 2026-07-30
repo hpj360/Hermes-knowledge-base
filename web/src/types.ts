@@ -109,6 +109,7 @@ export interface HealthStatus {
   auth_enabled: boolean;
   multiuser?: boolean;
   age_gate_enabled: boolean;
+  vault_enabled?: boolean;
 }
 
 export interface HistoryItem {
@@ -419,4 +420,36 @@ export interface InviteCodeListItem {
   expires_at: string | null;
   used_at: string | null;
   created_at: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// V4-Phase1：Obsidian vault 集成
+// ---------------------------------------------------------------------------
+
+/** GET /api/obsidian/status 响应 */
+export interface VaultStatus {
+  enabled: boolean;
+  vault_path: string;
+  watch_enabled: boolean;
+  watchdog_available: boolean;
+  watching: boolean;
+  synced_docs: number;
+  last_sync: string | null;
+}
+
+/** POST /api/obsidian/sync 响应 */
+export interface VaultSyncResult {
+  status: string;
+  scanned: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+}
+
+/** POST /api/obsidian/export 响应 */
+export interface VaultExportResult {
+  status: string;
+  path: string;
+  doc_id: string;
 }

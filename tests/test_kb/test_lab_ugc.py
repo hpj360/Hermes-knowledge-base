@@ -7,8 +7,8 @@ from sqlmodel import select
 
 def test_recipe_variant_model(tmp_db):
     """RecipeVariant 表可创建并写入（FK 约束要求 doc 必须存在）。"""
-    from hermes_kb.database import get_session
     from hermes_kb.models import Document, RecipeVariant
+    from hermes_kb.database import get_session
 
     with get_session() as session:
         # FK 约束要求 base/variant doc 必须先存在
@@ -50,8 +50,8 @@ def test_create_ugc_recipe(tmp_db):
     assert result["doc_id"] is not None
     assert result["status"] == "draft"
 
-    from hermes_kb.database import get_session
     from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     with get_session() as session:
         doc = session.get(Document, result["doc_id"])
@@ -65,9 +65,9 @@ def test_create_ugc_recipe(tmp_db):
 
 def test_submit_recipe(tmp_db):
     """提交审核（draft → pending）。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import create_recipe, submit_recipe
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="待审核配方",
@@ -88,9 +88,9 @@ def test_submit_recipe(tmp_db):
 
 def test_approve_recipe(tmp_db):
     """审核通过（pending → published, verified=True）。"""
-    from hermes_kb.database import get_session
+    from hermes_kb.recipe_crud import create_recipe, submit_recipe, approve_recipe
     from hermes_kb.models import Document
-    from hermes_kb.recipe_crud import approve_recipe, create_recipe, submit_recipe
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="将通过",
@@ -112,9 +112,9 @@ def test_approve_recipe(tmp_db):
 
 def test_reject_recipe(tmp_db):
     """审核驳回（pending → rejected）。"""
-    from hermes_kb.database import get_session
+    from hermes_kb.recipe_crud import create_recipe, submit_recipe, reject_recipe
     from hermes_kb.models import Document
-    from hermes_kb.recipe_crud import create_recipe, reject_recipe, submit_recipe
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="将驳回",
@@ -136,9 +136,9 @@ def test_reject_recipe(tmp_db):
 
 def test_update_recipe(tmp_db):
     """编辑配方（仅 draft 状态可编辑）。"""
-    from hermes_kb.database import get_session
+    from hermes_kb.recipe_crud import create_recipe, update_recipe, submit_recipe
     from hermes_kb.models import Document
-    from hermes_kb.recipe_crud import create_recipe, submit_recipe, update_recipe
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="原配方",
@@ -355,9 +355,9 @@ def test_import_text_governance_atomic(tmp_db):
     验证 verified/status/source/category/source_id/image_url 一次性写入，
     避免崩溃残留模型默认（verified=True/status=published）绕过治理意图。
     """
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.rag import ImportService
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     importer = ImportService()
     result = importer.import_text(
@@ -389,9 +389,9 @@ def test_import_text_governance_atomic(tmp_db):
 
 def test_import_text_governance_defaults_preserved(tmp_db):
     """P2-3: 不传治理字段时保留模型默认（向后兼容）。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.rag import ImportService
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     importer = ImportService()
     result = importer.import_text(
@@ -408,9 +408,9 @@ def test_import_text_governance_defaults_preserved(tmp_db):
 
 def test_create_recipe_governance_atomic(tmp_db):
     """P2-3: create_recipe 落地 verified=False/status=draft 原子（无残留 published）。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import create_recipe
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     result = create_recipe(
         title="UGC 原子测试",
@@ -430,9 +430,9 @@ def test_create_recipe_governance_atomic(tmp_db):
 
 def test_recipe_variant_cascade_on_delete(base_and_variant):
     """P0-2: 删除 base 配方后，RecipeVariant 关联应级联删除（不留孤儿）。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document, RecipeVariant
     from hermes_kb.recipe_variants import create_variant_link
+    from hermes_kb.models import Document, RecipeVariant
+    from hermes_kb.database import get_session
 
     base, variant = base_and_variant
     create_variant_link(base["doc_id"], variant["doc_id"], "测试级联")
@@ -458,9 +458,9 @@ def test_recipe_variant_cascade_on_delete(base_and_variant):
 
 def test_recipe_variant_cascade_on_delete_variant(base_and_variant):
     """P0-2: 删除 variant 配方后，RecipeVariant 关联也应级联删除。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document, RecipeVariant
     from hermes_kb.recipe_variants import create_variant_link
+    from hermes_kb.models import Document, RecipeVariant
+    from hermes_kb.database import get_session
 
     base, variant = base_and_variant
     create_variant_link(base["doc_id"], variant["doc_id"], "测试级联")
@@ -490,9 +490,9 @@ def test_recipe_variant_cascade_on_delete_variant(base_and_variant):
 
 def test_create_recipe_records_author_in_meta(tmp_db):
     """V3-Task11: create_recipe 将 author 写入 meta JSON。"""
-    from hermes_kb.database import get_session
+    from hermes_kb.recipe_crud import create_recipe, _read_meta
     from hermes_kb.models import Document
-    from hermes_kb.recipe_crud import _read_meta, create_recipe
+    from hermes_kb.database import get_session
 
     result = create_recipe(
         title="作者测试",
@@ -508,9 +508,9 @@ def test_create_recipe_records_author_in_meta(tmp_db):
 
 def test_create_recipe_default_author_anonymous(tmp_db):
     """V3-Task11: 未传 author 时默认 "anonymous"（向后兼容）。"""
-    from hermes_kb.database import get_session
+    from hermes_kb.recipe_crud import create_recipe, _read_meta
     from hermes_kb.models import Document
-    from hermes_kb.recipe_crud import _read_meta, create_recipe
+    from hermes_kb.database import get_session
 
     result = create_recipe(
         title="匿名测试",
@@ -525,14 +525,14 @@ def test_create_recipe_default_author_anonymous(tmp_db):
 
 def test_approve_recipe_records_reviewer(tmp_db):
     """V3-Task11: approve_recipe 将 reviewer 和 reviewed_at 写入 meta。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import (
-        _read_meta,
         approve_recipe,
         create_recipe,
+        _read_meta,
         submit_recipe,
     )
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="审核人测试",
@@ -555,14 +555,14 @@ def test_approve_recipe_records_reviewer(tmp_db):
 
 def test_reject_recipe_records_reviewer_and_reason(tmp_db):
     """V3-Task11: reject_recipe 将 reviewer/reject_reason/reviewed_at 写入 meta。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import (
-        _read_meta,
         create_recipe,
+        _read_meta,
         reject_recipe,
         submit_recipe,
     )
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="驳回理由测试",
@@ -589,14 +589,14 @@ def test_reject_recipe_records_reviewer_and_reason(tmp_db):
 
 def test_resubmit_recipe_rejected_to_draft(tmp_db):
     """V3-Task11: resubmit_recipe 将 rejected → draft。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import (
         create_recipe,
         reject_recipe,
         resubmit_recipe,
         submit_recipe,
     )
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = create_recipe(
         title="重新提交测试",
@@ -690,8 +690,8 @@ def test_list_my_recipes_returns_empty_for_unknown_author(tmp_db):
 
 def test_list_my_recipes_excludes_non_ugc(tmp_db):
     """V3-Task11: list_my_recipes 仅返回 source=ugc 的配方，排除其他来源。"""
-    from hermes_kb.rag import ImportService
     from hermes_kb.recipe_crud import create_recipe, list_my_recipes
+    from hermes_kb.rag import ImportService
 
     # 创建 UGC 配方
     create_recipe(
@@ -759,8 +759,8 @@ def test_get_recipe_author_returns_meta_author(tmp_db):
 
 def test_get_recipe_author_returns_anonymous_for_legacy(tmp_db):
     """V3-Task11: 旧配方（无 meta.author）返回 "anonymous"。"""
-    from hermes_kb.rag import ImportService
     from hermes_kb.recipe_crud import get_recipe_author
+    from hermes_kb.rag import ImportService
 
     result = ImportService().import_text(
         content="# 旧配方",
@@ -786,9 +786,9 @@ def test_get_recipe_author_returns_empty_for_nonexistent(tmp_db):
 
 def test_api_create_recipe_records_author_anonymous(client):
     """V3-Task11: POST /api/lab/recipes 未启用认证时 author="anonymous"。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import _read_meta
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     resp = client.post("/api/lab/recipes", json={
         "title": "API 作者测试",
@@ -870,9 +870,9 @@ def test_api_resubmit_recipe_wrong_status_returns_400(client):
 
 def test_api_approve_recipe_records_reviewer(client):
     """V3-Task11: POST /api/lab/recipes/{doc_id}/approve 记录 reviewer。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import _read_meta
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = client.post("/api/lab/recipes", json={
         "title": "审核人 API 测试",
@@ -891,9 +891,9 @@ def test_api_approve_recipe_records_reviewer(client):
 
 def test_api_reject_recipe_records_reviewer_and_reason(client):
     """V3-Task11: POST /api/lab/recipes/{doc_id}/reject 记录 reviewer 和 reason。"""
-    from hermes_kb.database import get_session
-    from hermes_kb.models import Document
     from hermes_kb.recipe_crud import _read_meta
+    from hermes_kb.models import Document
+    from hermes_kb.database import get_session
 
     created = client.post("/api/lab/recipes", json={
         "title": "驳回 API 测试",

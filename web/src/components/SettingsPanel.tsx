@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import type { AuditLogItem, HealthStatus, ImportBackupResult } from "../types";
+import { ObsidianPanel } from "./ObsidianPanel";
 import { TagPanel } from "./TagPanel";
 import { UserAdminPanel } from "./UserAdminPanel";
 import { showToast } from "./Toast";
@@ -19,14 +20,15 @@ interface SettingsPanelProps {
   onChange: () => void;
 }
 
-type SettingsTab = "tags" | "export" | "audit" | "users";
+type SettingsTab = "tags" | "export" | "audit" | "users" | "obsidian";
 
-// 设置中心子模块 tab（users 仅 multiuser 模式显示）
-const TABS: ReadonlyArray<{ key: SettingsTab; label: string; multiuserOnly?: boolean }> = [
+// 设置中心子模块 tab（users 仅 multiuser 模式显示，obsidian 仅 vault 启用时显示）
+const TABS: ReadonlyArray<{ key: SettingsTab; label: string; multiuserOnly?: boolean; vaultOnly?: boolean }> = [
   { key: "tags", label: "标签管理" },
   { key: "export", label: "数据导出" },
   { key: "audit", label: "审计日志" },
   { key: "users", label: "用户管理", multiuserOnly: true },
+  { key: "obsidian", label: "Obsidian", vaultOnly: true },
 ];
 
 /** 设置中心：聚合标签管理、数据导出、审计日志、用户管理子模块的容器。 */
@@ -39,7 +41,9 @@ export function SettingsPanel({ onChange }: SettingsPanelProps) {
     api.health().then(setHealth).catch(() => {});
   }, []);
 
-  const visibleTabs = TABS.filter((t) => !t.multiuserOnly || health?.multiuser);
+  const visibleTabs = TABS.filter(
+    (t) => (!t.multiuserOnly || health?.multiuser) && (!t.vaultOnly || health?.vault_enabled),
+  );
 
   return (
     <div>
@@ -89,6 +93,12 @@ export function SettingsPanel({ onChange }: SettingsPanelProps) {
       {active === "users" && (
         <div className="p-8 max-w-3xl mx-auto">
           <UserAdminPanel />
+        </div>
+      )}
+
+      {active === "obsidian" && (
+        <div className="p-8 max-w-3xl mx-auto">
+          <ObsidianPanel />
         </div>
       )}
     </div>

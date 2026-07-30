@@ -39,9 +39,10 @@ def test_invite_endpoint_requires_auth(monkeypatch):
     from fastapi.testclient import TestClient
 
     from hermes_kb.app import create_app
-    from hermes_kb.config import reset_settings
+    from hermes_kb.config import get_settings, reset_settings
 
     reset_settings()
+    import os
     monkeypatch.setenv("KB_MULTIUSER", "true")
     monkeypatch.setenv("KB_AUTH_ENABLED", "true")
     monkeypatch.setenv("KB_AUTH_PASSWORD", "secret")

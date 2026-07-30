@@ -48,6 +48,7 @@ async def health() -> dict[str, Any]:
         "auth_enabled": settings.auth_enabled,
         "multiuser": settings.multiuser,
         "age_gate_enabled": settings.age_gate_enabled,
+        "vault_enabled": settings.vault_enabled,
     }
 
 
