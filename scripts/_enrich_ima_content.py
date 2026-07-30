@@ -146,7 +146,8 @@ def _enrich_content(title: str, original_content: str) -> str | None:
         profile = _OTHER_PROFILES[title]
         category_label = "特色酒"
     else:
-        return None
+        # 通用富化：基于标题关键词构造可检索文本
+        return _generic_enrich(title, original_content)
 
     # 保留原始 metadata 头部，附加富化描述
     # 提取原始 # 标题行和来源类型行
@@ -163,6 +164,86 @@ def _enrich_content(title: str, original_content: str) -> str | None:
         for h in header_lines:
             if h.startswith(">"):
                 parts.append(h)
+    parts.append(f"\n类别：{category_label}")
+    parts.append(_ENRICHED_MARKER)
+    return "\n".join(parts)
+
+
+# 酒类关键词描述（用于通用富化时附加相关上下文）
+_ALCOHOL_KEYWORDS: dict[str, str] = {
+    "朗姆酒": "朗姆酒（Rum）是以甘蔗糖蜜或甘蔗汁为原料发酵蒸馏而成的烈酒，主要产自加勒比海地区，风格分白朗姆、金朗姆、黑朗姆。",
+    "金酒": "金酒（Gin）是以谷物为基酒，用杜松子等植物香料调味的烈酒，带杜松、柑橘、草本香气，是马天尼、金汤力等经典鸡尾酒的基酒。",
+    "伏特加": "伏特加（Vodka）是以谷物或马铃薯为原料发酵蒸馏的高纯度烈酒，酒精度通常 40%，口感纯净，是血腥玛丽、莫斯科骡子等鸡尾酒的基酒。",
+    "龙舌兰": "龙舌兰（Tequila）是墨西哥特色烈酒，以蓝色龙舌兰为原料，分 Blanco、Reposado、Añejo 等风格，是玛格丽特的基酒。",
+    "威士忌": "威士忌（Whisky/Whiskey）是以谷物为原料发酵蒸馏并经橡木桶陈年的烈酒，分苏格兰、爱尔兰、美国波本、日本等风格。",
+    "白兰地": "白兰地（Brandy）是以葡萄酒或其他水果酒为基酒蒸馏而成，干邑（Cognac）和雅文邑（Armagnac）是法国两大知名产区。",
+    "白酒": "白酒是中国传统蒸馏酒，以谷物为原料固态发酵，按香型分浓香、酱香、清香、米香等，茅台、五粮液、汾酒是代表品牌。",
+    "啤酒": "啤酒（Beer）是以麦芽、啤酒花、酵母和水为原料酿造的低酒精度饮料，分艾尔（Ale）和拉格（Lager）两大类。",
+    "葡萄酒": "葡萄酒（Wine）是以葡萄为原料发酵酿造的酒，按颜色分红、白、桃红，按含糖量分干、半干、半甜、甜型。",
+    "清酒": "清酒（Sake）是日本传统米酒，以米、米麹、水为原料发酵，按精米步合分纯米酒、本酿造、吟酿、大吟酿等等级。",
+    "梅酒": "梅酒（Umeshu）是以青梅浸泡在蒸馏酒中加糖制成的果酒，日本传统酒品，酸甜适口。",
+    "米酒": "米酒是以糯米为原料发酵而成的低酒精度饮料，中国传统酒品，各地有不同风味。",
+    "黄酒": "黄酒是中国传统发酵酒，以稻米为原料，绍兴酒是代表，按含糖量分元红、加饭、善酿、香雪。",
+    "鸡尾酒": "鸡尾酒（Cocktail）是以烈酒为基酒，辅以利口酒、果汁、糖浆等调制而成的混合饮料，IBA 分类含不朽经典、当代经典、新时代饮品。",
+    "利口酒": "利口酒（Liqueur）是以烈酒为基酒，加入水果、草本、香料等调味并加糖的甜味烈酒，君度、卡帕诺、金巴利是常见品牌。",
+    "香槟": "香槟（Champagne）是法国香槟产区用传统法酿造的起泡酒，仅允许霞多丽、黑皮诺、莫尼耶三品种，二次发酵产生气泡。",
+    "味美思": "味美思（Vermouth）是以葡萄酒为基酒，加入草本植物浸泡的加强酒，分干味美思和甜味美思，是马天尼、曼哈顿的辅料。",
+    "梅斯卡尔": "梅斯卡尔（Mezcal）是墨西哥烈酒，以龙舌兰为原料，带烟熏风味，与龙舌兰 Tequila 不同。",
+}
+
+
+def _generic_enrich(title: str, original_content: str) -> str:
+    """通用富化：清理标题 + 检测酒类关键词 + 构造可检索文本。
+
+    对于不在专项知识库中的文档（如酒博士知识体系、行业报告、方法论等），
+    从标题中提取酒类关键词并附加相关描述，提升 RAG 检索召回率。
+    """
+    # 清理标题：去除 · 分隔符的多段标题，提取核心部分
+    import re as _re
+
+    clean_title = title
+    # "酒博士·酒博士MAS·知识·XXX·通用端" → "XXX"
+    if "·" in clean_title:
+        parts = [p.strip() for p in clean_title.split("·") if p.strip()]
+        # 取倒数第二段（通常是核心标题）
+        if len(parts) >= 2:
+            clean_title = parts[-2] if "通用端" in parts[-1] else parts[-1]
+
+    # 去除版本号、日期后缀
+    clean_title = _re.sub(r"\s*v\d+\.\d+", "", clean_title, flags=_re.IGNORECASE)
+    clean_title = _re.sub(r"_\d{4}", "", clean_title)
+    clean_title = _re.sub(r"_\d{4}-\d{4}", "", clean_title)
+    clean_title = clean_title.strip()
+
+    # 检测酒类关键词
+    alcohol_descs: list[str] = []
+    for keyword, desc in _ALCOHOL_KEYWORDS.items():
+        if keyword in title:
+            alcohol_descs.append(desc)
+
+    # 提取原始 metadata
+    lines = original_content.split("\n")
+    header_lines: list[str] = []
+    for line in lines:
+        if line.startswith("> 来源类型"):
+            header_lines.append(line)
+
+    parts = [f"# {title}\n"]
+    parts.append(f"本文档标题为「{title}」。")
+
+    if alcohol_descs:
+        parts.append("\n相关酒类知识：")
+        for desc in alcohol_descs:
+            parts.append(f"- {desc}")
+        category_label = "酒类知识"
+    else:
+        # 无酒类关键词匹配，使用标题本身作为可检索文本
+        parts.append(f"本文档涉及主题：{clean_title}。")
+        category_label = "行业资料"
+
+    parts.append("")
+    for h in header_lines:
+        parts.append(h)
     parts.append(f"\n类别：{category_label}")
     parts.append(_ENRICHED_MARKER)
     return "\n".join(parts)
