@@ -4,11 +4,11 @@
  * 产品定位：个人酒类知识工作台首页
  * 三阶价值：知识可信 → 实践可用 → 持续可成长
  *
- * 结构：
- * 1. Hero 区：一句话价值主张 + 三个核心能力卡片
- * 2. 飞轮健康度概览：4 指标卡（文档数/问答数/引用密度/活跃度）
- * 3. 快捷操作：开始提问 / 导入文档 / 浏览配方
- * 4. 空库引导：种子导入卡片
+ * 结构（紧凑化版）：
+ * 1. Hero banner：价值主张 + 3 张实时数据卡 + 快捷操作（单行紧凑布局）
+ * 2. 空库引导：种子导入卡片
+ * 3. 飞轮健康度概览：4 指标卡（文档数/问答数/引用密度/配方数）
+ * 4. 今日推荐 / 最近问答
  */
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -74,28 +74,37 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Hero 区 */}
-        <div className="mb-10 pb-8" style={{ borderBottom: "var(--border-bold)" }}>
-          <BauhausSectionLabel className="mb-3">HERMES KNOWLEDGE WORKSPACE</BauhausSectionLabel>
-          <BauhausDisplay as="h1" className="mb-4">
-            从知识到实践
-          </BauhausDisplay>
-          <BodyText className="text-base mb-6 max-w-2xl">
-            沉淀酒类知识，智能检索引用，实践调酒配方——你的个人酒类知识工作台。
-          </BodyText>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <BauhausCard accent="wine" className="flex flex-col gap-2">
-              <BauhausSectionLabel>知识可信</BauhausSectionLabel>
-              <BodyText className="text-sm">引用式问答，每个答案可溯源到原文</BodyText>
-            </BauhausCard>
-            <BauhausCard accent="amber" className="flex flex-col gap-2">
-              <BauhausSectionLabel>实践可用</BauhausSectionLabel>
-              <BodyText className="text-sm">鸡尾酒配方库 + 实验室匹配工具</BodyText>
-            </BauhausCard>
-            <BauhausCard accent="bronze" className="flex flex-col gap-2">
-              <BauhausSectionLabel>持续成长</BauhausSectionLabel>
-              <BodyText className="text-sm">飞轮健康度可视化，知识库持续进化</BodyText>
-            </BauhausCard>
+        {/* Hero 区：单行 banner + 实时数据卡 + 快捷操作（紧凑化） */}
+        <div className="mb-6 pb-4" style={{ borderBottom: "var(--border-bold)" }}>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <BauhausSectionLabel className="mb-1">HERMES KNOWLEDGE WORKSPACE</BauhausSectionLabel>
+              <BauhausDisplay as="h1" className="mb-1">从知识到实践</BauhausDisplay>
+              <BodyText className="text-sm" style={{ color: "var(--ink-400)" }}>
+                沉淀酒类知识，智能检索引用，实践调酒配方
+              </BodyText>
+            </div>
+            {/* 3 张实时数据卡，水平排列 */}
+            <div className="flex gap-3 flex-shrink-0">
+              <BauhausMetric num={health?.doc_count ?? 0} label="文档" variant="wine" />
+              <BauhausMetric num={dashboard?.total_queries ?? recentHistory.length} label="问答" variant="amber" />
+              <BauhausMetric num={dashboard?.total_recipes ?? 0} label="配方" variant="bronze" />
+            </div>
+          </div>
+          {/* 快捷操作合并到 Hero banner 底部 */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <BauhausButton variant="solid" onClick={() => navigate("/chat")}>
+              开始提问
+            </BauhausButton>
+            <BauhausButton variant="outline" onClick={onShowImport}>
+              导入文档
+            </BauhausButton>
+            <BauhausButton variant="outline" onClick={() => navigate("/recipes")}>
+              浏览配方
+            </BauhausButton>
+            <BauhausButton variant="outline" onClick={() => navigate("/lab")}>
+              进入实验室
+            </BauhausButton>
           </div>
         </div>
 
@@ -111,16 +120,16 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
         )}
 
         {/* 飞轮健康度概览 */}
-        <div className="mb-10">
+        <div className="mb-6">
           <BauhausSectionLabel className="mb-4">飞轮健康度</BauhausSectionLabel>
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} height="80px" />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <BauhausMetric
                 num={health?.doc_count ?? 0}
                 label="文档总数"
@@ -145,28 +154,9 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
           )}
         </div>
 
-        {/* 快捷操作 */}
-        <div className="mb-10">
-          <BauhausSectionLabel className="mb-4">快捷操作</BauhausSectionLabel>
-          <div className="flex flex-wrap gap-3">
-            <BauhausButton variant="solid" onClick={() => navigate("/chat")}>
-              开始提问
-            </BauhausButton>
-            <BauhausButton variant="outline" onClick={onShowImport}>
-              导入文档
-            </BauhausButton>
-            <BauhausButton variant="outline" onClick={() => navigate("/recipes")}>
-              浏览配方
-            </BauhausButton>
-            <BauhausButton variant="outline" onClick={() => navigate("/lab")}>
-              进入实验室
-            </BauhausButton>
-          </div>
-        </div>
-
         {/* 今日推荐 / 应季推荐 */}
         {daily && daily.title && (
-          <div className="mb-10">
+          <div className="mb-6">
             <BauhausSectionLabel className="mb-4">今日推荐</BauhausSectionLabel>
             <BauhausCard
               accent={daily.reason === "season" ? "amber" : "wine"}
@@ -226,7 +216,7 @@ export function DashboardPanel({ health, onSeed, seeding, onShowImport }: Dashbo
 
         {/* 最近问答 */}
         {recentHistory.length > 0 && (
-          <div className="mb-10">
+          <div className="mb-6">
             <BauhausSectionLabel className="mb-4">最近问答</BauhausSectionLabel>
             <div className="space-y-3">
               {recentHistory.map((item) => (

@@ -1,73 +1,32 @@
 """Skill discovery and management for Hermes.
 
-Loads skills from the central repository under ./skills/ and provides
-utilities for listing, syncing, and managing skills across multiple agents.
+Loads skills copied from the main repository under ./skills/ and provides
+utilities to list and inspect them.
 
-Implements the Nacos Skill Sync pattern:
-- Single source of truth (central repository in ./skills/)
-- Local mode with symlink/copy sync to external agent directories
-- State tracking and conflict detection
-- Automatic discovery of common agent skill directories
+支持 agentskills.io 三级渐进加载标准：
+- Level 1 Discovery: discover_skills() 返回 name + description（~20 tokens）
+- Level 2 Activation: load_skill_content() 返回完整 SKILL.md（~200 tokens）
+- Level 3 Execution: load_skill_assets() 返回目录下所有文件路径（~1000+ tokens）
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
-import os
-import shutil
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 
-class SkillStatus(str, Enum):
-    UNMANAGED = "unmanaged"
-    LINKED = "linked"
-    SYNCED = "synced"
-    LOCAL_CHANGES = "local_changes"
-    EXTERNAL_CHANGES = "external_changes"
-    CONFLICT = "conflict"
-    MISSING = "missing"
-
-
 @dataclass
 class SkillInfo:
+    """Metadata for a single installed skill."""
+
     name: str
     path: Path
     has_skill_md: bool
     has_meta: bool
     meta: dict[str, Any] | None = None
-    status: SkillStatus = SkillStatus.UNMANAGED
-    synced_agents: list[str] = field(default_factory=list)
-    source_agent: str | None = None
-    next_action: str = ""
-
-
-@dataclass
-class AgentTarget:
-    name: str
-    path: Path
-    exists: bool
-    skill_count: int = 0
-    is_symlink: bool = False
-
-
-KNOWN_AGENT_DIRS = [
-    ("codex", "~/.codex/skills"),
-    ("claude-code", "~/.claude/skills"),
-    ("cursor", "~/.cursor/skills"),
-    ("qoder", "~/.qoder/skills"),
-    ("qoder-work", "~/.qoder-work/skills"),
-    ("kiro", "~/.kiro/skills"),
-    ("lingma", "~/.lingma/skills"),
-    ("copaw", "~/.copaw/skills"),
-    ("openclaw", "~/.openclaw/skills"),
-    ("agents-global", "~/.agents/skills"),
-    ("skills-global", "~/.skills"),
-    ("trae", "~/.trae/skills"),
-]
+    description: str = ""
 
 
 def _project_root() -> Path:
@@ -75,123 +34,242 @@ def _project_root() -> Path:
 
 
 def skills_dir() -> Path:
+    """Return the directory where skills are stored."""
     return _project_root() / "skills"
 
 
 def knowledge_dir() -> Path:
+    """Return the directory where knowledge docs are stored."""
     return _project_root() / "knowledge"
 
 
-def state_dir() -> Path:
-    return _project_root() / ".state"
+def get_skill_path(name: str) -> Path | None:
+    """Return the path for a named skill, or None if not installed."""
+    candidate = skills_dir() / name
+    return candidate if candidate.exists() and candidate.is_dir() else None
 
 
-def _sync_state_path() -> Path:
-    return state_dir() / "skill_sync.json"
+# ---------------------------------------------------------------------------
+# Frontmatter 解析（Level 1 Discovery 的基础）
+# ---------------------------------------------------------------------------
 
 
-def _file_hash(path: Path) -> str:
-    if not path.exists() or not path.is_file():
-        return ""
-    hasher = hashlib.sha256()
-    hasher.update(path.read_bytes())
-    return hasher.hexdigest()
+def parse_skill_frontmatter(skill_md_path: Path) -> dict[str, Any]:
+    """解析 SKILL.md 的 YAML frontmatter。
 
-
-def _dir_hash(directory: Path) -> str:
-    if not directory.exists() or not directory.is_dir():
-        return ""
-    hasher = hashlib.sha256()
-    for f in sorted(directory.rglob("*")):
-        if f.is_file() and not f.name.startswith("."):
-            rel = f.relative_to(directory)
-            hasher.update(str(rel).encode())
-            hasher.update(f.read_bytes())
-    return hasher.hexdigest()
-
-
-def _load_sync_state() -> dict[str, Any]:
-    state_path = _sync_state_path()
-    if not state_path.exists():
-        return {
-            "version": 1,
-            "mode": "local",
-            "profile": "default",
-            "managed_skills": {},
-            "custom_agents": [],
-        }
+    返回 frontmatter 字典。如果没有 frontmatter，返回空字典。
+    手动解析简单的 key: value 格式，不依赖 PyYAML（保持零依赖）。
+    """
     try:
-        return json.loads(state_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return {
-            "version": 1,
-            "mode": "local",
-            "profile": "default",
-            "managed_skills": {},
-            "custom_agents": [],
-        }
+        text = skill_md_path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
 
+    # frontmatter 必须以 --- 开头
+    if not text.startswith("---"):
+        return {}
 
-def _save_sync_state(state: dict[str, Any]) -> None:
-    state_dir().mkdir(parents=True, exist_ok=True)
-    _sync_state_path().write_text(
-        json.dumps(state, indent=2, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
-
-def discover_agents() -> list[AgentTarget]:
-    targets: list[AgentTarget] = []
-    state = _load_sync_state()
-    all_agents = KNOWN_AGENT_DIRS + [(a["name"], a["path"]) for a in state.get("custom_agents", [])]
-    seen_names: set[str] = set()
-
-    for name, path_str in all_agents:
-        if name in seen_names:
-            continue
-        seen_names.add(name)
-        path = Path(path_str).expanduser().resolve()
-        exists = path.exists()
-        is_symlink = path.is_symlink() if exists else False
-        skill_count = 0
-        if exists and path.is_dir():
-            skill_count = sum(1 for d in path.iterdir() if d.is_dir())
-        targets.append(
-            AgentTarget(
-                name=name,
-                path=path,
-                exists=exists,
-                skill_count=skill_count,
-                is_symlink=is_symlink,
-            )
-        )
-    return targets
-
-
-def add_agent_target(name: str, path_str: str) -> AgentTarget:
-    state = _load_sync_state()
-    custom = state.get("custom_agents", [])
-    for a in custom:
-        if a["name"] == name:
-            a["path"] = path_str
+    lines = text.split("\n")
+    # 跳过首行 ---，查找结束标记 ---
+    end_idx: int | None = None
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            end_idx = i
             break
-    else:
-        custom.append({"name": name, "path": path_str})
-    state["custom_agents"] = custom
-    _save_sync_state(state)
-    path = Path(path_str).expanduser().resolve()
-    return AgentTarget(name=name, path=path, exists=path.exists())
+
+    if end_idx is None:
+        return {}
+
+    return _parse_frontmatter_lines(lines[1:end_idx])
+
+
+def _find_key_separator(line: str) -> int:
+    """找到 key 与 value 的分隔冒号位置。
+
+    YAML 规范：分隔符是冒号后跟空格或位于行尾。返回冒号索引，-1 表示未找到。
+    """
+    for i, ch in enumerate(line):
+        if ch == ":" and (i == len(line) - 1 or line[i + 1] == " "):
+            return i
+    return -1
+
+
+def _is_quoted_complete(value: str, quote: str) -> bool:
+    """判断引号字符串是否已完整闭合（考虑转义）。"""
+    if not value.startswith(quote):
+        return False
+    i = 1
+    while i < len(value):
+        ch = value[i]
+        if quote == '"' and ch == "\\":
+            i += 2
+            continue
+        if ch == quote:
+            # 单引号中 '' 是转义，不是闭合
+            if quote == "'" and i + 1 < len(value) and value[i + 1] == quote:
+                i += 2
+                continue
+            return True
+        i += 1
+    return False
+
+
+def _unescape_double_quoted(s: str) -> str:
+    """反转义双引号字符串内容（左到右逐字符处理，避免全局替换的歧义）。"""
+    result: list[str] = []
+    i = 0
+    while i < len(s):
+        if s[i] == "\\" and i + 1 < len(s):
+            nxt = s[i + 1]
+            if nxt == '"':
+                result.append('"')
+            elif nxt == "\\":
+                result.append("\\")
+            elif nxt == "n":
+                result.append("\n")
+            elif nxt == "t":
+                result.append("\t")
+            elif nxt == "r":
+                result.append("\r")
+            else:
+                # 未知转义，保留原样
+                result.append(s[i : i + 2])
+            i += 2
+        else:
+            result.append(s[i])
+            i += 1
+    return "".join(result)
+
+
+def _strip_quotes(value: str) -> str:
+    """去除值两端的引号并处理转义。"""
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return _unescape_double_quoted(value[1:-1])
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        # 单引号中 '' 转义为 '
+        return value[1:-1].replace("''", "'")
+    return value
+
+
+def _parse_block_scalar(lines: list[str], indicator: str) -> str:
+    """解析 YAML 块标量（> 折叠，| 字面量）。
+
+    保留原始行格式（含缩进），使 Level 1 description 是 Level 2 content 的子集。
+    lines 为已收集的缩进行（含原始缩进）。
+    """
+    if not lines:
+        return ""
+    return "\n".join(lines).rstrip()
+
+
+def _parse_quoted_multiline(
+    value_part: str, lines: list[str], line_idx: int, quote: str
+) -> tuple[str, int]:
+    """解析可能跨行的引号值，返回 (去除引号后的值, 消耗的行数)。"""
+    # 同行闭合
+    if _is_quoted_complete(value_part, quote):
+        return _strip_quotes(value_part), 1
+
+    # 跨行收集后续行直到闭合（保留原始格式，不 strip 续行）
+    collected: list[str] = [value_part]
+    consumed = 1
+    j = line_idx + 1
+    while j < len(lines):
+        collected.append(lines[j])
+        consumed += 1
+        if _is_quoted_complete("\n".join(collected), quote):
+            return _strip_quotes("\n".join(collected)), consumed
+        j += 1
+    return _strip_quotes("\n".join(collected)), consumed
+
+
+def _parse_frontmatter_lines(lines: list[str]) -> dict[str, Any]:
+    """解析 frontmatter 行列表为字典。"""
+    result: dict[str, Any] = {}
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i]
+        stripped = line.strip()
+
+        # 跳过空行和注释
+        if not stripped or stripped.startswith("#"):
+            i += 1
+            continue
+
+        # 缩进行属于上一个 key 的多行值，由对应逻辑处理
+        if line[0] in (" ", "\t"):
+            i += 1
+            continue
+
+        sep = _find_key_separator(line)
+        if sep == -1:
+            i += 1
+            continue
+
+        key = line[:sep].strip()
+        value_part = line[sep + 1 :].strip()
+
+        # 块标量（> 或 |）
+        if value_part in (">", "|", ">-", "|-", ">+", "|+"):
+            block_lines: list[str] = []
+            i += 1
+            while i < n and (lines[i].startswith((" ", "\t")) or lines[i].strip() == ""):
+                block_lines.append(lines[i])
+                i += 1
+            # 去掉尾部空行
+            while block_lines and block_lines[-1].strip() == "":
+                block_lines.pop()
+            result[key] = _parse_block_scalar(block_lines, value_part)
+            continue
+
+        # 双引号值（可能跨行）
+        if value_part.startswith('"'):
+            value, consumed = _parse_quoted_multiline(value_part, lines, i, '"')
+            result[key] = value
+            i += consumed
+            continue
+
+        # 单引号值（可能跨行）
+        if value_part.startswith("'"):
+            value, consumed = _parse_quoted_multiline(value_part, lines, i, "'")
+            result[key] = value
+            i += consumed
+            continue
+
+        # 列表（value 为空，后续缩进行以 - 开头）
+        if value_part == "":
+            list_items: list[str] = []
+            j = i + 1
+            while j < n and lines[j].startswith((" ", "\t")):
+                item_line = lines[j].strip()
+                if item_line.startswith("- "):
+                    list_items.append(_strip_quotes(item_line[2:].strip()))
+                elif item_line == "-":
+                    list_items.append("")
+                j += 1
+            if list_items:
+                result[key] = list_items
+                i = j
+                continue
+
+        # 普通 scalar 值
+        result[key] = value_part
+        i += 1
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Level 1 Discovery：name + description（~20 tokens）
+# ---------------------------------------------------------------------------
 
 
 def discover_skills() -> list[SkillInfo]:
+    """Scan the skills directory and return metadata for each skill found."""
     root = skills_dir()
     if not root.exists():
         return []
-
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-    agents = discover_agents()
-    agent_map = {a.name: a.path for a in agents if a.exists}
 
     result: list[SkillInfo] = []
     for entry in sorted(root.iterdir()):
@@ -205,349 +283,95 @@ def discover_skills() -> list[SkillInfo]:
                 meta = json.loads(meta_json.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 meta = None
-
-        info = SkillInfo(
-            name=entry.name,
-            path=entry,
-            has_skill_md=skill_md.exists(),
-            has_meta=meta_json.exists(),
-            meta=meta,
+        # 从 SKILL.md frontmatter 提取 description
+        description = ""
+        if skill_md.exists():
+            fm = parse_skill_frontmatter(skill_md)
+            desc = fm.get("description")
+            if isinstance(desc, str):
+                description = desc
+        result.append(
+            SkillInfo(
+                name=entry.name,
+                path=entry,
+                has_skill_md=skill_md.exists(),
+                has_meta=meta_json.exists(),
+                meta=meta,
+                description=description,
+            )
         )
-
-        if entry.name in managed:
-            m = managed[entry.name]
-            info.status = SkillStatus(m.get("status", "synced"))
-            info.synced_agents = m.get("agents", [])
-            info.source_agent = m.get("source_agent")
-            info.next_action = _compute_next_action(info, agent_map, m)
-        else:
-            info.status = SkillStatus.UNMANAGED
-            info.next_action = "skill-sync add to manage"
-
-        result.append(info)
     return result
 
 
-def _compute_next_action(
-    info: SkillInfo,
-    agent_map: dict[str, Path],
-    managed_entry: dict[str, Any],
-) -> str:
-    if info.status == SkillStatus.SYNCED or info.status == SkillStatus.LINKED:
+def get_skill_description(name: str) -> str:
+    """Level 1 Discovery: 只返回 skill 的 description。
+
+    从 SKILL.md frontmatter 提取 description 字段。
+    如果没有 frontmatter 或没有 description，返回空字符串。
+    """
+    skill_path = get_skill_path(name)
+    if skill_path is None:
         return ""
-    if info.status == SkillStatus.CONFLICT:
-        return f"skill-sync resolve {info.name}"
-    if info.status == SkillStatus.LOCAL_CHANGES:
-        return "skill-sync sync to push changes"
-    if info.status == SkillStatus.EXTERNAL_CHANGES:
-        return "skill-sync resolve to choose version"
-    if info.status == SkillStatus.MISSING:
-        return "skill-sync sync to restore"
-    return ""
+    skill_md = skill_path / "SKILL.md"
+    if not skill_md.exists():
+        return ""
+    fm = parse_skill_frontmatter(skill_md)
+    desc = fm.get("description")
+    return desc if isinstance(desc, str) else ""
 
 
-def _detect_skill_status(skill_name: str) -> SkillStatus:
-    central = skills_dir() / skill_name
-    if not central.exists():
-        return SkillStatus.MISSING
+# ---------------------------------------------------------------------------
+# Level 2 Activation：完整 SKILL.md（~200 tokens）
+# ---------------------------------------------------------------------------
 
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-    if skill_name not in managed:
-        return SkillStatus.UNMANAGED
 
-    m = managed[skill_name]
-    central_hash = _dir_hash(central)
-    recorded_hash = m.get("central_hash", "")
+def load_skill_content(name: str) -> str | None:
+    """Level 2 Activation: 加载完整 SKILL.md 内容。
 
-    agents = discover_agents()
-    external_hashes: dict[str, str] = {}
-    for agent_name in m.get("agents", []):
-        for a in agents:
-            if a.name == agent_name and a.exists:
-                ext_path = a.path / skill_name
-                if ext_path.exists():
-                    external_hashes[agent_name] = _dir_hash(ext_path)
-                break
+    返回 SKILL.md 的完整文本（含 frontmatter）。
+    如果 skill 不存在或没有 SKILL.md，返回 None。
+    """
+    skill_path = get_skill_path(name)
+    if skill_path is None:
+        return None
+    skill_md = skill_path / "SKILL.md"
+    if not skill_md.exists():
+        return None
+    try:
+        return skill_md.read_text(encoding="utf-8")
+    except OSError:
+        return None
 
-    all_synced = True
-    has_external_diff = False
-    for agent_name, agent_hash in external_hashes.items():
-        if agent_hash != central_hash:
-            all_synced = False
-            has_external_diff = True
 
-    central_changed = central_hash != recorded_hash and recorded_hash != ""
+# ---------------------------------------------------------------------------
+# Level 3 Execution：目录下所有文件路径（~1000+ tokens）
+# ---------------------------------------------------------------------------
 
-    if central_changed and has_external_diff:
-        return SkillStatus.CONFLICT
-    if central_changed:
-        return SkillStatus.LOCAL_CHANGES
-    if has_external_diff:
-        return SkillStatus.EXTERNAL_CHANGES
-    if all_synced and recorded_hash == central_hash:
-        if all((a.path / skill_name).is_symlink() for a in agents if a.name in m.get("agents", [])):
-            return SkillStatus.LINKED
-        return SkillStatus.SYNCED
-    return SkillStatus.SYNCED
+
+def load_skill_assets(name: str) -> list[Path]:
+    """Level 3 Execution: 返回 skill 目录下所有文件路径。
+
+    不含 SKILL.md 本身（已在 Level 2 加载）。
+    不含 _meta.json（内部元数据）。
+    递归返回所有文件，按路径排序。
+    """
+    skill_path = get_skill_path(name)
+    if skill_path is None:
+        return []
+
+    excluded = {skill_path / "SKILL.md", skill_path / "_meta.json"}
+    assets = [p for p in skill_path.rglob("*") if p.is_file() and p not in excluded]
+    return sorted(assets)
+
+
+# ---------------------------------------------------------------------------
+# 其他工具函数
+# ---------------------------------------------------------------------------
 
 
 def list_knowledge_docs() -> list[Path]:
+    """Return list of knowledge document paths."""
     root = knowledge_dir()
     if not root.exists():
         return []
     return sorted(p for p in root.glob("*.md") if p.is_file())
-
-
-def get_skill_path(name: str) -> Path | None:
-    candidate = skills_dir() / name
-    return candidate if candidate.exists() and candidate.is_dir() else None
-
-
-def _copy_directory(src: Path, dst: Path) -> None:
-    if dst.exists() or dst.is_symlink():
-        if dst.is_symlink():
-            dst.unlink()
-        else:
-            shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-
-
-def _create_symlink(src: Path, dst: Path) -> None:
-    if dst.exists() or dst.is_symlink():
-        if dst.is_symlink():
-            dst.unlink()
-        else:
-            shutil.rmtree(dst)
-    os.symlink(src, dst, target_is_directory=True)
-
-
-def _find_existing_skill(skill_name: str) -> tuple[str | None, Path | None]:
-    for agent in discover_agents():
-        if agent.exists:
-            candidate = agent.path / skill_name
-            if candidate.exists() and candidate.is_dir():
-                return agent.name, candidate
-    return None, None
-
-
-def add_skill(
-    skill_name: str,
-    source: str | None = None,
-    use_symlink: bool = True,
-) -> dict[str, Any]:
-    root = skills_dir()
-    root.mkdir(parents=True, exist_ok=True)
-    central = root / skill_name
-
-    if central.exists() and not central.is_dir():
-        return {"success": False, "error": f"{skill_name} exists but is not a directory"}
-
-    state = _load_sync_state()
-    managed = state.setdefault("managed_skills", {})
-
-    agents = discover_agents()
-    agent_map = {a.name: a.path for a in agents if a.exists}
-
-    if not central.exists():
-        if source and source in agent_map:
-            src_path = agent_map[source] / skill_name
-            if not src_path.exists():
-                return {"success": False, "error": f"Skill not found in {source}"}
-            _copy_directory(src_path, central)
-        else:
-            found_agent, found_path = _find_existing_skill(skill_name)
-            if found_agent and found_path:
-                if source is None:
-                    return {
-                        "success": False,
-                        "error": f"Skill exists in agent '{found_agent}'. Specify --source {found_agent} or 'central' to confirm.",
-                        "found_in": found_agent,
-                    }
-                _copy_directory(found_path, central)
-            else:
-                central.mkdir(parents=True)
-                (central / "SKILL.md").write_text(
-                    f"---\nname: {skill_name}\ndescription: TODO: describe when to use this skill\n---\n\n# {skill_name}\n\nTODO: document this skill\n",
-                    encoding="utf-8",
-                )
-
-    target_agents: list[str] = []
-    for agent in agents:
-        if not agent.exists:
-            continue
-        target = agent.path / skill_name
-        if use_symlink:
-            _create_symlink(central, target)
-        else:
-            _copy_directory(central, target)
-        target_agents.append(agent.name)
-
-    managed[skill_name] = {
-        "source_agent": source or "central",
-        "agents": target_agents,
-        "central_hash": _dir_hash(central),
-        "mode": "symlink" if use_symlink else "copy",
-        "status": SkillStatus.LINKED.value if use_symlink else SkillStatus.SYNCED.value,
-    }
-    _save_sync_state(state)
-
-    return {
-        "success": True,
-        "skill": skill_name,
-        "mode": "symlink" if use_symlink else "copy",
-        "agents": target_agents,
-    }
-
-
-def add_all_skills(use_symlink: bool = True) -> list[dict[str, Any]]:
-    root = skills_dir()
-    results: list[dict[str, Any]] = []
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-
-    for entry in sorted(root.iterdir()):
-        if entry.is_dir() and entry.name not in managed:
-            res = add_skill(entry.name, use_symlink=use_symlink)
-            results.append(res)
-    return results
-
-
-def remove_skill(skill_name: str) -> dict[str, Any]:
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-
-    if skill_name not in managed:
-        return {"success": False, "error": f"Skill {skill_name} is not managed"}
-
-    m = managed[skill_name]
-    central = skills_dir() / skill_name
-    use_symlink = m.get("mode", "copy") == "symlink"
-
-    agents = discover_agents()
-    for agent in agents:
-        if not agent.exists:
-            continue
-        target = agent.path / skill_name
-        if target.is_symlink():
-            if central.exists() and use_symlink:
-                target.unlink()
-                _copy_directory(central, target)
-            else:
-                target.unlink()
-        elif target.exists() and not use_symlink:
-            pass
-        elif target.exists() and use_symlink:
-            _copy_directory(central, target)
-
-    del managed[skill_name]
-    _save_sync_state(state)
-
-    return {"success": True, "skill": skill_name}
-
-
-def sync_skills(skill_name: str | None = None) -> list[dict[str, Any]]:
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-    results: list[dict[str, Any]] = []
-
-    targets = [skill_name] if skill_name else list(managed.keys())
-
-    for name in targets:
-        if name not in managed:
-            results.append({"skill": name, "success": False, "error": "not managed"})
-            continue
-
-        m = managed[name]
-        central = skills_dir() / name
-        if not central.exists():
-            results.append({"skill": name, "success": False, "error": "central copy missing"})
-            continue
-
-        use_symlink = m.get("mode", "copy") == "symlink"
-        agents = discover_agents()
-        synced: list[str] = []
-        known_agents = set(m.get("agents", []))
-
-        for agent in agents:
-            if not agent.exists:
-                continue
-            target = agent.path / name
-            if use_symlink:
-                if not target.is_symlink() or target.resolve() != central.resolve():
-                    _create_symlink(central, target)
-            else:
-                _copy_directory(central, target)
-            synced.append(agent.name)
-            known_agents.add(agent.name)
-
-        m["agents"] = sorted(known_agents)
-        m["central_hash"] = _dir_hash(central)
-        m["status"] = SkillStatus.LINKED.value if use_symlink else SkillStatus.SYNCED.value
-        results.append({"skill": name, "success": True, "agents": synced})
-
-    _save_sync_state(state)
-    return results
-
-
-def resolve_conflict(
-    skill_name: str,
-    source: str,
-) -> dict[str, Any]:
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-
-    if skill_name not in managed:
-        return {"success": False, "error": f"Skill {skill_name} is not managed"}
-
-    m = managed[skill_name]
-    central = skills_dir() / skill_name
-    agents = discover_agents()
-    agent_map = {a.name: a.path for a in agents if a.exists}
-
-    if source == "central":
-        source_path = central
-    elif source in agent_map:
-        source_path = agent_map[source] / skill_name
-    else:
-        return {"success": False, "error": f"Unknown source: {source}"}
-
-    if not source_path.exists():
-        return {"success": False, "error": f"Source not found at {source_path}"}
-
-    if source != "central":
-        _copy_directory(source_path, central)
-
-    use_symlink = m.get("mode", "copy") == "symlink"
-    synced: list[str] = []
-    known_agents = set(m.get("agents", []))
-    for agent_name in agent_map:
-        target = agent_map[agent_name] / skill_name
-        if use_symlink:
-            _create_symlink(central, target)
-        else:
-            _copy_directory(central, target)
-        synced.append(agent_name)
-        known_agents.add(agent_name)
-
-    m["agents"] = sorted(known_agents)
-    m["central_hash"] = _dir_hash(central)
-    m["source_agent"] = source
-    m["status"] = SkillStatus.LINKED.value if use_symlink else SkillStatus.SYNCED.value
-    _save_sync_state(state)
-
-    return {"success": True, "skill": skill_name, "resolved_from": source, "agents": synced}
-
-
-def refresh_status() -> dict[str, Any]:
-    state = _load_sync_state()
-    managed = state.get("managed_skills", {})
-    summary: dict[str, int] = {s.value: 0 for s in SkillStatus}
-
-    for name in list(managed.keys()):
-        status = _detect_skill_status(name)
-        managed[name]["status"] = status.value
-        summary[status.value] += 1
-
-    _save_sync_state(state)
-    return {"summary": summary, "total": len(managed)}

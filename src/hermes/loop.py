@@ -20,7 +20,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 logger = logging.getLogger("hermes.loop")
 
@@ -74,7 +74,7 @@ LOOP_PATTERNS: dict[str, dict[str, Any]] = {
     "ci-sweeper": {
         "name": "CI Sweeper",
         "description": "监控CI失败，尝试分类和修复flaky test",
-        "execution_status": "scaffolding_only",  # 生成脚手架，运行走 guidance 模式
+        "execution_status": "implemented",  # P0: diagnosing-bugs skill 填充 builder
         "default_stage": LoopStage.L1_REPORT,
         "l1_capability": "报告CI失败列表",
         "l2_capability": "尝试修复明显问题，跑测试验证",
@@ -83,14 +83,14 @@ LOOP_PATTERNS: dict[str, dict[str, Any]] = {
         "max_rounds": 3,
         "sub_agents": [
             {"role": "ci_monitor", "agent_file": None, "parallel": False},
-            {"role": "builder", "agent_file": "builder.md", "parallel": False},
+            {"role": "builder", "agent_file": "skills/diagnosing-bugs/SKILL.md", "parallel": False},
             {"role": "checker", "agent_file": "checker.md", "parallel": False},
         ],
     },
     "pr-babysitter": {
         "name": "PR Babysitter",
         "description": "盯PR状态，检查CI，提醒reviewer，处理反馈",
-        "execution_status": "scaffolding_only",  # 生成脚手架，运行走 guidance 模式
+        "execution_status": "implemented",  # P0: code-review skill 填充 review 能力
         "default_stage": LoopStage.L1_REPORT,
         "l1_capability": "报告PR状态和CI结果",
         "l2_capability": "回应review评论，修复小问题",
@@ -99,6 +99,8 @@ LOOP_PATTERNS: dict[str, dict[str, Any]] = {
         "max_rounds": 5,
         "sub_agents": [
             {"role": "pr_monitor", "agent_file": None, "parallel": False},
+            {"role": "reviewer_standards", "agent_file": "skills/code-review/SKILL.md", "parallel": True},
+            {"role": "reviewer_spec", "agent_file": "skills/code-review/SKILL.md", "parallel": True},
         ],
     },
     "issue-triage": {
@@ -107,7 +109,7 @@ LOOP_PATTERNS: dict[str, dict[str, Any]] = {
         # 默认 L1：只分类/打标，不修改代码；升级到 L2 可关闭明显重复/无效 issue。
         "name": "Issue Triage",
         "description": "扫描未分配/无标签的 issue，按优先级分类，建议标签/负责人，关闭明显无效项",
-        "execution_status": "scaffolding_only",
+        "execution_status": "implemented",  # P0: triage skill 填充分诊能力
         "default_stage": LoopStage.L1_REPORT,
         "l1_capability": "报告未分类 issue 列表 + 推荐标签/优先级 + 疑似重复项",
         "l2_capability": "为 issue 打标签/分配人，关闭明显重复或已超时的 stale issue",
@@ -115,9 +117,9 @@ LOOP_PATTERNS: dict[str, dict[str, Any]] = {
         "denylist": ["label:security", "label:auth-bypass", "*P0*"],
         "max_rounds": 3,
         "sub_agents": [
-            {"role": "issue_scanner", "agent_file": None, "parallel": False},
-            {"role": "duplicate_detector", "agent_file": None, "parallel": True},
-            {"role": "label_suggester", "agent_file": None, "parallel": True},
+            {"role": "issue_scanner", "agent_file": "skills/triage/SKILL.md", "parallel": False},
+            {"role": "duplicate_detector", "agent_file": "skills/triage/SKILL.md", "parallel": True},
+            {"role": "label_suggester", "agent_file": "skills/triage/SKILL.md", "parallel": True},
         ],
     },
     "changelog-draft": {
@@ -327,6 +329,12 @@ class LoopRound:
     # P0-1：停止规则触发时的诊断信息（matched_signals / blocker / new_failures 等）。
     # 由 record_round 在 check_stop_rules 返回后回填，随 meta 持久化，供 CLI 展示与跨会话追溯。
     escalation_info: dict[str, Any] = field(default_factory=dict)
+    # P1 熔断：role -> "completed"|"failed"。record_round 据此更新
+    # LoopState.agent_failure_counts，连续失败超阈值时下一轮跳过该 role。
+    agent_status: dict[str, str] = field(default_factory=dict)
+    # P2 协作指标：本轮 RoundResult.collaboration_metrics 的快照。
+    # record_round 据此更新 LoopState 的累计指标（total_role_violations 等）。
+    collaboration_metrics: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -343,6 +351,8 @@ class LoopRound:
             "agent_reports": self.agent_reports,
             "baseline_failures": self.baseline_failures,
             "escalation_info": self.escalation_info,
+            "agent_status": self.agent_status,
+            "collaboration_metrics": self.collaboration_metrics,
         }
 
     @classmethod
@@ -354,6 +364,14 @@ class LoopRound:
         agent_reports = data.get("agent_reports") or {}
         baseline_failures = data.get("baseline_failures") or []
         escalation_info = data.get("escalation_info") or {}
+        # P1: agent_status 字典字段，缺省为空 dict
+        agent_status = data.get("agent_status") or {}
+        if not isinstance(agent_status, dict):
+            agent_status = {}
+        # P2: collaboration_metrics 字典字段，缺省为空 dict
+        collaboration_metrics = data.get("collaboration_metrics") or {}
+        if not isinstance(collaboration_metrics, dict):
+            collaboration_metrics = {}
         return cls(
             round_num=data.get("round_num", 0),
             timestamp=data.get("timestamp", ""),
@@ -368,6 +386,8 @@ class LoopRound:
             agent_reports=agent_reports if isinstance(agent_reports, dict) else {},
             baseline_failures=baseline_failures if isinstance(baseline_failures, list) else [],
             escalation_info=escalation_info if isinstance(escalation_info, dict) else {},
+            agent_status=agent_status,
+            collaboration_metrics=collaboration_metrics,
         )
 
 
@@ -396,6 +416,29 @@ class LoopState:
     audit_warnings: list[str] = field(default_factory=list)
     # 经验F：产物清单（期望产出的文件路径列表，每轮校验存在性）
     deliverables: list[str] = field(default_factory=list)
+    # P1 熔断：按 role 记录连续失败次数。role 成功则清零；连续达到
+    # AGENT_FAILURE_THRESHOLD 时下一轮跳过该 role（避免反复烧 token）。
+    agent_failure_counts: dict[str, int] = field(default_factory=dict)
+    # P2 multi-agent 协作评估累计指标（跨轮次聚合）：
+    #   total_role_violations: 所有轮次 MCP 角色违规调用累计总数
+    #   total_tokens_by_role: 每 role 累计消耗 token（效率分析）
+    #   failure_attribution_counts: dict[attribution, int] - 各归因类型出现次数
+    #     ("builder"/"checker"/"mixed"/"none")，用于诊断 loop 整体协作质量
+    total_role_violations: int = 0
+    total_tokens_by_role: dict[str, int] = field(default_factory=dict)
+    failure_attribution_counts: dict[str, int] = field(default_factory=dict)
+    # Stage 5 GEPA wire-up: 候选变体声明（opt-in）。非空时，loop 到达终态
+    # (COMPLETED/NEEDS_HUMAN/BUDGET_EXCEEDED) 后 record_round 会触发 GEPA 周期，
+    # 评估各变体在此 loop 的 benchmark_task 上的表现，选出 winner 并持久化到 .gepa/。
+    # 每项格式: {"variant_id": str, "agent_file": str, "description": str}
+    # evaluator 由 runner 通过 set_gepa_evaluator() 注入（解耦 Orchestrator）。
+    gepa_variants: list[dict[str, Any]] = field(default_factory=list)
+
+
+# P1 熔断阈值：同一 role 连续失败 N 次后下一轮跳过其任务分配。
+# 设为 2：builder 第一轮失败可能是噪声（网络抖动等），连续两次基本可判定
+# 为该 role 真正无法完成当前任务，再继续就是烧 token。
+AGENT_FAILURE_THRESHOLD = 2
 
 
 # meta.json schema version. Bump when the persisted shape changes; add a
@@ -409,6 +452,53 @@ def _project_root() -> Path:
 
 def loops_dir() -> Path:
     return _project_root() / ".loops"
+
+
+def _load_failure_counts(raw: Any) -> dict[str, int]:
+    """从 meta.json 反序列化 agent_failure_counts。
+
+    严格校验键值类型，丢弃任何非 str 键或非 int 值，避免脏数据进入状态机。
+    """
+    if not isinstance(raw, dict):
+        return {}
+    result: dict[str, int] = {}
+    for key, value in raw.items():
+        if not isinstance(key, str):
+            continue
+        # 兼容 JSON 把 int 写成 str 的情况（理论上不会，但防御性处理）
+        if isinstance(value, bool):
+            # bool 是 int 的子类，明确排除
+            continue
+        if isinstance(value, int):
+            result[key] = value
+    return result
+
+
+def _load_gepa_variants(raw: Any) -> list[dict[str, Any]]:
+    """从 meta.json 反序列化 gepa_variants。
+
+    严格校验每项是 dict 且含 variant_id + agent_file 字符串字段，丢弃
+    任何不合法项，避免脏数据触发 GEPA 周期时崩溃。向后兼容：旧 meta.json
+    无此字段时返回空 list（GEPA 不触发）。
+    """
+    if not isinstance(raw, list):
+        return []
+    result: list[dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        variant_id = item.get("variant_id")
+        agent_file = item.get("agent_file")
+        if not isinstance(variant_id, str) or not isinstance(agent_file, str):
+            continue
+        if not variant_id or not agent_file:
+            continue
+        result.append({
+            "variant_id": variant_id,
+            "agent_file": agent_file,
+            "description": str(item.get("description", "")),
+        })
+    return result
 
 
 def _loop_config_path(name: str) -> Path:
@@ -494,6 +584,16 @@ def _load_loop_meta(meta: dict[str, Any], name: str) -> LoopState | None:
         baseline_failures=baseline_failures if isinstance(baseline_failures, list) else [],
         audit_warnings=audit_warnings if isinstance(audit_warnings, list) else [],
         deliverables=deliverables if isinstance(deliverables, list) else [],
+        # P1: 字典字段读取，缺省为空 dict（向后兼容旧 meta.json）
+        agent_failure_counts=_load_failure_counts(meta.get("agent_failure_counts")),
+        # P2: 累计协作指标读取
+        total_role_violations=int(meta.get("total_role_violations", 0) or 0),
+        total_tokens_by_role=_load_failure_counts(meta.get("total_tokens_by_role")),
+        failure_attribution_counts=_load_failure_counts(
+            meta.get("failure_attribution_counts")
+        ),
+        # Stage 5: GEPA 变体声明读取（向后兼容：旧 meta.json 无此字段时为空 list）
+        gepa_variants=_load_gepa_variants(meta.get("gepa_variants")),
     )
 
 
@@ -520,6 +620,14 @@ def _save_loop_meta(state: LoopState) -> None:
         "baseline_failures": state.baseline_failures,
         "audit_warnings": state.audit_warnings,
         "deliverables": state.deliverables,
+        # P1: 熔断字段序列化（dict[str, int] 在 JSON 中原生可序列化）
+        "agent_failure_counts": state.agent_failure_counts,
+        # P2: 累计协作指标序列化
+        "total_role_violations": state.total_role_violations,
+        "total_tokens_by_role": state.total_tokens_by_role,
+        "failure_attribution_counts": state.failure_attribution_counts,
+        # Stage 5: GEPA 变体声明序列化
+        "gepa_variants": state.gepa_variants,
     }
     (loop_dir / "meta.json").write_text(
         json.dumps(meta, indent=2, ensure_ascii=False),
@@ -1611,6 +1719,216 @@ def knowledge_hygiene_scan() -> dict[str, Any]:
 # ── State management helpers ──────────────────────────────────────────
 
 
+def _update_failure_counts(loop: LoopState, agent_status: dict[str, str]) -> None:
+    """根据本轮 agent_status 更新 loop.agent_failure_counts。
+
+    P1 熔断机制核心：
+    - role 状态为 "failed"：计数 +1
+    - role 状态为 "completed" 或任何非 failed 值：计数清零（成功窗口重置）
+    - 未在 agent_status 中出现的 role 不动（保守：保持原计数，不重置）
+
+    为什么未出现不重置：agent 可能因熔断被跳过该轮，不应因此清零其失败计数。
+    """
+    if not agent_status:
+        return  # 该轮未记录任何 role 状态，跳过
+    for role, status in agent_status.items():
+        if status == "failed":
+            loop.agent_failure_counts[role] = (
+                loop.agent_failure_counts.get(role, 0) + 1
+            )
+        else:
+            # 任何非 failed 状态（completed / unknown 等）均视为成功，清零
+            loop.agent_failure_counts[role] = 0
+
+
+def get_tripped_roles(loop: LoopState) -> list[str]:
+    """返回已触发热断的 role 列表（连续失败 >= AGENT_FAILURE_THRESHOLD）。
+
+    fan_out 前调用此函数：若返回非空，下一轮应跳过对应 role 的任务分配，
+    避免反复烧 token。loop.agent_failure_counts 为运行时累积状态。
+    """
+    return [
+        role
+        for role, count in loop.agent_failure_counts.items()
+        if count >= AGENT_FAILURE_THRESHOLD
+    ]
+
+
+def _accumulate_collaboration_metrics(
+    loop: LoopState, metrics: dict[str, Any]
+) -> None:
+    """把本轮 collaboration_metrics 累加到 LoopState 跨轮次累计字段。
+
+    P2 multi-agent 协作评估：单轮指标只能看当下，累计指标才能看趋势。
+    累计 3 个维度：
+    - total_role_violations: MCP 违规总数（安全趋势）
+    - total_tokens_by_role: 每 role 累计 token（成本归因）
+    - failure_attribution_counts: 各归因类型出现次数（协作质量分布）
+
+    输入为空 dict 时（如 L1_REPORT 阶段无 sub-agent 的轮次）跳过，不报错。
+    """
+    if not metrics:
+        return  # 该轮无协作指标（如纯扫描型 loop），跳过
+
+    # 1. MCP 违规累计
+    violations = metrics.get("role_violation_count", 0)
+    if isinstance(violations, int) and not isinstance(violations, bool):
+        loop.total_role_violations += violations
+
+    # 2. 每 role token 累计
+    token_by_role = metrics.get("token_by_role") or {}
+    if isinstance(token_by_role, dict):
+        for role, tokens in token_by_role.items():
+            if not isinstance(role, str):
+                continue
+            if isinstance(tokens, bool) or not isinstance(tokens, int):
+                continue
+            loop.total_tokens_by_role[role] = (
+                loop.total_tokens_by_role.get(role, 0) + tokens
+            )
+
+    # 3. failure_attribution 累计（按类型计数）
+    attribution = metrics.get("failure_attribution", "none")
+    if isinstance(attribution, str) and attribution:
+        loop.failure_attribution_counts[attribution] = (
+            loop.failure_attribution_counts.get(attribution, 0) + 1
+        )
+
+
+# ── Stage 5: GEPA wire-up ───────────────────────────────────────────
+#
+# 设计原则（第一性原理）：
+# - 解耦：loop.py 不硬依赖 gepa.py。evaluator 由 runner 通过
+#   set_gepa_evaluator() 注入；未注入时 _maybe_run_gepa 跳过并记日志，
+#   不影响 record_round 主流程。
+# - Opt-in：loop 必须在 meta.json 声明 gepa_variants 才会触发；空列表
+#   时完全跳过（零开销）。
+# - 终态触发：只在 loop 到达终态（COMPLETED/NEEDS_HUMAN/BUDGET_EXCEEDED）
+#   时触发一次 GEPA 周期，避免每轮都跑（GEPA 评估多 variant 成本高）。
+# - 审计优先：实验结果通过 save_experiment 持久化到 .gepa/，永不覆盖。
+
+# 类型别名：与 gepa.EvaluateFn 签名一致，但延迟导入避免循环依赖。
+# (variant_dict, benchmark_task, benchmark_context) -> result_dict
+GepaEvaluator = Callable[[dict[str, Any], str, str], dict[str, Any]]
+
+_gepa_evaluator: GepaEvaluator | None = None
+
+
+def set_gepa_evaluator(fn: GepaEvaluator | None) -> None:
+    """注入 GEPA 评估函数。runner 在启动时调用（Gateway 可用时注入真实实现）。
+
+    fn 签名: (variant_dict, benchmark_task, benchmark_context) -> result_dict
+    result_dict 须含: success(bool), tokens_used(int), rounds_to_converge(int),
+    failure_items(list[str]), error(str|None)。与 VariantResult.to_dict() 对齐。
+    传 None 清除注入（用于测试隔离）。
+    """
+    global _gepa_evaluator
+    _gepa_evaluator = fn
+
+
+def get_gepa_evaluator() -> GepaEvaluator | None:
+    """返回当前注入的 GEPA 评估函数（None 表示未注入）。"""
+    return _gepa_evaluator
+
+
+# 触发 GEPA 的终态集合（只在 loop 结束时跑一次，不在中间轮跑）
+_GEPA_TRIGGER_STATUSES = frozenset({
+    LoopStatus.COMPLETED,
+    LoopStatus.NEEDS_HUMAN,
+    LoopStatus.BUDGET_EXCEEDED,
+})
+
+
+def _maybe_run_gepa(loop: LoopState, round_data: LoopRound) -> dict[str, Any]:
+    """在 record_round 终态时按需触发 GEPA 自进化周期。
+
+    触发条件（全部满足）：
+    1. loop.status ∈ {COMPLETED, NEEDS_HUMAN, BUDGET_EXCEEDED}
+    2. loop.gepa_variants 非空（声明了候选变体）
+    3. _gepa_evaluator 已注入（runner 在 Gateway 可用时注入）
+
+    任一条件不满足时静默跳过，返回 {"ran": False, "reason": ...}。
+    全部满足时：延迟导入 gepa 模块，构建 Variant 列表，跑 run_gepa_cycle，
+    save_experiment 持久化，返回实验摘要。
+
+    benchmark_task 用 loop.name + pattern 组合，让 .gepa/ 中的实验可按
+    loop 追溯（list_experiments 后按 benchmark_task 过滤即可）。
+    """
+    if loop.status not in _GEPA_TRIGGER_STATUSES:
+        return {"ran": False, "reason": f"non-terminal status: {loop.status.value}"}
+
+    if not loop.gepa_variants:
+        return {"ran": False, "reason": "no gepa_variants declared"}
+
+    evaluator = _gepa_evaluator
+    if evaluator is None:
+        logger.info(
+            "Loop '%s' reached terminal state with gepa_variants declared, "
+            "but no GEPA evaluator is injected (call set_gepa_evaluator to enable)",
+            loop.name,
+        )
+        return {"ran": False, "reason": "no evaluator injected"}
+
+    # 延迟导入：避免 loop.py 硬依赖 gepa.py（gepa 模块仅在真正触发时加载）
+    from hermes.gepa import Variant, run_gepa_cycle, save_experiment
+
+    variants = [
+        Variant(
+            variant_id=v["variant_id"],
+            agent_file=v["agent_file"],
+            description=v.get("description", ""),
+        )
+        for v in loop.gepa_variants
+    ]
+
+    benchmark_task = f"loop:{loop.name} pattern:{loop.pattern}"
+    benchmark_context = (
+        f"terminal_status={loop.status.value} "
+        f"rounds={loop.current_round}/{loop.max_rounds} "
+        f"budget={loop.budget_used_tokens}/{loop.budget_limit_tokens}"
+    )
+
+    def _evaluate(variant: Variant, task: str, context: str) -> Any:
+        """适配器：把注入的 evaluator（返回 dict）转为 VariantResult。
+
+        evaluator 返回的 dict 字段与 VariantResult 对齐（由 runner 合约保证）。
+        若字段缺失，用合理默认值填充（防御性）。
+        """
+        from hermes.gepa import VariantResult
+        raw = evaluator(variant.to_dict(), task, context)
+        return VariantResult(
+            variant_id=str(raw.get("variant_id", variant.variant_id)),
+            success=bool(raw.get("success", False)),
+            tokens_used=int(raw.get("tokens_used", 0) or 0),
+            rounds_to_converge=int(raw.get("rounds_to_converge", 0) or 0),
+            failure_items=list(raw.get("failure_items") or []),
+            error=raw.get("error"),
+        )
+
+    try:
+        experiment = run_gepa_cycle(
+            benchmark_task=benchmark_task,
+            variants=variants,
+            evaluate_fn=_evaluate,
+            benchmark_context=benchmark_context,
+        )
+        save_experiment(experiment)
+    except Exception as exc:  # noqa: BLE001 - GEPA 失败不能影响 record_round
+        logger.exception(
+            "GEPA cycle failed for loop '%s'; record_round result unaffected",
+            loop.name,
+        )
+        return {"ran": False, "reason": f"gepa error: {type(exc).__name__}: {exc}"}
+
+    return {
+        "ran": True,
+        "experiment_id": experiment.experiment_id,
+        "winner_id": experiment.winner_id,
+        "promotion_reason": experiment.promotion_reason,
+        "variants_evaluated": len(experiment.results),
+    }
+
+
 def record_round(
     name: str,
     round_data: LoopRound,
@@ -1632,6 +1950,16 @@ def record_round(
     loop.current_round = round_data.round_num
     loop.last_run = datetime.now(timezone.utc).isoformat()
     loop.budget_used_tokens += tokens_used
+
+    # P1 熔断：根据本轮 agent_status 更新连续失败计数。
+    # - role 失败：agent_failure_counts[role] += 1
+    # - role 成功：清零（连续失败窗口重置）
+    # 调用方可在 fan_out 前查 get_tripped_roles() 决定是否跳过该 role。
+    _update_failure_counts(loop, round_data.agent_status)
+
+    # P2 协作指标累计：从本轮 collaboration_metrics 聚合到 LoopState。
+    # 累计值用于跨轮次诊断 loop 整体协作质量（如 builder 频繁失败 / token 浪费）。
+    _accumulate_collaboration_metrics(loop, round_data.collaboration_metrics)
 
     if loop.budget_limit_tokens > 0 and loop.budget_used_tokens >= loop.budget_limit_tokens:
         loop.status = LoopStatus.BUDGET_EXCEEDED
@@ -1665,6 +1993,9 @@ def record_round(
         else []
     )
 
+    # Stage 5: 终态时按需触发 GEPA 自进化周期（opt-in，失败不影响 record_round）
+    gepa_result = _maybe_run_gepa(loop, round_data)
+
     return {
         "success": True,
         "loop": name,
@@ -1674,6 +2005,7 @@ def record_round(
         "budget_used": loop.budget_used_tokens,
         "budget_remaining": loop.budget_limit_tokens - loop.budget_used_tokens,
         "missing_deliverables": missing_deliverables,
+        "gepa": gepa_result,
     }
 
 
@@ -1714,7 +2046,47 @@ def _update_state_md(loop: LoopState) -> None:
                 lines.append(f"- Failures ({r.failure_count}): {', '.join(r.failure_items[:5])}")
             if r.tokens_used:
                 lines.append(f"- Tokens: {r.tokens_used:,}")
+            # P2: 渲染本轮协作指标（attribution + agreement）
+            cm = r.collaboration_metrics
+            if cm:
+                attribution = cm.get("failure_attribution", "none")
+                agreement = cm.get("checker_builder_agreement")
+                agreement_str = (
+                    "agree" if agreement is True
+                    else "disagree" if agreement is False
+                    else "n/a"
+                )
+                lines.append(
+                    f"- Collaboration: attribution={attribution}, "
+                    f"checker_builder={agreement_str}, "
+                    f"completed={cm.get('roles_completed', 0)}/"
+                    f"failed={cm.get('roles_failed', 0)}"
+                )
             lines.append("")
+
+    # P2 multi-agent 协作评估累计指标（跨轮次聚合）
+    has_collab_data = (
+        loop.total_role_violations > 0
+        or loop.total_tokens_by_role
+        or loop.failure_attribution_counts
+    )
+    if has_collab_data:
+        lines.append("## Collaboration Metrics (cumulative)")
+        if loop.total_role_violations:
+            lines.append(f"- Total MCP violations: {loop.total_role_violations}")
+        if loop.total_tokens_by_role:
+            lines.append("- Tokens by role:")
+            for role, tokens in sorted(
+                loop.total_tokens_by_role.items(), key=lambda x: -x[1]
+            ):
+                lines.append(f"  - {role}: {tokens:,}")
+        if loop.failure_attribution_counts:
+            lines.append("- Failure attribution distribution:")
+            for attribution, count in sorted(
+                loop.failure_attribution_counts.items(), key=lambda x: -x[1]
+            ):
+                lines.append(f"  - {attribution}: {count}")
+        lines.append("")
 
     # 经验B：软门禁留疤——展示审计未通过的检查项（留痕但不阻断执行）
     if loop.audit_warnings:

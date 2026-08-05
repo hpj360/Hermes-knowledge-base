@@ -63,11 +63,12 @@ describe("DashboardPanel", () => {
     expect(screen.getByText("从知识到实践")).toBeInTheDocument();
   });
 
-  it("展示三个核心能力卡片", async () => {
+  it("展示三张实时数据卡（文档/问答/配方）", async () => {
     renderDashboard();
-    expect(screen.getByText("知识可信")).toBeInTheDocument();
-    expect(screen.getByText("实践可用")).toBeInTheDocument();
-    expect(screen.getByText("持续成长")).toBeInTheDocument();
+    // Hero banner 内 3 张 BauhausMetric 实时数据卡（替换原静态能力卡）
+    expect(screen.getByText("文档")).toBeInTheDocument();
+    expect(screen.getByText("问答")).toBeInTheDocument();
+    expect(screen.getByText("配方")).toBeInTheDocument();
   });
 
   it("展示飞轮健康度指标卡", async () => {

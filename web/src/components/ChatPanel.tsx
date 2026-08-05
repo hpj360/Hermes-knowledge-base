@@ -287,7 +287,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       ) : (
         <>
       {/* 消息列表 */}
-      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 md:px-6 py-4 space-y-2">
         {messages.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
             <div className="text-center max-w-lg">
@@ -354,7 +354,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
               }
             >
               {m.role === "user" ? (
-                <p className="whitespace-pre-wrap">{m.content}</p>
+                <p className="whitespace-pre-wrap text-sm">{m.content}</p>
               ) : (
                 <>
                   {m.rejected && (
@@ -371,7 +371,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
                       低置信度：知识库中暂无足够相关信息
                     </div>
                   )}
-                  <BodyText as="p" className="whitespace-pre-wrap">
+                  <BodyText as="p" className="whitespace-pre-wrap text-sm">
                     {m.content || (m.streaming ? "生成中..." : "")}
                     {m.streaming && (
                       <span
@@ -478,7 +478,7 @@ export function ChatPanel({ refreshDocs, onJumpToDoc }: ChatPanelProps) {
       </div>
 
       {/* 输入区 — sticky bottom-0 确保移动端始终可见，桌面端无副作用 */}
-      <div className="sticky bottom-0 border-t p-3 md:p-4 bg-white">
+      <div className="sticky bottom-0 border-t p-2 bg-white">
         <div className="flex gap-2">
           <textarea
             className="input flex-1 resize-none"

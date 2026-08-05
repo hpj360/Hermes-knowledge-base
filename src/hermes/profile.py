@@ -62,9 +62,6 @@ def _load_working_principles_from_doc() -> list[str]:
     def _flush() -> None:
         nonlocal current_title, current_body
         if current_title is not None:
-            # Strip trailing `---` thematic-break lines (and surrounding blank
-            # lines) that delimit sections but aren't part of the rule's actual
-            # content. A blank line often separates `---` from the next heading.
             body_lines = list(current_body)
             while body_lines and body_lines[-1].strip() in ("", "---"):
                 body_lines.pop()
@@ -75,8 +72,6 @@ def _load_working_principles_from_doc() -> list[str]:
 
     for line in text.splitlines():
         stripped = line.lstrip()
-        # Track fenced code blocks — inside ```/~~~ blocks, # lines are
-        # comments, not markdown headings.
         if stripped.startswith("```") or stripped.startswith("~~~"):
             in_code_block = not in_code_block
             if current_title is not None:
@@ -91,8 +86,6 @@ def _load_working_principles_from_doc() -> list[str]:
             current_title = line.lstrip("# ").strip()
             current_body = []
         elif _HEADING_RE.match(line):
-            # Any other heading ends the current rule's body so trailing
-            # non-rule sections (e.g. `## 加载机制`) don't leak in.
             _flush()
         elif current_title is not None:
             current_body.append(line)
@@ -130,8 +123,6 @@ def load_profile() -> dict[str, Any]:
     if not _has_meaningful_principles(local_principles):
         doc_principles = _load_working_principles_from_doc()
         if doc_principles:
-            # Store backfilled values under a separate key so save_profile can
-            # avoid persisting them (keeps local "empty" state for future doc updates).
             work_style["working_principles"] = doc_principles
             work_style["_working_principles_from_doc"] = True
     return profile
@@ -150,7 +141,6 @@ def save_profile(profile: dict[str, Any]) -> None:
     profile["updated_at"] = datetime.now(timezone.utc).isoformat()
     work_style = profile.get("work_style")
     if isinstance(work_style, dict) and work_style.get("_working_principles_from_doc"):
-        # Restore local to empty so doc updates remain visible on next load.
         work_style["working_principles"] = []
         work_style.pop("_working_principles_from_doc", None)
     with path.open("w", encoding="utf-8") as f:
@@ -160,7 +150,7 @@ def save_profile(profile: dict[str, Any]) -> None:
 def update_field(section: str, key: str, value: Any) -> dict[str, Any]:
     """Update a single field in the profile and save. Returns the updated profile."""
     profile = load_profile()
-    if section not in profile:
+    if section not in profile or not isinstance(profile[section], dict):
         profile[section] = {}
     profile[section][key] = value
     save_profile(profile)
@@ -653,7 +643,6 @@ def _default_profile() -> dict[str, Any]:
             "work_habits": [],
             "communication_style": [],
             "tools_preferred": [],
-            "working_principles": [],
         },
         "personal_projects": [],
         "goals": {

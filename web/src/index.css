@@ -386,7 +386,7 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-wide);
   color: var(--ink-400);
-  padding: var(--sp-2) var(--sp-3);
+  padding: var(--sp-1) var(--sp-3);
   border-bottom: 3px solid transparent;
   transition: color var(--duration-fast), border-color var(--duration-fast);
   white-space: nowrap;

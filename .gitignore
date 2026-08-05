@@ -36,9 +36,13 @@ venv.bak/
 # IDEs
 .idea/
 .vscode/
+.trae/
 *.swp
 *.swo
 *~
+
+# Backups
+src/hermes_backup_v050/
 
 # Testing
 .pytest_cache/

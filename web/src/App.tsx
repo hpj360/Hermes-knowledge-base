@@ -188,26 +188,53 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col relative" style={{ background: "var(--paper-bg)" }}>
       <OfflineBanner />
-      {/* 顶部栏 — 包豪斯导航栏：白底 + 3px 黑色底边 + brand mark 实色方块 */}
-      <header className="navbar px-6 py-4 flex items-center justify-between flex-shrink-0">
+      {/* 顶部栏 — 包豪斯导航栏：白底 + 3px 黑色底边 + brand mark 实色方块
+          T1 信息密度优化：压缩 header 高度（py-2 / Logo 20 / 标题 base），
+          文档数与操作按钮下沉到主导航右侧，header 与 nav 形成视觉整体。 */}
+      <header className="navbar px-6 py-2 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <BauhausBrandMark />
-          <Logo size={24} className="text-ink-900" />
-          <div>
-            <h1 className="brand">
-              <span className="brand-accent">Hermes 知识库</span>
-            </h1>
-            {health && (
-              <p
-                className="text-xs mt-0.5"
-                style={{ color: "var(--ink-400)", fontFamily: "var(--font-mono)" }}
-              >
-                {health.doc_count} 篇文档
-              </p>
-            )}
-          </div>
+          <Logo size={20} className="text-ink-900" />
+          <h1 className="brand" style={{ fontSize: "var(--fs-base)" }}>
+            <span className="brand-accent">Hermes 知识库</span>
+          </h1>
         </div>
-        <div className="flex items-center gap-2">
+      </header>
+
+      {/* 水平导航 — 分组：首页 | 知识区(问答/文档) | 调酒区(配方/实验室) | 设置
+          移动端 (<768px) 隐藏，改用底部 BottomTabBar；桌面端 (≥768px) 显示。
+          hidden md:flex 提供 CSS 级隐藏，!isMobile 提供条件渲染（jsdom 测试用）。
+          T1：文档数 + 导入种子/退出按钮合并到导航栏右侧（ml-auto），
+          nav border 降为 ink-100，与 header 3px 黑边形成层次统一的顶部区。 */}
+      {!isMobile && (
+      <nav
+        className="hidden md:flex items-center gap-1 px-6 border-b border-ink-100 flex-shrink-0 overflow-x-auto"
+        aria-label="主导航"
+        style={{ background: "var(--paper)" }}
+      >
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi} className="flex items-center gap-1">
+            {gi > 0 && (
+              <span
+                className="mx-1 h-4 w-px flex-shrink-0"
+                style={{ background: "var(--ink-200)" }}
+                aria-hidden="true"
+              />
+            )}
+            {group.items.map((item) => (
+              <NavItem key={item.path} path={item.path} label={item.label} />
+            ))}
+          </div>
+        ))}
+        <span className="ml-auto flex items-center gap-3">
+          {health && (
+            <span
+              className="text-xs font-mono"
+              style={{ color: "var(--ink-400)" }}
+            >
+              {health.doc_count} 篇文档
+            </span>
+          )}
           {health && health.doc_count === 0 && (
             <BauhausButton
               variant="outline"
@@ -228,32 +255,7 @@ export default function App() {
               退出
             </BauhausButton>
           )}
-        </div>
-      </header>
-
-      {/* 水平导航 — 分组：首页 | 知识区(问答/文档) | 调酒区(配方/实验室) | 设置
-          移动端 (<768px) 隐藏，改用底部 BottomTabBar；桌面端 (≥768px) 显示。
-          hidden md:flex 提供 CSS 级隐藏，!isMobile 提供条件渲染（jsdom 测试用）。 */}
-      {!isMobile && (
-      <nav
-        className="hidden md:flex items-center gap-1 px-6 border-b border-ink-200 flex-shrink-0 overflow-x-auto"
-        aria-label="主导航"
-        style={{ background: "var(--paper)" }}
-      >
-        {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className="flex items-center gap-1">
-            {gi > 0 && (
-              <span
-                className="mx-2 h-5 w-px flex-shrink-0"
-                style={{ background: "var(--ink-200)" }}
-                aria-hidden="true"
-              />
-            )}
-            {group.items.map((item) => (
-              <NavItem key={item.path} path={item.path} label={item.label} />
-            ))}
-          </div>
-        ))}
+        </span>
       </nav>
       )}
 

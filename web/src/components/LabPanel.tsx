@@ -14,6 +14,7 @@ import { showToast } from "./Toast";
 import {
   BauhausButton,
   BauhausCard,
+  BauhausChip,
   BauhausDisplay,
   BauhausMetric,
   BauhausSectionLabel,
@@ -197,10 +198,17 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe, onEditRecipe }: LabPanel
         attribution="HERMES LAB"
       />
 
-      {/* 今日推荐 — .daily-recipe 语义类（mockup lab.html#L90-L97） */}
+      {/* 今日推荐 — 顶部单行 banner（保留 role=button + 键盘激活以维持 a11y） */}
       {daily && daily.title && (
         <div
-          className="daily-recipe cursor-pointer"
+          className="mb-4 px-4 py-2 flex items-center gap-3 cursor-pointer hover:opacity-90"
+          style={{
+            background: "var(--paper)",
+            border: "var(--border-medium)",
+            borderRadius: "var(--r-sm)",
+          }}
+          role="button"
+          tabIndex={0}
           onClick={() =>
             onJumpToDoc && daily.doc_id
               ? onJumpToDoc(daily.doc_id, daily.chunk_rowid || undefined)
@@ -212,14 +220,22 @@ export function LabPanel({ onJumpToDoc, onCreateRecipe, onEditRecipe }: LabPanel
               onJumpToDoc(daily.doc_id, daily.chunk_rowid || undefined);
             }
           }}
-          role="button"
-          tabIndex={0}
         >
-          <span className="daily-badge">今日推荐</span>
-          <span className="daily-name">{daily.title}</span>
-          <span className="daily-reason">{reasonText(daily.reason)}</span>
+          <BauhausChip variant={daily.reason === "season" ? "amber" : "wine"}>
+            {reasonText(daily.reason)}
+          </BauhausChip>
+          <span
+            className="truncate"
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700, color: "var(--ink-900)" }}
+            title={daily.title}
+          >
+            {daily.title}
+          </span>
           {daily.base_spirit && (
-            <span className="match-badge match-full whitespace-nowrap">
+            <span
+              className="ml-auto whitespace-nowrap"
+              style={{ fontFamily: "var(--font-mono)", color: "var(--ink-400)" }}
+            >
               {daily.base_spirit}
             </span>
           )}
@@ -442,7 +458,7 @@ function MatchGroup({
         <h3 className="section-title text-xl">{title}</h3>
         <hr className="divider-gold flex-1" />
       </div>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {items.map((r) => (
           <RecipeMatchCard
             key={r.doc_id}

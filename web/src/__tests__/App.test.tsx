@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // Mock api 模块，避免 jsdom 环境下发起真实网络请求
@@ -62,6 +62,15 @@ async function waitForAppReady() {
   });
 }
 
+/**
+ * 在主导航中查找链接文本。
+ * 作用域限定在 nav 内，避免与 DashboardPanel 数据卡标签（文档/问答/配方）
+ * 发生全局 getByText 多匹配冲突。
+ */
+function getNavLink(text: string) {
+  return within(screen.getByLabelText("主导航")).getByText(text);
+}
+
 describe("App", () => {
   it("冒烟测试：能渲染不崩溃", async () => {
     const { container } = render(<App />);
@@ -74,16 +83,16 @@ describe("App", () => {
   it("侧边导航包含实验室与配方入口", async () => {
     render(<App />);
     await waitFor(() => {
-      expect(screen.getByText("实验室")).toBeInTheDocument();
-      expect(screen.getByText("配方")).toBeInTheDocument();
+      expect(getNavLink("实验室")).toBeInTheDocument();
+      expect(getNavLink("配方")).toBeInTheDocument();
     });
   });
 
   it("点击「实验室」切换到 LabPanel", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await waitFor(() => expect(screen.getByText("实验室")).toBeInTheDocument());
-    await user.click(screen.getByText("实验室"));
+    await waitFor(() => expect(getNavLink("实验室")).toBeInTheDocument());
+    await user.click(getNavLink("实验室"));
     await waitFor(() => {
       expect(screen.getByText("🧪 鸡尾酒实验室")).toBeInTheDocument();
     });
@@ -92,8 +101,8 @@ describe("App", () => {
   it("点击「配方」切换到 RecipePanel", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await waitFor(() => expect(screen.getByText("配方")).toBeInTheDocument());
-    await user.click(screen.getByText("配方"));
+    await waitFor(() => expect(getNavLink("配方")).toBeInTheDocument());
+    await user.click(getNavLink("配方"));
     await waitFor(() => {
       expect(screen.getByText("📝 配方治理")).toBeInTheDocument();
     });
@@ -131,7 +140,7 @@ describe("产品重构：分组导航与 IA", () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("文档"));
+    await user.click(getNavLink("文档"));
     await waitFor(() => {
       expect(screen.getByText("知识库为空")).toBeInTheDocument();
     });
@@ -152,11 +161,11 @@ describe("产品重构：分组导航与 IA", () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("实验室"));
+    await user.click(getNavLink("实验室"));
     await waitFor(() => {
       expect(screen.getByText("🧪 鸡尾酒实验室")).toBeInTheDocument();
     });
-    const labLink = screen.getByText("实验室").closest("a");
+    const labLink = getNavLink("实验室").closest("a");
     expect(labLink).not.toBeNull();
     expect(labLink?.getAttribute("aria-current")).toBe("page");
   });
@@ -222,7 +231,7 @@ describe("产品重构：分组导航与 IA", () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("文档"));
+    await user.click(getNavLink("文档"));
     await waitFor(() => {
       expect(screen.getByText("知识库为空")).toBeInTheDocument();
     });
@@ -311,7 +320,7 @@ describe("产品重构：分组导航与 IA", () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("文档"));
+    await user.click(getNavLink("文档"));
     await waitFor(() => {
       expect(screen.getByText("知识库为空")).toBeInTheDocument();
     });
@@ -347,7 +356,7 @@ describe("产品重构：分组导航与 IA", () => {
     const user = userEvent.setup();
     render(<App />);
     await waitForAppReady();
-    await user.click(screen.getByText("文档"));
+    await user.click(getNavLink("文档"));
     await waitFor(() => {
       expect(screen.getByText("测试文档一")).toBeInTheDocument();
     });

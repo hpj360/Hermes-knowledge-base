@@ -206,7 +206,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
       {/* 加载中 — F3: 骨架屏替代纯文字 */}
       {loading && items.length === 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <SkeletonList count={6} />
         </div>
       )}
@@ -221,7 +221,7 @@ export function RecipePanel({ onCreateRecipe, onEditRecipe }: RecipePanelProps) 
 
       {/* 配方卡片网格 */}
       {filtered.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {filtered.map((r) => (
             <RecipeCard
               key={r.doc_id}
@@ -290,7 +290,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
 
   return (
     <div
-      className={`bauhaus-card flex flex-col gap-2 ${recipe.hidden ? "opacity-55" : ""}`}
+      className={`bauhaus-card p-3 flex flex-col gap-1 ${recipe.hidden ? "opacity-55" : ""}`}
       data-doc-id={recipe.doc_id}
     >
       {recipe.image_url && !imgError ? (
@@ -299,12 +299,12 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
           alt={recipe.title || "配方"}
           loading="lazy"
           onError={() => setImgError(true)}
-          className="w-full h-40 object-cover mb-2"
+          className="w-full h-28 object-cover mb-2"
           style={{ borderRadius: "var(--r-sm)" }}
         />
       ) : (
         <div
-          className="w-full h-40 mb-2 flex flex-col items-center justify-center"
+          className="w-full h-28 mb-2 flex flex-col items-center justify-center"
           style={{
             background: placeholderBg,
             borderRadius: "var(--r-sm)",
@@ -329,7 +329,7 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         </HeadingText>
         <StatusBadge variant={statusVariant}>{statusText}</StatusBadge>
       </div>
-      <div className="flex gap-2 flex-wrap items-center text-xs pl-[26px]">
+      <div className="flex gap-1 flex-wrap items-center text-xs pl-[26px]">
         <BauhausChip variant="outline">{recipe.source || "local"}</BauhausChip>
         {recipe.verified ? (
           <BauhausChip variant="bronze">✓ 已审核</BauhausChip>
@@ -344,13 +344,13 @@ function RecipeCard({ recipe, busy, onVerify, onToggleHide, onEdit }: RecipeCard
         )}
       </div>
       <MonoText
-        className="text-xs break-all pl-[26px]"
+        className="text-xs truncate pl-[26px]"
         as="div"
         title={recipe.doc_id}
       >
         {recipe.doc_id}
       </MonoText>
-      <div className="flex gap-2 pt-2 pl-[26px]" style={{ borderTop: "1px dashed var(--ink-200)" }}>
+      <div className="flex gap-1 pt-1 pl-[26px]" style={{ borderTop: "1px dashed var(--ink-200)" }}>
         {!recipe.verified && (
           <BauhausButton variant="outline" onClick={onVerify} disabled={busy}>
             审核通过
