@@ -249,3 +249,18 @@
 {"id": "q249", "query": "常见假酒造假手段识别", "expected_doc_titles": ["常见假酒造假手段"], "expected_keywords": ["假酒", "造假", "灌装", "仿冒", "识别"], "category": "IMA中文专题"}
 {"id": "q250", "query": "解酒方法科学原理", "expected_doc_titles": ["解酒的科学原理与方法"], "expected_keywords": ["解酒", "醒酒", "代谢", "水分", "休息"], "category": "IMA中文专题"}
 {"id": "q251", "query": "酒精代谢ADH ALDH酶机制", "expected_doc_titles": ["肝脏酒精代谢ADH与ALDH酶机制"], "expected_keywords": ["酒精代谢", "ADH", "ALDH", "乙醛", "肝脏"], "category": "IMA中文专题"}
+{"id": "q252", "query": "茅台镇酱香白酒工艺12987", "expected_doc_titles": ["茅台镇酱香白酒文化百科"], "expected_keywords": ["茅台", "酱香", "12987", "赤水河", "高温"], "category": "地方酒文化"}
+{"id": "q253", "query": "绍兴黄酒酿造女儿红状元红", "expected_doc_titles": ["绍兴黄酒文化百科"], "expected_keywords": ["绍兴", "黄酒", "鉴湖", "女儿红", "麦曲"], "category": "地方酒文化"}
+{"id": "q254", "query": "汾酒清香型杏花村工艺", "expected_doc_titles": ["汾酒清香白酒文化百科"], "expected_keywords": ["汾酒", "清香", "杏花村", "地缸", "清茬曲"], "category": "地方酒文化"}
+{"id": "q255", "query": "泸州老窖浓香型窖池1573", "expected_doc_titles": ["泸州浓香白酒文化百科"], "expected_keywords": ["泸州", "浓香", "泥窖", "万年糟", "1573"], "category": "地方酒文化"}
+{"id": "q256", "query": "西凤酒凤香型酒海储存", "expected_doc_titles": ["西凤凤香白酒文化百科"], "expected_keywords": ["西凤", "凤香", "酒海", "荆条", "蜜蜡香"], "category": "地方酒文化"}
+{"id": "q257", "query": "五粮液五种粮食配方包包曲", "expected_doc_titles": ["五粮液文化百科"], "expected_keywords": ["五粮液", "五粮", "包包曲", "跑窖", "宜宾"], "category": "地方酒文化"}
+{"id": "q258", "query": "董酒百草入曲药香型", "expected_doc_titles": ["董酒董香文化百科"], "expected_keywords": ["董酒", "药香", "百草", "串蒸", "保密"], "category": "地方酒文化"}
+{"id": "q259", "query": "洋河绵柔型白酒三低工艺", "expected_doc_titles": ["洋河绵柔白酒文化百科"], "expected_keywords": ["洋河", "绵柔", "三低", "蓝色经典", "梦之蓝"], "category": "地方酒文化"}
+{"id": "q260", "query": "苏格兰威士忌产区艾雷岛斯佩塞泥煤", "expected_doc_titles": ["苏格兰威士忌产区文化百科"], "expected_keywords": ["苏格兰", "斯佩塞", "艾雷岛", "泥煤", "产区"], "category": "地方酒文化"}
+{"id": "q261", "query": "爱尔兰威士忌三壶蒸馏", "expected_doc_titles": ["爱尔兰威士忌文化百科"], "expected_keywords": ["爱尔兰", "三壶蒸馏", "柔顺", "无泥煤", "尊美醇"], "category": "地方酒文化"}
+{"id": "q262", "query": "波本威士忌新烧焦橡木桶肯塔基", "expected_doc_titles": ["波本威士忌文化百科"], "expected_keywords": ["波本", "玉米", "新橡木桶", "烧焦", "肯塔基"], "category": "地方酒文化"}
+{"id": "q263", "query": "干邑白兰地产区VSOP XO分级", "expected_doc_titles": ["干邑白兰地产区文化百科"], "expected_keywords": ["干邑", "白兰地", "夏朗德", "双蒸馏", "VSOP"], "category": "地方酒文化"}
+{"id": "q264", "query": "雅文邑白兰地单年份连续蒸馏", "expected_doc_titles": ["雅文邑白兰地文化百科"], "expected_keywords": ["雅文邑", "连续蒸馏", "单年份", "黑橡木", "Baco"], "category": "地方酒文化"}
+{"id": "q265", "query": "龙舌兰产区哈利斯科蓝色龙舌兰", "expected_doc_titles": ["龙舌兰产区文化百科"], "expected_keywords": ["龙舌兰", "哈利斯科", "蓝色龙舌兰", "piña", "jimador"], "category": "地方酒文化"}
+{"id": "q266", "query": "朗姆酒产区古巴牙买加马提尼克农业朗姆", "expected_doc_titles": ["朗姆酒产区文化百科"], "expected_keywords": ["朗姆酒", "古巴", "牙买加", "马提尼克", "农业朗姆"], "category": "地方酒文化"}

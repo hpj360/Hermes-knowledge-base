@@ -669,12 +669,24 @@ def _load_meta(doc: Document) -> dict:
         return {}
 
 
+def _normalize_en_key(title: str) -> str:
+    """从「中文 English」标题中提取英文部分并归一化为大写 key。"""
+    key = " ".join(title.split()).upper()
+    key = key.replace("\u2019", "'").replace("\u2018", "'")
+    return key
+
+
 def _build_seed_story(title: str) -> dict | None:
     """为 seed 配方构建 4 字段 story（复用 SEED_RECIPES.history）。"""
     supplement = _SEED_STORY_SUPPLEMENT.get(title)
     if not supplement:
         return None
     history = _SEED_HISTORY.get(title, "")
+    if not history:
+        # 兜底：从 _IBA_EN_STORIES 取 history
+        en_key = _normalize_en_key(title)
+        en_story = _IBA_EN_STORIES.get(en_key)
+        history = en_story["history"] if en_story else ""
     if not history:
         return None
     return {
@@ -685,12 +697,44 @@ def _build_seed_story(title: str) -> dict | None:
     }
 
 
+def _build_iba_story(title: str) -> dict | None:
+    """为 iba 配方构建 4 字段 story。
+
+    IBA 配方标题为「中文 English」格式，与 _SEED_STORY_SUPPLEMENT 的 key 一致，
+    优先匹配 _SEED_STORY_SUPPLEMENT（variants/pairing/occasion），
+    history 从 _SEED_HISTORY 或 _IBA_EN_STORIES 获取。
+    若 _SEED_STORY_SUPPLEMENT 未命中，退回 _IBA_EN_STORIES 完整匹配。
+    """
+    # 1. 优先 _SEED_STORY_SUPPLEMENT（标题格式一致）
+    supplement = _SEED_STORY_SUPPLEMENT.get(title)
+    if supplement:
+        history = _SEED_HISTORY.get(title, "")
+        if not history:
+            en_key = _normalize_en_key(title)
+            en_story = _IBA_EN_STORIES.get(en_key)
+            history = en_story["history"] if en_story else ""
+        if not history:
+            # 兜底：从 supplement 的 occasion 生成简短 history
+            history = f"IBA 经典鸡尾酒「{title}」，{supplement['occasion']}。"
+        return {
+            "history": history,
+            "variants": supplement["variants"],
+            "pairing": supplement["pairing"],
+            "occasion": supplement["occasion"],
+        }
+
+    # 2. 退回 _IBA_EN_STORIES（英文 key 完整匹配）
+    en_key = _normalize_en_key(title)
+    en_story = _IBA_EN_STORIES.get(en_key)
+    if en_story:
+        return en_story
+
+    return None
+
+
 def _build_iba_en_story(title: str) -> dict | None:
-    """为 iba 英文配方构建 4 字段 story。"""
-    # 归一化 key：合并空白（含 non-breaking space）、去首尾、全大写
-    key = " ".join(title.split()).upper()
-    # 统一引号变体（HORSE'S NECK / HORSE'S NECK）
-    key = key.replace("\u2019", "'").replace("\u2018", "'")
+    """为 iba 英文配方构建 4 字段 story（保留兼容，优先用 _build_iba_story）。"""
+    key = _normalize_en_key(title)
     return _IBA_EN_STORIES.get(key)
 
 
@@ -726,7 +770,7 @@ def main() -> None:
                 if source == "seed":
                     story = _build_seed_story(doc.title)
                 elif source == "iba":
-                    story = _build_iba_en_story(doc.title)
+                    story = _build_iba_story(doc.title)
                 if story:
                     meta["story"] = story
                     doc.meta = json.dumps(meta, ensure_ascii=False)
@@ -734,7 +778,16 @@ def main() -> None:
                     iba_with_story += 1
                     stats[f"iba_{source}_filled"] += 1
                 else:
-                    stats[f"iba_{source}_no_story_data"] += 1
+                    # 兜底：为未命中字典的 IBA 配方生成简化版 story
+                    if source == "iba":
+                        fallback = _generate_tdb_story(doc)
+                        meta["story"] = fallback
+                        doc.meta = json.dumps(meta, ensure_ascii=False)
+                        session.add(doc)
+                        iba_with_story += 1
+                        stats["iba_fallback_filled"] += 1
+                    else:
+                        stats[f"iba_{source}_no_story_data"] += 1
 
             elif source == "thecocktaildb":
                 tdb_total += 1

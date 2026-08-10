@@ -267,34 +267,34 @@ def test_baseline_json_exists():
 
 
 def test_baseline_recall_rate_above_threshold():
-    """Task 5：读取 baseline.json，断言 recall_rate >= 0。
+    """Task 5：读取 baseline.json，断言检索命中率 >= 0。
 
     基线仅作对比基准，不设高阈值；但确保不为负数（合法范围 [0, 1]）。
-    同时校验关键字段齐全：total / recall_hit / keyword_hit / recall_rate /
-    keyword_rate / harvested_at。
+    同时校验关键字段齐全：total / top1_hits / topk_hits / top1_rate /
+    topk_rate / embedding_provider。
     """
     assert BASELINE_PATH.exists(), (
         f"baseline.json 不存在: {BASELINE_PATH}。请先运行 run_eval_baseline()。"
     )
     data = json.loads(BASELINE_PATH.read_text(encoding="utf-8"))
 
-    # 校验字段齐全
+    # 校验字段齐全（P4 起采用 top1/topk 指标 + sentence_transformers）
     required_keys = {
         "total",
-        "recall_hit",
-        "keyword_hit",
-        "recall_rate",
-        "keyword_rate",
-        "harvested_at",
+        "top1_hits",
+        "topk_hits",
+        "top1_rate",
+        "topk_rate",
+        "embedding_provider",
     }
     missing = required_keys - set(data)
     assert not missing, f"baseline.json 缺少字段: {sorted(missing)}"
 
-    # recall_rate 非负（基线仅作对比基准，不设高阈值）
-    recall_rate = data["recall_rate"]
-    assert isinstance(recall_rate, (int, float)), (
-        f"recall_rate 应为数值，实际 {type(recall_rate).__name__}: {recall_rate!r}"
+    # topk_rate 非负（基线仅作对比基准，不设高阈值）
+    topk_rate = data["topk_rate"]
+    assert isinstance(topk_rate, (int, float)), (
+        f"topk_rate 应为数值，实际 {type(topk_rate).__name__}: {topk_rate!r}"
     )
-    assert recall_rate >= 0, (
-        f"recall_rate 不应为负数，实际 {recall_rate}"
+    assert topk_rate >= 0, (
+        f"topk_rate 不应为负数，实际 {topk_rate}"
     )

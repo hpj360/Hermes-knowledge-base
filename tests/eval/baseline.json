@@ -1,10 +1,12 @@
 {
-  "total": 201,
-  "recall_hit": 30,
-  "keyword_hit": 103,
-  "recall_rate": 0.1493,
-  "keyword_rate": 0.5124,
-  "harvested_at": "2026-07-31T01:45:39.342152",
-  "embedding_provider": "hash",
-  "note": "hash embedding baseline; spec requires real embedding (bge-small-zh-v1.5) baseline in production"
+  "total": 266,
+  "top1_hits": 34,
+  "topk_hits": 141,
+  "top1_rate": 0.128,
+  "topk_rate": 0.530,
+  "keyword_rate": 0.0,
+  "embedding_provider": "sentence_transformers",
+  "embedding_model": "BAAI/bge-small-zh-v1.5",
+  "embedding_dim": 512,
+  "note": "P4 baseline: 1118 docs (523 recipes + 444 IMA + 151 encyclopedia incl. 41 ingredient profiles + 15 local wine culture), 266 eval entries, sentence_transformers real embedding"
 }
