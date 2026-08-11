@@ -17,4 +17,8 @@ python-multipart>=0.0.9
 # pysqlite3-binary>=0.5.4  # Windows/Python3.12 不兼容，使用标准库 sqlite3
 # sqlite-vec>=0.1
 
+# Obsidian vault 同步（V4-Phase1）
+watchdog>=4.0
+pyyaml>=6.0
+
 # Development dependencies (install with: pip install -r requirements.txt -r requirements-dev.txt)

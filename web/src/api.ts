@@ -39,7 +39,11 @@ import type {
   VaultSyncResult,
 } from "./types";
 
-const BASE = import.meta.env.VITE_API_BASE || "";
+// Electron 生产模式（file:// 协议）下相对路径不可用，需要绝对 URL
+const ELECTRON_BASE = typeof window !== "undefined" && (window as any).electronAPI
+  ? "http://127.0.0.1:8765"
+  : "";
+const BASE = import.meta.env.VITE_API_BASE || ELECTRON_BASE;
 
 // 401 回调：由 App 层注册，触发跳转登录
 let onUnauthorized: (() => void) | null = null;

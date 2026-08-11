@@ -48,6 +48,11 @@ embedding = [
     # 可选：本地 sentence-transformers 后端
     "sentence-transformers>=2.7",
 ]
+obsidian = [
+    # 可选：Obsidian vault 实时同步
+    "watchdog>=4.0",
+    "pyyaml>=6.0",
+]
 
 [project.scripts]
 hermes = "hermes.main:main"

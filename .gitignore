@@ -81,6 +81,11 @@ web/.vite/
 web/tsconfig.tsbuildinfo
 web/dist
 
+# Electron 桌面端
+web/.electron-data/
+dist-electron/
+.electron-cache/
+
 # 临时数据库
 *.db
 *.db-wal

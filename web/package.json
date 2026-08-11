@@ -1,12 +1,16 @@
 {
   "name": "hermes-kb-web",
-  "version": "0.5.0",
-  "description": "Hermes 知识库前端（Vite + React + TailwindCSS）",
+  "version": "0.6.0",
+  "description": "Hermes 知识库前端（Vite + React + TailwindCSS + Electron）",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
+    "dev:electron": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron electron/main.cjs\"",
     "build": "tsc -b && vite build",
+    "build:electron": "tsc -b && vite build && electron-builder --win",
     "preview": "vite preview",
+    "electron": "electron electron/main.cjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -25,11 +29,34 @@
     "@vitejs/plugin-react": "^4.3.1",
     "@vitest/coverage-v8": "^2.1.9",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",
     "vite": "^5.4.3",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.hermes.kb",
+    "productName": "Hermes 知识库",
+    "directories": {
+      "output": "../dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }
