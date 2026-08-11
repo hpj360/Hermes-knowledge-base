@@ -170,6 +170,74 @@ class TestSyncFile:
         r2 = sync_file(note, vault)
         assert r2["status"] == "updated"
 
+    def test_sync_file_preserves_doc_id_on_update(self, tmp_path: Path):
+        """P1 修复：更新时 doc_id 保持不变（引用/收藏/评分不失效）。"""
+        from hermes_kb.obsidian_sync import sync_file
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        note = vault / "stable.md"
+        note.write_text("# 第一版\n\n内容 A", encoding="utf-8")
+
+        r1 = sync_file(note, vault)
+        doc_id1 = r1["doc_id"]
+
+        # 修改内容后再次同步
+        time.sleep(0.05)
+        note.write_text("# 第二版\n\n内容 B", encoding="utf-8")
+        r2 = sync_file(note, vault)
+
+        # doc_id 必须保持一致
+        assert r2["doc_id"] == doc_id1
+        assert r2["status"] == "updated"
+
+        # 数据库中仍是同一个文档，且内容已更新
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+
+        with get_session() as session:
+            docs = session.exec(select(Document)).all()
+            assert len(docs) == 1  # 没有产生重复文档
+            doc = docs[0]
+            assert doc.doc_id == doc_id1
+            assert "内容 B" in doc.content
+
+    def test_remove_synced_doc_removes_document(self, tmp_path: Path):
+        """P0 修复：remove_synced_doc 删除 vault 文件后清理对应文档。"""
+        from hermes_kb.obsidian_sync import remove_synced_doc, sync_file
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        note = vault / "del.md"
+        note.write_text("# 待删除\n\n内容", encoding="utf-8")
+
+        r = sync_file(note, vault)
+        assert r["status"] == "imported"
+
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+
+        # 删除前存在
+        with get_session() as session:
+            assert session.get(Document, r["doc_id"]) is not None
+
+        # 移除同步文档
+        removed = remove_synced_doc("vault://del.md")
+        assert removed is True
+
+        # 删除后文档被清理
+        with get_session() as session:
+            assert session.get(Document, r["doc_id"]) is None
+
+        # 幂等：再次删除返回 False
+        assert remove_synced_doc("vault://del.md") is False
+
+    def test_remove_synced_doc_noop_for_unsynced(self, tmp_path: Path):
+        """P0 修复：未同步过的路径移除返回 False，不报错。"""
+        from hermes_kb.obsidian_sync import remove_synced_doc
+
+        assert remove_synced_doc("vault://nonexistent.md") is False
+
     def test_sync_file_uses_filename_when_no_frontmatter_title(self, tmp_path: Path):
         """无 frontmatter title 时用文件名作为标题。"""
         from hermes_kb.obsidian_sync import sync_file
@@ -606,3 +674,61 @@ class TestWikilinkResolution:
             tag = session.exec(select(Tag).where(Tag.name == "新标签")).first()
             assert tag is not None
             assert tag.color == "#6b2c2c"
+
+
+# ---------------------------------------------------------------------------
+# P0 修复：事件处理器（删除 / 重命名）
+# ---------------------------------------------------------------------------
+class TestEventHandler:
+    def _make_handler(self, tmp_path: Path):
+        from hermes_kb import obsidian_sync
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        return vault, obsidian_sync._VaultEventHandler(vault)
+
+    def test_on_deleted_removes_doc(self, tmp_path: Path):
+        """P0 修复：on_deleted 移除被删除文件对应的文档。"""
+        from watchdog.events import FileDeletedEvent
+
+        from hermes_kb.obsidian_sync import sync_file
+
+        vault, handler = self._make_handler(tmp_path)
+        note = vault / "gone.md"
+        note.write_text("# 将删除\n\n内容", encoding="utf-8")
+        r = sync_file(note, vault)
+        assert r["status"] == "imported"
+
+        # 模拟文件删除事件
+        handler.on_deleted(FileDeletedEvent(str(note)))
+
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+
+        with get_session() as session:
+            assert session.get(Document, r["doc_id"]) is None
+
+    def test_on_moved_removes_old_and_pending_new(self, tmp_path: Path):
+        """P0 修复：on_moved 移除旧文档并调度新路径同步。"""
+        from watchdog.events import FileMovedEvent
+
+        from hermes_kb.obsidian_sync import sync_file
+
+        vault, handler = self._make_handler(tmp_path)
+        old = vault / "old.md"
+        old.write_text("# 旧名\n\n内容", encoding="utf-8")
+        r = sync_file(old, vault)
+        assert r["status"] == "imported"
+
+        new = vault / "new.md"
+        # 模拟重命名事件
+        handler.on_moved(FileMovedEvent(str(old), str(new)))
+
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+
+        # 旧文档已移除，新路径已进入 pending 待同步
+        with get_session() as session:
+            assert session.get(Document, r["doc_id"]) is None
+        with handler._lock:
+            assert str(new) in handler._pending

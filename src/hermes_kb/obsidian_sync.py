@@ -286,6 +286,24 @@ def _find_existing_doc(source_path: str) -> Document | None:
         return session.exec(stmt).first()
 
 
+def remove_synced_doc(source_path: str) -> bool:
+    """根据 source_path 移除已同步的 vault 文档。
+
+    P0 修复：文件在 vault 中删除/重命名后，同步清理知识库中对应文档，
+    避免孤儿文档（检索仍返回已删除内容）。关联表由数据库级联清理。
+    """
+    existing = _find_existing_doc(source_path)
+    if not existing:
+        return False
+    with get_session() as session:
+        doc = session.get(Document, existing.doc_id)
+        if not doc:
+            return False
+        session.delete(doc)
+        session.commit()
+        return True
+
+
 def sync_file(
     file_path: Path,
     vault_root: Path,
@@ -330,8 +348,10 @@ def sync_file(
 
     # 导入或更新
     svc = importer or ImportService()
+    # P1 修复：更新时保留原 doc_id，避免聊天引用/收藏/评分等外部关联失效
+    existing_doc_id = existing.doc_id if existing else None
     if existing:
-        # 更新：删除旧文档（级联清理 chunks/vectors）后重新导入
+        # 更新：删除旧文档（级联清理 chunks/vectors）后以原 doc_id 重新导入
         with get_session() as session:
             session.delete(existing)
             session.commit()
@@ -350,6 +370,7 @@ def sync_file(
         category=category,
         source=source,
         season=season,
+        doc_id=existing_doc_id,
     )
 
     # 写入 meta（import_text 不支持自定义 meta，需单独更新）
@@ -464,7 +485,12 @@ def get_vault_status(watching: bool = False) -> VaultStatus:
 # watchdog 实时监听（可选）
 # ---------------------------------------------------------------------------
 class _VaultEventHandler(FileSystemEventHandler):  # type: ignore[misc]
-    """vault 文件变更事件处理器（防抖 500ms）。"""
+    """vault 文件变更事件处理器（防抖 500ms）。
+
+    P0 修复：
+    - on_deleted：文件删除 → 移除知识库对应文档（避免孤儿文档）
+    - on_moved：文件重命名/移动 → 移除旧路径文档 + 同步新路径（避免重复）
+    """
 
     def __init__(self, vault_root: Path) -> None:
         self.vault_root = vault_root
@@ -473,14 +499,52 @@ class _VaultEventHandler(FileSystemEventHandler):  # type: ignore[misc]
         self._worker = threading.Thread(target=self._flush_loop, daemon=True)
         self._worker.start()
 
+    @staticmethod
+    def _is_md(path: str) -> bool:
+        return path.lower().endswith(".md")
+
+    def _remove_by_path(self, path: Path) -> None:
+        """按文件路径移除对应 vault 文档（删除/重命名旧路径共用）。"""
+        try:
+            rel = path.relative_to(self.vault_root).as_posix()
+        except ValueError:
+            return  # 路径不在 vault 内，忽略
+        source_path = f"vault://{rel}"
+        try:
+            if remove_synced_doc(source_path):
+                _logger.info("vault 文件删除/移动，已移除文档: %s", rel)
+        except Exception as e:  # noqa: BLE001 — 单文件失败不阻塞监听
+            _logger.warning("移除 vault 文档失败 %s: %s", rel, e)
+
     def on_any_event(self, event: FileSystemEvent) -> None:
+        # 仅处理创建/修改（删除/移动由 on_deleted/on_moved 单独处理）
         if event.is_directory:
             return
-        if not event.src_path.endswith(".md"):
+        if event.event_type not in ("created", "modified"):
+            return
+        if not self._is_md(event.src_path):
             return
         # 防抖：500ms 后处理
         with self._lock:
             self._pending[event.src_path] = time.time() + 0.5
+
+    def on_deleted(self, event: FileSystemEvent) -> None:
+        if event.is_directory:
+            return
+        if not self._is_md(event.src_path):
+            return
+        self._remove_by_path(Path(event.src_path))
+
+    def on_moved(self, event: FileSystemEvent) -> None:
+        if event.is_directory:
+            return
+        # 旧路径：重命名/移出 vault → 移除原文档
+        if self._is_md(event.src_path):
+            self._remove_by_path(Path(event.src_path))
+        # 新路径：.md 且进入 vault → 防抖同步导入
+        if self._is_md(event.dest_path):
+            with self._lock:
+                self._pending[event.dest_path] = time.time() + 0.5
 
     def _flush_loop(self) -> None:
         """后台线程：定期检查 pending 并同步。"""
