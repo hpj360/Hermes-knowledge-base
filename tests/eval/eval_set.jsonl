@@ -17,14 +17,14 @@
 {"id": "q017", "query": "威士忌的高波饮法", "expected_doc_titles": ["威士忌 Whisky 百科"], "expected_keywords": ["苏打水", "Highball", "日式"], "category": "威士忌"}
 {"id": "q018", "query": "田纳西威士忌和波本的区别", "expected_doc_titles": ["威士忌 Whisky 百科", "spirit_whisky_tennessee", "spirit_whisky_american_bourbon"], "expected_keywords": ["糖枫木炭", "过滤", "杰克丹尼"], "category": "威士忌"}
 {"id": "q019", "query": "葡萄酒按颜色如何分类", "expected_doc_titles": ["葡萄酒 Wine 百科"], "expected_keywords": ["红", "白", "桃红"], "category": "葡萄酒"}
-{"id": "q020", "query": "赤霞珠葡萄的特点", "expected_doc_titles": ["葡萄酒 Wine 百科", "赤霞珠葡萄"], "expected_keywords": ["波尔多", "单宁", "黑醋栗"], "category": "葡萄酒"}
-{"id": "q021", "query": "黑皮诺是哪个产区的主角", "expected_doc_titles": ["葡萄酒 Wine 百科", "黑皮诺葡萄"], "expected_keywords": ["勃艮第", "优雅", "细腻"], "category": "葡萄酒"}
-{"id": "q022", "query": "雷司令葡萄的风味", "expected_doc_titles": ["葡萄酒 Wine 百科", "雷司令葡萄"], "expected_keywords": ["花香", "矿物", "酸度"], "category": "葡萄酒"}
-{"id": "q023", "query": "香槟是什么类型的酒", "expected_doc_titles": ["葡萄酒 Wine 百科", "香槟产区", "sparkling_sparkling_champagne"], "expected_keywords": ["起泡酒", "二氧化碳"], "category": "葡萄酒"}
+{"id": "q020", "query": "赤霞珠葡萄的特点", "expected_doc_titles": ["葡萄酒 Wine 百科", "赤霞珠葡萄", "赤霞珠葡萄百科"], "expected_keywords": ["波尔多", "单宁", "黑醋栗"], "category": "葡萄酒"}
+{"id": "q021", "query": "黑皮诺是哪个产区的主角", "expected_doc_titles": ["葡萄酒 Wine 百科", "黑皮诺葡萄", "黑皮诺葡萄百科"], "expected_keywords": ["勃艮第", "优雅", "细腻"], "category": "葡萄酒"}
+{"id": "q022", "query": "雷司令葡萄的风味", "expected_doc_titles": ["葡萄酒 Wine 百科", "雷司令葡萄", "雷司令葡萄百科"], "expected_keywords": ["花香", "矿物", "酸度"], "category": "葡萄酒"}
+{"id": "q023", "query": "香槟是什么类型的酒", "expected_doc_titles": ["葡萄酒 Wine 百科", "香槟产区", "sparkling_sparkling_champagne", "香槟产区百科"], "expected_keywords": ["起泡酒", "二氧化碳"], "category": "葡萄酒"}
 {"id": "q024", "query": "波特酒和雪莉酒属于什么类型", "expected_doc_titles": ["葡萄酒 Wine 百科", "fortified_fortified_port", "fortified_fortified_sherry"], "expected_keywords": ["加强酒", "白兰地"], "category": "葡萄酒"}
 {"id": "q025", "query": "葡萄酒品鉴的 5S 步骤", "expected_doc_titles": ["葡萄酒 Wine 百科"], "expected_keywords": ["看", "摇", "闻", "尝", "评"], "category": "葡萄酒"}
-{"id": "q026", "query": "霞多丽葡萄的风格特点", "expected_doc_titles": ["葡萄酒 Wine 百科", "霞多丽葡萄"], "expected_keywords": ["多变", "清瘦", "浓郁"], "category": "葡萄酒"}
-{"id": "q027", "query": "新西兰长相思的产区", "expected_doc_titles": ["葡萄酒 Wine 百科", "长相思葡萄", "马尔堡产区"], "expected_keywords": ["马尔堡", "新西兰"], "category": "葡萄酒"}
+{"id": "q026", "query": "霞多丽葡萄的风格特点", "expected_doc_titles": ["葡萄酒 Wine 百科", "霞多丽葡萄", "霞多丽葡萄百科"], "expected_keywords": ["多变", "清瘦", "浓郁"], "category": "葡萄酒"}
+{"id": "q027", "query": "新西兰长相思的产区", "expected_doc_titles": ["葡萄酒 Wine 百科", "长相思葡萄", "马尔堡产区", "长相思葡萄百科", "马尔堡产区百科"], "expected_keywords": ["马尔堡", "新西兰"], "category": "葡萄酒"}
 {"id": "q028", "query": "葡萄酒发酵浸渍的作用", "expected_doc_titles": ["葡萄酒 Wine 百科", "process_wine"], "expected_keywords": ["色素", "单宁", "带皮"], "category": "葡萄酒"}
 {"id": "q029", "query": "中国白酒的香型有多少种", "expected_doc_titles": ["中国白酒百科"], "expected_keywords": ["12", "香型"], "category": "白酒"}
 {"id": "q030", "query": "酱香型白酒的代表品牌", "expected_doc_titles": ["中国白酒百科", "spirit_baijiu_maotai", "spirit_baijiu_langjiu"], "expected_keywords": ["茅台", "郎酒", "习酒"], "category": "白酒"}
@@ -138,26 +138,26 @@
 {"id": "q138", "query": "烧酒的酒精度一般是多少", "expected_doc_titles": ["韩国烧酒 Soju 百科", "spirit_soju_diluted"], "expected_keywords": ["16", "25"], "category": "烧酒"}
 {"id": "q139", "query": "烧酒有哪些分类", "expected_doc_titles": ["韩国烧酒 Soju 百科", "spirit_soju_traditional", "spirit_soju_diluted"], "expected_keywords": ["稀释", "蒸馏"], "category": "烧酒"}
 {"id": "q140", "query": "真露和好天好饮是什么品牌", "expected_doc_titles": ["韩国烧酒 Soju 百科"], "expected_keywords": ["真露", "好天好饮"], "category": "烧酒"}
-{"id": "q141", "query": "赤霞珠葡萄的特点", "expected_doc_titles": ["赤霞珠葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["赤霞珠", "cabernet"], "category": "IMA葡萄品种"}
-{"id": "q142", "query": "黑皮诺葡萄产地", "expected_doc_titles": ["黑皮诺葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["黑皮诺", "pinot"], "category": "IMA葡萄品种"}
-{"id": "q143", "query": "雷司令葡萄风味", "expected_doc_titles": ["雷司令葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["雷司令", "riesling"], "category": "IMA葡萄品种"}
-{"id": "q144", "query": "霞多丽葡萄", "expected_doc_titles": ["霞多丽葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["霞多丽", "chardonnay"], "category": "IMA葡萄品种"}
-{"id": "q145", "query": "长相思葡萄是什么", "expected_doc_titles": ["长相思葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["长相思", "sauvignon"], "category": "IMA葡萄品种"}
-{"id": "q146", "query": "梅洛葡萄简介", "expected_doc_titles": ["梅洛葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["梅洛", "merlot"], "category": "IMA葡萄品种"}
-{"id": "q147", "query": "西拉葡萄种植", "expected_doc_titles": ["西拉葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["西拉", "syrah"], "category": "IMA葡萄品种"}
-{"id": "q148", "query": "莫斯卡托葡萄甜度", "expected_doc_titles": ["莫斯卡托葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["莫斯卡托", "moscato"], "category": "IMA葡萄品种"}
-{"id": "q149", "query": "波尔多产区葡萄酒", "expected_doc_titles": ["波尔多产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["波尔多", "bordeaux"], "category": "IMA产区"}
-{"id": "q150", "query": "勃艮第产区特点", "expected_doc_titles": ["勃艮第产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["勃艮第", "burgundy"], "category": "IMA产区"}
-{"id": "q151", "query": "香槟产区起泡酒", "expected_doc_titles": ["香槟产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["香槟", "champagne"], "category": "IMA产区"}
-{"id": "q152", "query": "里奥哈产区西班牙", "expected_doc_titles": ["里奥哈产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["里奥哈", "rioja"], "category": "IMA产区"}
-{"id": "q153", "query": "托斯卡纳产区意大利", "expected_doc_titles": ["托斯卡纳产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["托斯卡纳", "tuscany"], "category": "IMA产区"}
-{"id": "q154", "query": "纳帕产区美国葡萄酒", "expected_doc_titles": ["纳帕产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科"], "expected_keywords": ["纳帕", "napa"], "category": "IMA产区"}
+{"id": "q141", "query": "赤霞珠葡萄的特点", "expected_doc_titles": ["赤霞珠葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "赤霞珠葡萄百科"], "expected_keywords": ["赤霞珠", "cabernet"], "category": "IMA葡萄品种"}
+{"id": "q142", "query": "黑皮诺葡萄产地", "expected_doc_titles": ["黑皮诺葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "黑皮诺葡萄百科"], "expected_keywords": ["黑皮诺", "pinot"], "category": "IMA葡萄品种"}
+{"id": "q143", "query": "雷司令葡萄风味", "expected_doc_titles": ["雷司令葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "雷司令葡萄百科"], "expected_keywords": ["雷司令", "riesling"], "category": "IMA葡萄品种"}
+{"id": "q144", "query": "霞多丽葡萄", "expected_doc_titles": ["霞多丽葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "霞多丽葡萄百科"], "expected_keywords": ["霞多丽", "chardonnay"], "category": "IMA葡萄品种"}
+{"id": "q145", "query": "长相思葡萄是什么", "expected_doc_titles": ["长相思葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "长相思葡萄百科"], "expected_keywords": ["长相思", "sauvignon"], "category": "IMA葡萄品种"}
+{"id": "q146", "query": "梅洛葡萄简介", "expected_doc_titles": ["梅洛葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "梅洛葡萄百科"], "expected_keywords": ["梅洛", "merlot"], "category": "IMA葡萄品种"}
+{"id": "q147", "query": "西拉葡萄种植", "expected_doc_titles": ["西拉葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "西拉葡萄百科"], "expected_keywords": ["西拉", "syrah"], "category": "IMA葡萄品种"}
+{"id": "q148", "query": "莫斯卡托葡萄甜度", "expected_doc_titles": ["莫斯卡托葡萄", "葡萄酒葡萄品种概览百科", "葡萄酒 Wine 百科", "莫斯卡托葡萄百科"], "expected_keywords": ["莫斯卡托", "moscato"], "category": "IMA葡萄品种"}
+{"id": "q149", "query": "波尔多产区葡萄酒", "expected_doc_titles": ["波尔多产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "波尔多产区百科"], "expected_keywords": ["波尔多", "bordeaux"], "category": "IMA产区"}
+{"id": "q150", "query": "勃艮第产区特点", "expected_doc_titles": ["勃艮第产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "勃艮第产区百科"], "expected_keywords": ["勃艮第", "burgundy"], "category": "IMA产区"}
+{"id": "q151", "query": "香槟产区起泡酒", "expected_doc_titles": ["香槟产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "香槟产区百科"], "expected_keywords": ["香槟", "champagne"], "category": "IMA产区"}
+{"id": "q152", "query": "里奥哈产区西班牙", "expected_doc_titles": ["里奥哈产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "里奥哈产区百科"], "expected_keywords": ["里奥哈", "rioja"], "category": "IMA产区"}
+{"id": "q153", "query": "托斯卡纳产区意大利", "expected_doc_titles": ["托斯卡纳产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "托斯卡纳产区百科"], "expected_keywords": ["托斯卡纳", "tuscany"], "category": "IMA产区"}
+{"id": "q154", "query": "纳帕产区美国葡萄酒", "expected_doc_titles": ["纳帕产区", "葡萄酒产区概览百科", "葡萄酒 Wine 百科", "纳帕产区百科"], "expected_keywords": ["纳帕", "napa"], "category": "IMA产区"}
 {"id": "q155", "query": "红葡萄酒风格", "expected_doc_titles": ["红葡萄酒", "葡萄酒 Wine 百科"], "expected_keywords": ["红葡萄酒", "red wine"], "category": "IMA葡萄酒类型"}
 {"id": "q156", "query": "白葡萄酒配餐", "expected_doc_titles": ["白葡萄酒", "葡萄酒 Wine 百科"], "expected_keywords": ["白葡萄酒", "white wine"], "category": "IMA葡萄酒类型"}
-{"id": "q157", "query": "桃红葡萄酒怎么喝", "expected_doc_titles": ["桃红葡萄酒", "葡萄酒 Wine 百科"], "expected_keywords": ["桃红", "rosé"], "category": "IMA葡萄酒类型"}
-{"id": "q158", "query": "山楂果酒制作", "expected_doc_titles": ["山楂果酒", "米酒与发酵酒百科"], "expected_keywords": ["山楂", "hawthorn"], "category": "IMA果酒"}
-{"id": "q159", "query": "杨梅果酒口感", "expected_doc_titles": ["杨梅果酒", "米酒与发酵酒百科"], "expected_keywords": ["杨梅", "yangmei"], "category": "IMA果酒"}
-{"id": "q160", "query": "荔枝果酒风味", "expected_doc_titles": ["荔枝果酒", "米酒与发酵酒百科"], "expected_keywords": ["荔枝", "lychee"], "category": "IMA果酒"}
+{"id": "q157", "query": "桃红葡萄酒怎么喝", "expected_doc_titles": ["桃红葡萄酒", "葡萄酒 Wine 百科", "桃红葡萄酒百科"], "expected_keywords": ["桃红", "rosé"], "category": "IMA葡萄酒类型"}
+{"id": "q158", "query": "山楂果酒制作", "expected_doc_titles": ["山楂果酒", "米酒与发酵酒百科", "山楂果酒百科"], "expected_keywords": ["山楂", "hawthorn"], "category": "IMA果酒"}
+{"id": "q159", "query": "杨梅果酒口感", "expected_doc_titles": ["杨梅果酒", "米酒与发酵酒百科", "杨梅果酒百科"], "expected_keywords": ["杨梅", "yangmei"], "category": "IMA果酒"}
+{"id": "q160", "query": "荔枝果酒风味", "expected_doc_titles": ["荔枝果酒", "米酒与发酵酒百科", "荔枝果酒百科"], "expected_keywords": ["荔枝", "lychee"], "category": "IMA果酒"}
 {"id": "q161", "query": "朗姆酒是什么酒", "expected_doc_titles": ["酒博士·酒博士MAS·知识·朗姆酒（Rum）知识体系 v1.0·通用端", "朗姆酒与龙舌兰百科"], "expected_keywords": ["朗姆酒", "rum"], "category": "IMA酒类知识"}
 {"id": "q162", "query": "金酒的风味特点", "expected_doc_titles": ["酒博士·酒博士MAS·知识·金酒（Gin）知识体系 v1.0·通用端", "金酒（Gin）百科"], "expected_keywords": ["金酒", "gin"], "category": "IMA酒类知识"}
 {"id": "q163", "query": "伏特加怎么酿造", "expected_doc_titles": ["酒博士·酒博士MAS·知识·伏特加（Vodka）知识体系 v1.0·通用端", "伏特加 Vodka 百科"], "expected_keywords": ["伏特加", "vodka"], "category": "IMA酒类知识"}
@@ -175,7 +175,7 @@
 {"id": "q175", "query": "鸡尾酒调酒技法", "expected_doc_titles": ["酒博士·酒博士MAS·知识·鸡尾酒与调酒技法知识体系_2026-05·通用端", "调酒术语词典"], "expected_keywords": ["鸡尾酒", "cocktail"], "category": "IMA酒类知识"}
 {"id": "q176", "query": "经典鸡尾酒配方", "expected_doc_titles": ["酒博士·酒医生·知识·02_经典鸡尾酒配方库·B端"], "expected_keywords": ["鸡尾酒", "配方"], "category": "IMA酒类知识"}
 {"id": "q177", "query": "利口酒配制酒体系", "expected_doc_titles": ["酒博士·酒BOSS·知识·配制酒与利口酒体系_2026-05·B端", "利口酒 Liqueur 百科"], "expected_keywords": ["利口酒", "liqueur"], "category": "IMA酒类知识"}
-{"id": "q178", "query": "香槟产区在哪里", "expected_doc_titles": ["香槟产区", "sparkling_sparkling_champagne"], "expected_keywords": ["香槟", "champagne"], "category": "IMA酒类知识"}
+{"id": "q178", "query": "香槟产区在哪里", "expected_doc_titles": ["香槟产区", "sparkling_sparkling_champagne", "香槟产区百科"], "expected_keywords": ["香槟", "champagne"], "category": "IMA酒类知识"}
 {"id": "q179", "query": "味美思开胃酒", "expected_doc_titles": ["酒水知识|配制酒：开胃酒、甜食酒、利口酒芒果椰汁奶 芒果椰汁奶2024年10月1日 00:32 广西", "味美思 Vermouth 百科", "fortified_fortified_vermouth"], "expected_keywords": ["味美思", "vermouth", "开胃酒"], "category": "IMA酒类知识"}
 {"id": "q180", "query": "梅斯卡尔与龙舌兰", "expected_doc_titles": ["白名单公众号提炼_龙舌兰梅斯卡尔_2025-2026", "朗姆酒与龙舌兰百科"], "expected_keywords": ["梅斯卡尔", "mezcal"], "category": "IMA酒类知识"}
 {"id": "q181", "query": "AOC 是什么意思 法国葡萄酒分级", "expected_doc_titles": ["法国 AOC 葡萄酒分级体系百科"], "expected_keywords": ["AOC", "原产地命名控制", "AOP", "VdP", "VdF"], "category": "法规分级"}
@@ -226,7 +226,7 @@
 {"id": "q226", "query": "波特酒特点 Ruby Tawny", "expected_doc_titles": ["fortified_fortified_port", "加强酒百科"], "expected_keywords": ["波特", "port", "加强酒", "甜", "杜罗河"], "category": "加强酒"}
 {"id": "q227", "query": "雪莉酒 Fino Oloroso 风格", "expected_doc_titles": ["fortified_fortified_sherry", "加强酒百科"], "expected_keywords": ["雪莉", "sherry", "fino", "oloroso", "赫雷斯"], "category": "加强酒"}
 {"id": "q228", "query": "马沙拉加强酒分类", "expected_doc_titles": ["加强酒百科", "fortified_fortified_marsala"], "expected_keywords": ["马沙拉", "marsala", "加强酒", "西西里"], "category": "加强酒"}
-{"id": "q229", "query": "香槟法传统法起泡酒酿造", "expected_doc_titles": ["sparkling_sparkling_champagne", "起泡酒百科", "香槟产区"], "expected_keywords": ["香槟", "champagne", "传统法", "二次发酵", "气泡"], "category": "起泡酒"}
+{"id": "q229", "query": "香槟法传统法起泡酒酿造", "expected_doc_titles": ["sparkling_sparkling_champagne", "起泡酒百科", "香槟产区", "香槟产区百科"], "expected_keywords": ["香槟", "champagne", "传统法", "二次发酵", "气泡"], "category": "起泡酒"}
 {"id": "q230", "query": "卡瓦西班牙起泡酒特点", "expected_doc_titles": ["sparkling_sparkling_cava", "起泡酒百科"], "expected_keywords": ["卡瓦", "cava", "西班牙", "传统法", "加泰罗尼亚"], "category": "起泡酒"}
 {"id": "q231", "query": "普罗塞克意大利起泡酒", "expected_doc_titles": ["起泡酒百科"], "expected_keywords": ["普罗塞克", "prosecco", "意大利", "罐式法", "起泡酒"], "category": "起泡酒"}
 {"id": "q232", "query": "葡萄酒酿造工艺流程", "expected_doc_titles": ["process_wine", "葡萄酒 Wine 百科"], "expected_keywords": ["葡萄酒", "酿造", "发酵", "浸渍", "压榨"], "category": "酿造工艺"}
