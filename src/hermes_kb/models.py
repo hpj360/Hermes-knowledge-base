@@ -52,6 +52,11 @@ class Document(SQLModel, table=True):
     # M3+：难度与强度档位（向后兼容，默认空字符串）
     difficulty: str = Field(default="", max_length=16, index=True)  # 制作难度（easy/medium/hard）
     abv_bucket: str = Field(default="", max_length=16, index=True)  # 强度档位（low/medium/high/strong）
+    # 数据源溯源（V4-Phase：权威性/时效性/许可，均有默认值，向后兼容）
+    source_authority: str = Field(default="", max_length=128)  # 来源机构/期刊名称（如 IWSR/WHO/J. Agric. Food Chem.）
+    source_url: str | None = Field(default=None, max_length=512)  # 来源链接
+    source_refreshed_at: datetime | None = Field(default=None)  # 数据更新时间
+    source_license: str | None = Field(default=None, max_length=64)  # 许可标识（CC0/CC BY/open-access）
     created_at: datetime = Field(default_factory=_now_utc)
 
     def __init__(self, **data: object) -> None:

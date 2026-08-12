@@ -172,6 +172,33 @@ def audit_eval_set() -> dict:
     }
 
 
+def audit_provenance_coverage() -> dict:
+    """数据源溯源覆盖率（V4-Phase）。
+
+    针对注册表优质源（source ∈ registry id）的文档，统计
+    source_authority/url/refreshed_at/license 四字段的覆盖率。
+    """
+    from hermes_kb.data_sources import load_data_source_registry
+
+    quality_ids = set(load_data_source_registry().keys())
+    fields = [
+        "source_authority",
+        "source_url",
+        "source_refreshed_at",
+        "source_license",
+    ]
+    with get_session() as s:
+        docs = s.exec(select(Document)).all()
+    quality_docs = [d for d in docs if d.source in quality_ids]
+    total = len(quality_docs)
+    counts = {f: 0 for f in fields}
+    for doc in quality_docs:
+        for f in fields:
+            if getattr(doc, f, None):
+                counts[f] += 1
+    return {"total": total, "coverage": counts}
+
+
 def _fmt_pct(n: int, total: int) -> str:
     pct = (n / total * 100) if total else 0.0
     return f"{n}/{total} ({pct:.1f}%)"
@@ -188,6 +215,7 @@ def main() -> int:
     content = audit_content_quality()
     ima = audit_ima_quality()
     eval_set = audit_eval_set()
+    provenance = audit_provenance_coverage()
 
     failures: list[str] = []
 
@@ -270,6 +298,62 @@ def main() -> int:
         failures.append(
             f"评估集条目数 {eval_set['valid']} 低于阈值 {_EVAL_SET_MIN_COUNT}{detail}"
         )
+
+    # === 6. 数据源溯源覆盖率 ===
+    print("\n=== 6. 数据源溯源覆盖率 ===")
+    prov_total = provenance["total"]
+    if prov_total == 0:
+        print("优质源文档: 0（无溯源数据） ⏭️")
+    else:
+        for field in provenance["coverage"]:
+            covered = provenance["coverage"][field]
+            print(f"{field}: {_fmt_pct(covered, prov_total)}")
+        # 软告警：溯源覆盖不达标不阻断审计（新接入源需完整溯源，存量可逐步补齐）
+        for field in provenance["coverage"]:
+            if provenance["coverage"][field] < prov_total:
+                print(f"⚠️  {field} 覆盖率未达 100%")
+
+    # === 审计结果 === 6. 数据源溯源覆盖率 ===
+    print("\n=== 6. 数据源溯源覆盖率 ===")
+    prov_total = provenance["total"]
+    if prov_total == 0:
+        print("优质源文档: 0（无溯源数据） ⏭️")
+    else:
+        for field in provenance["coverage"]:
+            covered = provenance["coverage"][field]
+            print(f"{field}: {_fmt_pct(covered, prov_total)}")
+        # 软告警：溯源覆盖不达标不阻断审计（新接入源需完整溯源，存量可逐步补齐）
+        for field in provenance["coverage"]:
+            if provenance["coverage"][field] < prov_total:
+                print(f"⚠️  {field} 覆盖率未达 100%")
+
+    # === 审计结果 === 6. 数据源溯源覆盖率 ===
+    print("\n=== 6. 数据源溯源覆盖率 ===")
+    prov_total = provenance["total"]
+    if prov_total == 0:
+        print("优质源文档: 0（无溯源数据） ⏭️")
+    else:
+        for field in provenance["coverage"]:
+            covered = provenance["coverage"][field]
+            print(f"{field}: {_fmt_pct(covered, prov_total)}")
+        # 软告警：溯源覆盖不达标不阻断审计（新接入源需完整溯源，存量可逐步补齐）
+        for field in provenance["coverage"]:
+            if provenance["coverage"][field] < prov_total:
+                print(f"⚠️  {field} 覆盖率未达 100%")
+
+    # === 审计结果 === 6. 数据源溯源覆盖率 ===
+    print("\n=== 6. 数据源溯源覆盖率 ===")
+    prov_total = provenance["total"]
+    if prov_total == 0:
+        print("优质源文档: 0（无溯源数据） ⏭️")
+    else:
+        for field in provenance["coverage"]:
+            covered = provenance["coverage"][field]
+            print(f"{field}: {_fmt_pct(covered, prov_total)}")
+        # 软告警：溯源覆盖不达标不阻断审计（新接入源需完整溯源，存量可逐步补齐）
+        for field in provenance["coverage"]:
+            if provenance["coverage"][field] < prov_total:
+                print(f"⚠️  {field} 覆盖率未达 100%")
 
     # === 审计结果 ===
     print("\n" + "=" * 40)

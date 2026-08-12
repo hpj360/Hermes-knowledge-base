@@ -1,0 +1,80 @@
+{
+  "wikidata": {
+    "id": "wikidata",
+    "name": "Wikidata 酒类/原料结构化实体",
+    "type": "institution",
+    "authority_level": 4,
+    "accuracy_notes": "众包但带引用（references）的结构化知识库，实体属性可溯源到权威文献；适合获取酒类/原料基础属性与跨语言别名，不适合承载主观评测结论。",
+    "refresh_cadence_days": 365,
+    "last_verified": "2026-08-12",
+    "license": "CC0",
+    "access": "api",
+    "import_adapter": "wikidata",
+    "status": "active"
+  },
+  "crossref": {
+    "id": "crossref",
+    "name": "Crossref 学术期刊元数据/摘要",
+    "type": "journal",
+    "authority_level": 5,
+    "accuracy_notes": "学术出版元数据注册中心，提供期刊文章标题/摘要/DOI/引用；对烈酒/葡萄酒/发酵类研究文章提供权威的学术来源与可引用 DOI。",
+    "refresh_cadence_days": 365,
+    "last_verified": "2026-08-12",
+    "license": "CC0",
+    "access": "api",
+    "import_adapter": "crossref",
+    "status": "active"
+  },
+  "iwsr_summary": {
+    "id": "iwsr_summary",
+    "name": "IWSR 全球酒类市场数据摘要",
+    "type": "report",
+    "authority_level": 5,
+    "accuracy_notes": "IWSR 是全球最权威的饮料酒市场数据机构，追踪 160 个国家市场，年度发布销量/价值与十年预测；本源为人工策划的公开新闻稿/摘要快照。",
+    "refresh_cadence_days": 365,
+    "last_verified": "2026-08-12",
+    "license": "open-access",
+    "access": "curated",
+    "import_adapter": "iwsr_summary",
+    "status": "active"
+  },
+  "who_alcohol": {
+    "id": "who_alcohol",
+    "name": "WHO 全球酒精与健康报告",
+    "type": "institution",
+    "authority_level": 5,
+    "accuracy_notes": "世界卫生组织官方发布的酒精消费与健康数据，权威性与国际认可度最高；内容偏向公共卫生与流行病学视角。",
+    "refresh_cadence_days": 730,
+    "last_verified": "2026-08-12",
+    "license": "CC BY",
+    "access": "curated",
+    "import_adapter": "who_alcohol",
+    "status": "active"
+  },
+  "iba_official": {
+    "id": "iba_official",
+    "name": "IBA 官方鸡尾酒金标准",
+    "type": "institution",
+    "authority_level": 5,
+    "accuracy_notes": "国际调酒师协会官方配方规范（The Unforgettables / Contemporary Classics / New Era Drinks），业界公认的配方金标准。",
+    "refresh_cadence_days": 730,
+    "last_verified": "2026-08-12",
+    "license": "open-access",
+    "access": "curated",
+    "import_adapter": "iba_official",
+    "status": "active"
+  },
+  "thecocktaildb": {
+    "id": "thecocktaildb",
+    "name": "TheCocktailDB 开放配方库",
+    "type": "reference",
+    "authority_level": 3,
+    "accuracy_notes": "开源社区维护的配方库（免费 API，500+ 配方），覆盖广、更新快；权威性低于 IBA 金标准，作为补充数据源。",
+    "refresh_cadence_days": 365,
+    "last_verified": "2026-08-12",
+    "license": "open-access",
+    "access": "api",
+    "import_adapter": "thecocktaildb",
+    "status": "active"
+  }
+}

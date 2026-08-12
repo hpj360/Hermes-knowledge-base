@@ -28,6 +28,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
+from hermes_kb.data_sources import load_data_source_registry  # noqa: E402
+from hermes_kb.data_sources.registry import get_adapter  # noqa: E402
 from hermes_kb.iba_dataset_importer import sync_iba_dataset  # noqa: E402
 from hermes_kb.rag import ImportService  # noqa: E402
 from hermes_kb.retrieval import HybridRetriever  # noqa: E402
@@ -37,6 +39,16 @@ from tests.eval import load_eval_set  # noqa: E402
 
 EVAL_SET_PATH = ROOT / "tests" / "eval" / "eval_set.jsonl"
 BASELINE_PATH = ROOT / "tests" / "eval" / "baseline.json"
+
+# 数据源注册表中的优质数据源（适配器接入）
+QUALITY_SOURCE_IDS = [
+    "wikidata",
+    "crossref",
+    "iwsr_summary",
+    "who_alcohol",
+    "iba_official",
+    "thecocktaildb",
+]
 
 
 def run_eval_baseline(top_k: int = 5) -> dict:
@@ -79,11 +91,42 @@ def run_eval_baseline(top_k: int = 5) -> dict:
     return result
 
 
+def harvest_quality_sources(
+    importer: ImportService,
+    source_ids: list[str] | None = None,
+) -> dict:
+    """通过数据源适配器编排优质数据源收割。
+
+    对每个源调用 get_adapter(source_id).run(importer)，收集
+    {imported, skipped, failed} 汇总；部分源失败不中断其他源。
+    """
+    ids = source_ids or QUALITY_SOURCE_IDS
+    results: dict = {}
+    for source_id in ids:
+        try:
+            results[source_id] = get_adapter(source_id).run(importer)
+        except Exception as e:  # noqa: BLE001
+            results[source_id] = {
+                "error": str(e),
+                "imported": 0,
+                "skipped": 0,
+                "failed": 0,
+            }
+            print(f"{source_id} 收割失败: {e}", file=sys.stderr)
+    return results
+
+
 def main() -> int:
+    reg = load_data_source_registry()
+    # --source 可选值：既有源 + 注册表优质源 + all + quality
+    choices = ["thecocktaildb", "iba_dataset", "all", "quality"]
+    for sid in reg:
+        choices.append(sid)
+
     parser = argparse.ArgumentParser(description="外部数据收割编排")
     parser.add_argument(
         "--source",
-        choices=["thecocktaildb", "iba_dataset", "all"],
+        choices=choices,
         default="all",
         help="数据源（默认 all）",
     )
@@ -103,6 +146,17 @@ def main() -> int:
     importer = ImportService()
     results: dict = {}
     has_failure = False
+
+    if args.source == "quality" or args.source in QUALITY_SOURCE_IDS:
+        # 通过数据源适配器收割优质数据源
+        if args.source == "quality":
+            ids = QUALITY_SOURCE_IDS
+        else:
+            ids = [args.source]
+        quality_results = harvest_quality_sources(importer, ids)
+        results.update(quality_results)
+        if any(r.get("error") for r in quality_results.values()):
+            has_failure = True
 
     if args.source in ("thecocktaildb", "all"):
         try:

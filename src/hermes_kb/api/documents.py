@@ -107,6 +107,12 @@ async def list_documents(
                     "created_at": d.created_at.isoformat()
                     if d.created_at
                     else None,
+                    "source_authority": d.source_authority,
+                    "source_url": d.source_url,
+                    "source_refreshed_at": d.source_refreshed_at.isoformat()
+                    if d.source_refreshed_at
+                    else None,
+                    "source_license": d.source_license,
                 }
                 for d in docs
             ],

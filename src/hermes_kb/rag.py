@@ -21,6 +21,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, AsyncIterator
 from uuid import uuid4
@@ -652,6 +653,10 @@ class ImportService:
         flavor_profile: str = "",
         difficulty: str = "",
         abv_bucket: str = "",
+        source_authority: str = "",
+        source_url: str | None = None,
+        source_refreshed_at: datetime | None = None,
+        source_license: str | None = None,
     ) -> dict[str, Any]:
         """导入纯文本。
 
@@ -707,6 +712,10 @@ class ImportService:
             "flavor_profile": flavor_profile,
             "difficulty": difficulty,
             "abv_bucket": abv_bucket,
+            "source_authority": source_authority,
+            "source_url": source_url,
+            "source_refreshed_at": source_refreshed_at,
+            "source_license": source_license,
         }
         if source is not None:
             gov["source"] = source
