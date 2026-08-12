@@ -56,11 +56,14 @@ class DocMetadataReq(BaseModel):
 async def list_documents(
     category: str | None = None,
     tag_id: int | None = None,
+    source: str | None = None,
 ) -> dict[str, Any]:
     with get_session() as session:
         stmt = select(Document)
         if category:
             stmt = stmt.where(Document.category == category)
+        if source:
+            stmt = stmt.where(Document.source == source)
         if tag_id:
             # 通过 DocumentTag 关联筛选
             doc_ids_stmt = select(DocumentTag.doc_id).where(
@@ -95,6 +98,7 @@ async def list_documents(
                     "doc_id": d.doc_id,
                     "title": d.title,
                     "source_type": d.source_type,
+                    "source": d.source,
                     "file_type": d.file_type,
                     "chunk_count": d.chunk_count,
                     "category": d.category,

@@ -441,6 +441,41 @@ def scan_vault(
 # ---------------------------------------------------------------------------
 # 状态查询
 # ---------------------------------------------------------------------------
+def list_synced_docs(limit: int = 200) -> list[dict[str, Any]]:
+    """列出已同步的 Obsidian vault 文档（source=obsidian）。
+
+    Returns:
+        [{doc_id, title, vault_path, wikilinks, category, chunk_count, created_at}]
+    """
+    with get_session() as session:
+        stmt = (
+            select(Document)
+            .where(Document.source == "obsidian")
+            .order_by(Document.created_at.desc())
+            .limit(limit)
+        )
+        docs = session.exec(stmt).all()
+        items: list[dict[str, Any]] = []
+        for d in docs:
+            meta: dict[str, Any] = {}
+            try:
+                meta = json.loads(d.meta or "{}")
+            except (json.JSONDecodeError, TypeError):
+                pass
+            items.append(
+                {
+                    "doc_id": d.doc_id,
+                    "title": d.title,
+                    "vault_path": meta.get("vault_path", ""),
+                    "wikilinks": meta.get("wikilinks", []),
+                    "category": d.category,
+                    "chunk_count": d.chunk_count,
+                    "created_at": d.created_at.isoformat() if d.created_at else None,
+                }
+            )
+        return items
+
+
 def get_vault_status(watching: bool = False) -> VaultStatus:
     """查询 vault 集成状态。"""
     settings = get_settings()
@@ -600,13 +635,17 @@ class VaultWatcher:
 
 
 # ---------------------------------------------------------------------------
-# 反向同步（Phase 2）：UGC 配方 → 导出 .md 到 vault
+# 反向同步（Phase 2）：知识库文档 → 导出 .md 到 vault
 # ---------------------------------------------------------------------------
-def export_recipe_to_vault(
+def export_doc_to_vault(
     doc_id: str,
     vault_path: Path | None = None,
+    subdir: str = "Hermes",
 ) -> str:
-    """将 UGC 配方导出为 .md 文件到 vault 的 Hermes/ 子目录。
+    """将知识库中任意文档导出为 .md 文件到 vault 的 Hermes/ 子目录。
+
+    全面融合：不再局限于 UGC 配方，百科/文档/Obsidian 笔记均可导出，
+    便于在 Obsidian 中浏览与编辑知识库内容。
 
     Returns:
         导出文件的相对路径（vault 内）
@@ -621,13 +660,11 @@ def export_recipe_to_vault(
         doc = session.get(Document, doc_id)
         if not doc:
             raise VaultSyncError(f"文档不存在: {doc_id}")
-        if doc.source != "ugc":
-            raise VaultSyncError(f"仅 UGC 配方可导出，当前 source={doc.source}")
         title = doc.title
         content = doc.content
 
-    # 导出到 vault/Hermes/ 子目录
-    export_dir = vault_path / "Hermes"
+    # 导出到 vault/<subdir>/ 子目录
+    export_dir = vault_path / subdir
     export_dir.mkdir(parents=True, exist_ok=True)
 
     # 文件名：标题（清理非法字符）+ doc_id 后缀避免重名
@@ -635,11 +672,11 @@ def export_recipe_to_vault(
     filename = f"{safe_title}.md"
     file_path = export_dir / filename
 
-    # 构造 frontmatter
+    # 构造 frontmatter（保留 source，便于回读识别导出源）
     frontmatter_lines = [
         "---",
         f"title: {title}",
-        "source: hermes-ugc",
+        f"source: {doc.source or 'local'}",
         f"doc_id: {doc_id}",
         f"exported_at: {time.strftime('%Y-%m-%dT%H:%M:%S')}",
         "---",
@@ -650,8 +687,28 @@ def export_recipe_to_vault(
         encoding="utf-8",
     )
     rel = file_path.relative_to(vault_path).as_posix()
-    _logger.info("UGC 配方已导出到 vault: %s", rel)
+    _logger.info("文档已导出到 vault: %s (source=%s)", rel, doc.source)
     return rel
+
+
+def export_recipe_to_vault(
+    doc_id: str,
+    vault_path: Path | None = None,
+) -> str:
+    """将 UGC 配方导出为 .md 文件到 vault 的 Hermes/ 子目录。
+
+    保留 UGC 限制语义（旧 API 兼容）。新导出能力请使用 export_doc_to_vault。
+
+    Returns:
+        导出文件的相对路径（vault 内）
+    """
+    with get_session() as session:
+        doc = session.get(Document, doc_id)
+        if not doc:
+            raise VaultSyncError(f"文档不存在: {doc_id}")
+        if doc.source != "ugc":
+            raise VaultSyncError(f"仅 UGC 配方可导出，当前 source={doc.source}")
+    return export_doc_to_vault(doc_id, vault_path=vault_path)
 
 
 # ---------------------------------------------------------------------------

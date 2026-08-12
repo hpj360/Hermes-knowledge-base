@@ -24,6 +24,7 @@ import type {
   LabTranslateResult,
   MultiLoginResult,
   MyRecipeItem,
+  ObsidianDocItem,
   RegisterResult,
   InviteCodeItem,
   UserItem,
@@ -101,10 +102,11 @@ export const api = {
   // -------------------------------------------------------------------------
   // 文档管理
   // -------------------------------------------------------------------------
-  async listDocuments(category?: string, tagId?: number): Promise<{ total: number; items: DocumentItem[] }> {
+  async listDocuments(category?: string, tagId?: number, source?: string): Promise<{ total: number; items: DocumentItem[] }> {
     const params = new URLSearchParams();
     if (category) params.set("category", category);
     if (tagId) params.set("tag_id", String(tagId));
+    if (source) params.set("source", source);
     const qs = params.toString();
     return request(`/api/documents${qs ? "?" + qs : ""}`);
   },
@@ -817,6 +819,11 @@ export const api = {
   /** GET /api/obsidian/status — 查询 vault 集成状态 */
   async obsidianStatus(): Promise<VaultStatus> {
     return request("/api/obsidian/status");
+  },
+
+  /** GET /api/obsidian/docs — 列出已同步的 Obsidian 文档 */
+  async obsidianDocs(limit: number = 200): Promise<{ total: number; items: ObsidianDocItem[] }> {
+    return request(`/api/obsidian/docs?limit=${limit}`);
   },
 
   /** POST /api/obsidian/sync — 触发全量/增量扫描同步 */

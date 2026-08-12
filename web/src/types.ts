@@ -33,6 +33,7 @@ export interface DocumentItem {
   doc_id: string;
   title: string;
   source_type: string;
+  source?: string;
   file_type: string;
   chunk_count: number;
   category: string;
@@ -470,4 +471,15 @@ export interface VaultExportResult {
   status: string;
   path: string;
   doc_id: string;
+}
+
+/** GET /api/obsidian/docs 单条已同步文档 */
+export interface ObsidianDocItem {
+  doc_id: string;
+  title: string;
+  vault_path: string;
+  wikilinks: string[];
+  category: string;
+  chunk_count: number;
+  created_at: string | null;
 }

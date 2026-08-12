@@ -396,7 +396,7 @@ class TestExportRecipe:
         # 验证文件内容
         exported = (vault / rel_path).read_text(encoding="utf-8")
         assert "title: 我的特调" in exported
-        assert "source: hermes-ugc" in exported
+        assert "source: ugc" in exported
         assert doc_id in exported
         assert "# 我的特调" in exported
 

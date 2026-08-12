@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import type { VaultStatus, VaultSyncResult } from "../types";
+import type { ObsidianDocItem, VaultStatus, VaultSyncResult } from "../types";
 import { showToast } from "./Toast";
 import {
   BauhausButton,
@@ -29,6 +29,9 @@ export function ObsidianPanel() {
   const [syncing, setSyncing] = useState(false);
   const [togglingWatch, setTogglingWatch] = useState(false);
   const [syncResult, setSyncResult] = useState<VaultSyncResult | null>(null);
+  const [docs, setDocs] = useState<ObsidianDocItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [exportingId, setExportingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const loadStatus = async () => {
@@ -44,9 +47,42 @@ export function ObsidianPanel() {
     }
   };
 
+  const loadDocs = async () => {
+    setDocsLoading(true);
+    try {
+      const res = await api.obsidianDocs();
+      setDocs(res.items);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "文档列表加载失败");
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadStatus();
   }, []);
+
+  useEffect(() => {
+    if (status?.enabled) {
+      loadDocs();
+    }
+  }, [status?.enabled]);
+
+  const handleExport = async (docId: string, title: string) => {
+    setExportingId(docId);
+    setError("");
+    try {
+      const res = await api.obsidianExport(docId);
+      showToast(`已导出「${title}」→ vault/${res.path}`, "success");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      showToast(`导出失败：${msg}`, "danger");
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   const handleSync = async (incremental: boolean) => {
     setSyncing(true);
@@ -224,6 +260,57 @@ export function ObsidianPanel() {
                 ))}
               </ul>
             </div>
+          )}
+        </BauhausCard>
+      )}
+
+      {/* 已同步文档列表 */}
+      {status?.enabled && (
+        <BauhausCard className="p-5 mb-6" data-testid="obsidian-docs-card">
+          <div className="flex items-center justify-between mb-3">
+            <BodyText className="text-sm font-medium">已同步文档（{docs.length}）</BodyText>
+            <BauhausButton variant="outline" onClick={loadDocs} disabled={docsLoading} aria-label="刷新已同步文档列表">
+              {docsLoading ? "加载中..." : "刷新"}
+            </BauhausButton>
+          </div>
+          {docs.length === 0 ? (
+            <MetaText className="text-xs">尚无已同步的 Obsidian 文档，点击上方「增量同步」或「全量重扫」导入 .md 笔记。</MetaText>
+          ) : (
+            <ul className="space-y-2 max-h-72 overflow-y-auto" data-testid="obsidian-docs-list">
+              {docs.map((d) => (
+                <li
+                  key={d.doc_id}
+                  className="p-3 rounded border border-ink-100 flex items-start justify-between gap-3"
+                  data-testid={`obsidian-doc-${d.doc_id}`}
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium truncate" style={{ color: "var(--ink-900)" }} title={d.title}>
+                      {d.title}
+                    </div>
+                    <MetaText className="text-xs mt-0.5 block truncate" title={d.vault_path}>
+                      {d.vault_path || "(无 vault 路径)"}
+                    </MetaText>
+                    {Array.isArray(d.wikilinks) && d.wikilinks.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {d.wikilinks.slice(0, 6).map((w) => (
+                          <span key={w} className="text-[10px] px-1.5 py-0.5 rounded bg-ink-100" style={{ color: "var(--ink-600)" }}>
+                            [[{w}]]
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <BauhausButton
+                    variant="outline"
+                    disabled={exportingId === d.doc_id}
+                    onClick={() => handleExport(d.doc_id, d.title)}
+                    aria-label={`导出「${d.title}」到 vault`}
+                  >
+                    {exportingId === d.doc_id ? "导出中..." : "导出"}
+                  </BauhausButton>
+                </li>
+              ))}
+            </ul>
           )}
         </BauhausCard>
       )}

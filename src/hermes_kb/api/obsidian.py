@@ -18,8 +18,9 @@ from hermes_kb.config import get_settings
 from hermes_kb.obsidian_sync import (
     VaultConfigError,
     VaultSyncError,
-    export_recipe_to_vault,
+    export_doc_to_vault,
     get_vault_status,
+    list_synced_docs,
     scan_vault,
     start_watcher,
     stop_watcher,
@@ -42,6 +43,13 @@ async def obsidian_status() -> dict[str, Any]:
     watching = _watcher is not None and _watcher.is_running
     status = get_vault_status(watching=watching)
     return status.to_dict()
+
+
+@router.get("/docs", dependencies=[Depends(require_age_gate)])
+async def obsidian_docs(limit: int = 200) -> dict[str, Any]:
+    """列出已同步的 Obsidian vault 文档（source=obsidian）。"""
+    docs = list_synced_docs(limit=limit)
+    return {"total": len(docs), "items": docs}
 
 
 @router.post("/sync", dependencies=[Depends(require_age_gate)])
@@ -103,7 +111,7 @@ async def obsidian_export(
     req: ExportRequest,
     payload: dict[str, Any] | None = Depends(require_auth),
 ) -> dict[str, Any]:
-    """V4-Phase2：将 UGC 配方导出为 .md 到 vault/Hermes/ 子目录。"""
+    """V4-Phase2+：将任意文档导出为 .md 到 vault/Hermes/ 子目录（不再限 UGC）。"""
     settings = get_settings()
     if not settings.vault_enabled:
         raise HTTPException(
@@ -111,7 +119,7 @@ async def obsidian_export(
             detail="vault 未启用，无法导出",
         )
     try:
-        rel_path = export_recipe_to_vault(req.doc_id)
+        rel_path = export_doc_to_vault(req.doc_id)
         return {"status": "ok", "path": rel_path, "doc_id": req.doc_id}
     except VaultConfigError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

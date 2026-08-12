@@ -33,6 +33,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterTagId, setFilterTagId] = useState<number | undefined>(undefined);
+  const [filterSource, setFilterSource] = useState<string>("");
 
   // R2: 替代 window.confirm 的异步确认对话框
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -42,7 +43,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
     setError("");
     try {
       const [docsResp, catsResp, tagsResp] = await Promise.all([
-        api.listDocuments(filterCategory || undefined, filterTagId),
+        api.listDocuments(filterCategory || undefined, filterTagId, filterSource || undefined),
         api.listCategories(),
         api.listTags(),
       ]);
@@ -58,7 +59,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
 
   useEffect(() => {
     load();
-  }, [refreshKey, filterCategory, filterTagId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshKey, filterCategory, filterTagId, filterSource]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (docId: string, title: string) => {
     if (!(await confirm(`确认删除文档「${title}」？此操作不可恢复。`))) return;
@@ -74,6 +75,7 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
   const clearFilters = () => {
     setFilterCategory("");
     setFilterTagId(undefined);
+    setFilterSource("");
   };
 
   if (loading && docs.length === 0) {
@@ -123,7 +125,19 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
             </option>
           ))}
         </select>
-        {(filterCategory || filterTagId) && (
+        <select
+          className="select text-sm rounded px-2 py-1"
+          value={filterSource}
+          onChange={(e) => setFilterSource(e.target.value)}
+          aria-label="按来源筛选"
+        >
+          <option value="">全部来源</option>
+          <option value="obsidian">Obsidian</option>
+          <option value="ima">IMA</option>
+          <option value="ugc">UGC</option>
+          <option value="local">本地</option>
+        </select>
+        {(filterCategory || filterTagId || filterSource) && (
           <BauhausButton
             variant="outline"
             onClick={clearFilters}
@@ -144,9 +158,9 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
       {docs.length === 0 ? (
         <EmptyState
           eyebrow="EMPTY"
-          title={filterCategory || filterTagId ? "无匹配文档" : "知识库为空"}
+          title={filterCategory || filterTagId || filterSource ? "无匹配文档" : "知识库为空"}
           description={
-            filterCategory || filterTagId
+            filterCategory || filterTagId || filterSource
               ? "尝试更换筛选条件"
               : "点击右上角导入或种子知识"
           }
@@ -175,6 +189,12 @@ export function DocumentList({ refreshKey, onChange, onSelectDoc, onShowImport }
                     <span>{d.chunk_count} 片段</span>
                     <span>·</span>
                     <span>{d.source_type}</span>
+                    {d.source && (
+                      <>
+                        <span>·</span>
+                        <span>{d.source}</span>
+                      </>
+                    )}
                     {d.created_at && (
                       <>
                         <span>·</span>
