@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -15,14 +14,12 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 # 必须加载 .env 以使用正确的 embedding provider（与数据库向量维度匹配）
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv()
 
-from hermes_kb.rag import HybridRetriever  # noqa: E402
-from hermes_kb.retrieval import HybridRetriever as _HR  # noqa: E402
-
-from tests.eval import load_eval_set  # noqa: E402
+from hermes_kb.rag import HybridRetriever
+from tests.eval import load_eval_set
 
 
 def main() -> int:
@@ -56,7 +53,8 @@ def main() -> int:
 
         try:
             results = retriever.retrieve(query, top_k=args.top_k)
-        except Exception as e:
+        # 单条查询失败不中断整体评估，作为边界兜底静默记录
+        except Exception as e:  # noqa: BLE001
             errors.append({"query": query, "error": str(e), "expected": expected_titles[0] if expected_titles else ""})
             continue
 
@@ -96,7 +94,7 @@ def main() -> int:
     avg_keyword = sum(keyword_coverages) / len(keyword_coverages) if keyword_coverages else 0
 
     print(f"\n{'=' * 60}")
-    print(f"检索评估结果")
+    print("检索评估结果")
     print(f"{'=' * 60}")
     print(f"评估条数: {total}")
     print(f"Top-1 命中率: {top1_hits}/{total} ({top1_rate:.1%})")
@@ -105,7 +103,7 @@ def main() -> int:
     print(f"未命中数: {len(errors)}")
 
     if args.verbose and errors:
-        print(f"\n=== 错误分析（前 20 条）===")
+        print("\n=== 错误分析（前 20 条）===")
         # 按类别分组
         from collections import Counter
         error_cats = Counter(e.get("category", "") for e in errors)

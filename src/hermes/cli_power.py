@@ -50,6 +50,7 @@ def cmd_sh(args: argparse.Namespace) -> int:
             shell=True,
             capture_output=True,
             text=True,
+            check=False,
         )
     except OSError as exc:
         print(f"Error: failed to execute command: {exc}")
@@ -96,6 +97,7 @@ def cmd_diff(args: argparse.Namespace) -> int:
             cwd=str(root),
             capture_output=True,
             text=True,
+            check=False,
         )
     except OSError as exc:
         print(f"Error: failed to run git: {exc}")

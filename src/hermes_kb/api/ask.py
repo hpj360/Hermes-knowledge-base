@@ -11,7 +11,8 @@ import anyio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import func, text as sa_text
+from sqlalchemy import func
+from sqlalchemy import text as sa_text
 from sqlmodel import Session, select
 
 from hermes_kb.api.deps import get_importer, get_rag, require_age_gate, require_auth, require_role
@@ -211,7 +212,7 @@ def _search_history_fts(
         # 将 Row 转为 QueryLog 实例（复用 _format_history_item）
         logs: list[QueryLog] = []
         for row in rows:
-            row_dict = row._mapping  # noqa: SLF001 —— SQLAlchemy Row 标准访问
+            row_dict = row._mapping
             logs.append(QueryLog(**row_dict))
         return logs, total
     except Exception as exc:  # noqa: BLE001 — 软降级，不阻塞主流程
@@ -286,7 +287,8 @@ def _parse_date(date_str: str | None, *, end_of_day: bool = False) -> datetime |
     if not date_str or not date_str.strip():
         return None
     try:
-        d = datetime.strptime(date_str.strip()[:10], '%Y-%m-%d')
+        # 输入为纯日期字符串（YYYY-MM-DD），不携带时区，naive 解析符合预期
+        d = datetime.strptime(date_str.strip()[:10], '%Y-%m-%d')  # noqa: DTZ007
     except ValueError:
         return None
     if end_of_day:
@@ -451,7 +453,7 @@ async def feedback_list(
     tag: str | None = Query(default=None, max_length=32, description="按问题标签筛选"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
-    payload: dict[str, Any] | None = Depends(require_role("owner")),
+    payload: dict[str, Any] | None = Depends(require_role("owner")),  # noqa: B008  # require_role 为 FastAPI 依赖，需在默认参数中调用
 ) -> dict[str, Any]:
     """V5：反馈汇总列表。
 

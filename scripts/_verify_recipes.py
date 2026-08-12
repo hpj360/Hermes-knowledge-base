@@ -4,10 +4,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from hermes_kb.ingredients import INGREDIENT_REGISTRY, canonicalize
 from hermes_kb.recipe_metadata import infer_flavor_profile
 from hermes_kb.seed_recipes import SEED_RECIPES
-from hermes_kb.ingredients import INGREDIENT_REGISTRY, canonicalize
-
 
 # 校验失败累计（任一失败时以非零码退出）
 _FAILURES: list[str] = []

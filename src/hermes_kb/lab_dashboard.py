@@ -8,8 +8,8 @@ from typing import Any
 
 from sqlmodel import func, select
 
-from hermes_kb.database import get_session
 from hermes_kb.daily_recipe import daily_recipe
+from hermes_kb.database import get_session
 from hermes_kb.ingredients import all_canonical
 from hermes_kb.missing_stats import get_top_missing
 from hermes_kb.models import Document, IngredientSubstitute, RecipeStats

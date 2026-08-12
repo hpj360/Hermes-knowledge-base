@@ -20,11 +20,14 @@ import json
 import logging
 import re
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from sqlalchemy import text as sa_text
 
@@ -154,7 +157,7 @@ def _is_high_value_query(query: str) -> bool:
     return bool(_HIGH_VALUE_RE.search(query))
 
 
-def _build_external_refs(items: list[dict[str, Any]]) -> list["ExternalRef"]:
+def _build_external_refs(items: list[dict[str, Any]]) -> list[ExternalRef]:
     """把 IMA search_knowledge 响应条目转为 ExternalRef 列表（去重 + 截断）。"""
     seen: set[str] = set()
     refs: list[ExternalRef] = []
@@ -313,10 +316,10 @@ class RAGEngine:
                 limit=_EXTERNAL_REFS_LIMIT,
             )
         except (IMAAPIError, IMAConfigError) as e:
-            logging.warning("IMA external refs failed (query=%r): %s", query[:80], e)
+            logger.warning("IMA external refs failed (query=%r): %s", query[:80], e)
             return []
         except Exception as e:  # noqa: BLE001 — 外部参考为可选补充，任何异常都不阻塞主流程
-            logging.warning("IMA external refs unexpected error: %s", e)
+            logger.warning("IMA external refs unexpected error: %s", e)
             return []
         return _build_external_refs(page.get("info_list") or [])
 
@@ -489,7 +492,7 @@ class RAGEngine:
                 if _contains_leak("".join(full_answer)):
                     leak_detected = True
                     full_answer.clear()
-                    logging.warning(
+                    logger.warning(
                         "output leak detected during streaming (query=%r)",
                         query[:80],
                     )
@@ -501,7 +504,7 @@ class RAGEngine:
                     return
                 yield f"data: {json.dumps({'type': 'delta', 'content': chunk}, ensure_ascii=False)}\n\n"
         except Exception:
-            logging.exception("streaming error")
+            logger.exception("streaming error")
             err = {"type": "error", "message": "stream interrupted"}
             yield f"data: {json.dumps(err, ensure_ascii=False)}\n\n"
             return
@@ -729,14 +732,14 @@ class ImportService:
             gov["season"] = season
 
         with get_session() as session:
-            doc_kwargs: dict[str, Any] = dict(
-                title=title.strip(),
-                content=content,
-                source_type=source_type,
-                file_type=file_type,
-                source_path=source_path,
-                chunk_count=len(chunks),
-            )
+            doc_kwargs: dict[str, Any] = {
+                "title": title.strip(),
+                "content": content,
+                "source_type": source_type,
+                "file_type": file_type,
+                "source_path": source_path,
+                "chunk_count": len(chunks),
+            }
             if doc_id is not None:
                 doc_kwargs["doc_id"] = doc_id
             doc = Document(**doc_kwargs, **gov)
@@ -783,7 +786,7 @@ class ImportService:
                             },
                         )
                     except Exception as exc:  # noqa: BLE001 — 写路径降级，不阻塞导入
-                        logging.warning(
+                        logger.warning(
                             "ANN insert failed for chunk rowid=%s (dim mismatch?), "
                             "falling back to JSON-only vector: %s",
                             rowid,

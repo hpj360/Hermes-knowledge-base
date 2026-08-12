@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from sqlmodel import func, select
+from sqlmodel import select
 
 from hermes_kb.database import get_session
 from hermes_kb.models import Document
@@ -19,27 +19,27 @@ def main() -> None:
         docs = s.exec(select(Document)).all()
 
     total = len(docs)
-    print(f"=" * 60)
-    print(f"知识库综合状态报告")
-    print(f"=" * 60)
+    print("=" * 60)
+    print("知识库综合状态报告")
+    print("=" * 60)
     print(f"\n总文档数: {total}")
 
     # 按来源
     by_source = Counter(d.source or "unknown" for d in docs)
-    print(f"\n=== 按来源 ===")
+    print("\n=== 按来源 ===")
     for src, n in by_source.most_common():
         print(f"  {src}: {n} ({n/total*100:.1f}%)")
 
     # 按类别
     by_cat = Counter(d.category or "unknown" for d in docs)
-    print(f"\n=== 按类别 ===")
+    print("\n=== 按类别 ===")
     for cat, n in by_cat.most_common():
         print(f"  {cat}: {n} ({n/total*100:.1f}%)")
 
     # 可见文档（非 hidden）
     visible = [d for d in docs if not d.hidden]
     hidden = [d for d in docs if d.hidden]
-    print(f"\n=== 可见性 ===")
+    print("\n=== 可见性 ===")
     print(f"  可见: {len(visible)} ({len(visible)/total*100:.1f}%)")
     print(f"  隐藏: {len(hidden)} ({len(hidden)/total*100:.1f}%)")
 
@@ -47,7 +47,7 @@ def main() -> None:
     lengths = [len(d.content or "") for d in visible]
     if lengths:
         avg = sum(lengths) // len(lengths)
-        print(f"\n=== 内容长度（可见文档）===")
+        print("\n=== 内容长度（可见文档）===")
         print(f"  最短: {min(lengths)} 字符")
         print(f"  最长: {max(lengths)} 字符")
         print(f"  平均: {avg} 字符")
@@ -66,7 +66,7 @@ def main() -> None:
                 buckets["1000-2000"] += 1
             else:
                 buckets[">2000"] += 1
-        print(f"  长度分布:")
+        print("  长度分布:")
         for bucket, n in buckets.items():
             print(f"    {bucket}: {n}")
 
@@ -74,7 +74,7 @@ def main() -> None:
     ima_docs = [d for d in docs if d.source == "ima"]
     ima_enriched = sum(1 for d in ima_docs if "<!-- enriched -->" in (d.content or ""))
     ima_hidden = sum(1 for d in ima_docs if d.hidden)
-    print(f"\n=== IMA 文档质量 ===")
+    print("\n=== IMA 文档质量 ===")
     print(f"  总数: {len(ima_docs)}")
     print(f"  已富化: {ima_enriched} ({ima_enriched/len(ima_docs)*100:.1f}%)")
     print(f"  隐藏(__OLD): {ima_hidden}")
@@ -120,7 +120,7 @@ def main() -> None:
         print(f"  {prefix}: {n}")
 
     print(f"\n{'=' * 60}")
-    print(f"报告完成")
+    print("报告完成")
     print(f"{'=' * 60}")
 
 

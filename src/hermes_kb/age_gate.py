@@ -46,9 +46,7 @@ def verify_age_cookie(value: str | None) -> bool:
     if not payload.get("confirmed"):
         return False
     exp = payload.get("exp")
-    if not isinstance(exp, int) or exp < int(time.time()):
-        return False
-    return True
+    return isinstance(exp, int) and exp >= int(time.time())
 
 
 async def require_age_gate(request: Request) -> None:

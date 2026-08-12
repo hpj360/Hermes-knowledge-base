@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from collections import defaultdict
+
 from sqlmodel import select
 
 from hermes_kb.database import get_session

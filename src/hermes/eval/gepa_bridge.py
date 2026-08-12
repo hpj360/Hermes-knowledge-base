@@ -27,12 +27,13 @@ preserving the decoupling (eval module knows nothing about GEPA).
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from hermes.eval.client import SkillUpError
-from hermes.eval.runner import EvalRunner
 from hermes.eval.result import EvalResult
+from hermes.eval.runner import EvalRunner
 
 logger = logging.getLogger("hermes.eval.gepa_bridge")
 
@@ -123,7 +124,7 @@ def make_evaluator(
         # Resolve skill_dir from variant metadata
         try:
             skill_dir = skill_dir_resolver(variant)
-        except Exception as exc:  # noqa: BLE001 — resolver is user-supplied
+        except Exception as exc:
             logger.exception("skill_dir_resolver crashed for variant %s", variant_id)
             return eval_result_to_variant_dict(
                 EvalResult(),  # empty
@@ -159,7 +160,7 @@ def make_evaluator(
                 variant_id=variant_id,
                 error=f"skill-up run failed: {type(exc).__name__}: {exc}",
             )
-        except Exception as exc:  # noqa: BLE001 — defensive: don't crash GEPA
+        except Exception as exc:
             logger.exception(
                 "unexpected error evaluating variant %s", variant_id
             )

@@ -16,13 +16,12 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+from sqlmodel import SQLModel
 
 # 触发所有 SQLModel 表注册（document/chunk/tag/document_tag/query_log/
 # recipe_stats/ingredient_substitute/missing_ingredient_stats/recipe_variant）
 import hermes_kb.models  # noqa: F401
 from hermes_kb.config import get_settings
-
-from sqlmodel import SQLModel
 
 config = context.config
 
@@ -77,7 +76,7 @@ def run_migrations_online() -> None:
         # SQLite 迁移期也启用外键 + WAL，保证触发器/级联行为一致
         try:
             _set_sqlite_pragmas(connection)
-        except Exception:  # 非 SQLite（如未来切 PG）无 PRAGMA，忽略  # noqa: BLE001 — 软降级，不阻塞主流程
+        except Exception:  # 非 SQLite（如未来切 PG）无 PRAGMA，忽略  # noqa: S110, BLE001 — 软降级，不阻塞主流程
             pass
         context.configure(
             connection=connection,

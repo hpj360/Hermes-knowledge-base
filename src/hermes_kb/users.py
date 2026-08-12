@@ -182,7 +182,7 @@ def list_users(active_only: bool = False) -> list[dict[str, Any]]:
     with get_session() as session:
         stmt = select(User)
         if active_only:
-            stmt = stmt.where(User.is_active == True)  # noqa: E712
+            stmt = stmt.where(User.is_active == True)
         users = session.exec(stmt).all()
         return [
             {

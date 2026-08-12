@@ -417,7 +417,8 @@ class SkillRunner:
         else:
             popen_kwargs["start_new_session"] = True
         try:
-            proc = subprocess.run(cmd, **popen_kwargs)
+            # check=False 已通过 popen_kwargs 显式传入，无需在调用处重复
+            proc = subprocess.run(cmd, **popen_kwargs)  # noqa: PLW1510
         except subprocess.TimeoutExpired as exc:
             return RunResult(
                 skill=spec.name,

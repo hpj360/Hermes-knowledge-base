@@ -50,11 +50,10 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from hermes.config import get_settings
 from hermes.workbench.memory import MemoryService, make_episode
-
 
 # ---------------------------------------------------------------------------
 # Module path constants
@@ -133,7 +132,7 @@ class ImaApiError(Exception):
     """IMA API returned an error."""
 
     # Common IMA OpenAPI error codes → user-friendly (Chinese) hints.
-    _FRIENDLY: dict[int, str] = {
+    _FRIENDLY: ClassVar[dict[int, str]] = {
         20001: "参数缺失或格式错误，请检查请求字段",
         20002: "知识库不存在或已删除",
         20003: "笔记不存在或已删除",
@@ -244,9 +243,7 @@ class ImaClient:
         if error.code in _RETRYABLE_IMA_CODES:
             return True
         # Fall back to HTTP status (negative codes are network errors).
-        if error.code in _RETRYABLE_HTTP_STATUS:
-            return True
-        return False
+        return error.code in _RETRYABLE_HTTP_STATUS
 
     def _request_once(
         self, module_path: str, endpoint: str, body: dict[str, Any]
@@ -272,7 +269,7 @@ class ImaClient:
             body_text = ""
             try:
                 body_text = e.read().decode("utf-8", errors="replace")
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: S110, BLE001
                 pass
             raise ImaApiError(f"HTTP {e.code}: {body_text or e.reason}", e.code) from e
         if result.get("code") != 0:
@@ -487,7 +484,7 @@ class ImaClient:
                 body_text = ""
                 try:
                     body_text = e.read().decode("utf-8", errors="replace")
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: S110, BLE001
                     pass
                 last_error = ImaApiError(
                     f"COS PUT failed: HTTP {e.code}: {body_text or e.reason}",

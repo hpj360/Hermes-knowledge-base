@@ -25,14 +25,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from sqlmodel import select  # noqa: E402
+from sqlmodel import select
 
-from hermes_kb.data_sources import (  # noqa: E402
+from hermes_kb.data_sources import (
     load_data_source_registry,
     validate_registry,
 )
-from hermes_kb.database import get_session  # noqa: E402
-from hermes_kb.models import Document  # noqa: E402
+from hermes_kb.database import get_session
+from hermes_kb.models import Document
 
 # 注册表未覆盖但已知合法的存量 source 值
 _LEGACY_SOURCES = {
@@ -138,7 +138,7 @@ def main() -> int:
     print(f"优质源文档数: {len(quality_docs)}")
     print(f"来源合法值校验: {'通过' if not (sources_in_db - legal) else '失败'}")
     print(
-        f"溯源完整性: {_fmt_pct(len(quality_docs) - len(set(m.split('(')[0] for m in missing_prov)), len(quality_docs))}"
+        f"溯源完整性: {_fmt_pct(len(quality_docs) - len({m.split('(')[0] for m in missing_prov}), len(quality_docs))}"
         if quality_docs
         else "溯源完整性: 无优质源文档"
     )

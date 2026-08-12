@@ -81,11 +81,10 @@ class AgentLoop:
                 stdout_preview=_preview(run_result.stdout),
             )
             step_results.append(sr)
-            if not run_result.ok:
-                if step.abort_on_error:
-                    loop_error = run_result.error or f"step {step.skill} failed"
-                    aborted = True
-                    break
+            if not run_result.ok and step.abort_on_error:
+                loop_error = run_result.error or f"step {step.skill} failed"
+                aborted = True
+                break
         ended_at = time.time()
 
         all_ok = bool(step_results) and all(s.ok for s in step_results)

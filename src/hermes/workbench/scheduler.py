@@ -20,18 +20,19 @@ the existing ``TaskScheduler.run``. We never re-implement execution logic.
 
 from __future__ import annotations
 
+import builtins
 import queue as _queue
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, List
+from typing import Any
 
 from hermes.workbench.persistence import atomic_write_json, safe_read_json
-
 
 __all__ = [
     "EmptyError",
@@ -96,7 +97,7 @@ class RetryPolicy:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any] | None) -> "RetryPolicy":
+    def from_dict(cls, data: dict[str, Any] | None) -> RetryPolicy:
         if not data:
             return cls()
         return cls(
@@ -135,7 +136,7 @@ class JobExecution:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "JobExecution":
+    def from_dict(cls, data: dict[str, Any]) -> JobExecution:
         return cls(
             attempt_num=int(data["attempt_num"]),
             started_at=data["started_at"],
@@ -229,7 +230,7 @@ class ScheduledJob:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ScheduledJob":
+    def from_dict(cls, data: dict[str, Any]) -> ScheduledJob:
         return cls(
             task=_task_from_dict(data.get("task", {})),
             job_id=data.get("job_id", ""),
@@ -247,7 +248,7 @@ class ScheduledJob:
         )
 
     @classmethod
-    def from_template(cls, template: dict[str, Any], submitted_by: str = "cron") -> "ScheduledJob":
+    def from_template(cls, template: dict[str, Any], submitted_by: str = "cron") -> ScheduledJob:
         """Instantiate a new job from a template (job_id/status/attempts regenerated)."""
         template = dict(template)
         template.pop("job_id", None)
@@ -291,12 +292,12 @@ class JobStore:
             data = self._jobs.get(job_id)
         return ScheduledJob.from_dict(data) if data else None
 
-    def list(self) -> "List[ScheduledJob]":
+    def list(self) -> builtins.list[ScheduledJob]:
         with self._lock:
             snapshot = list(self._jobs.values())
         return [ScheduledJob.from_dict(d) for d in snapshot]
 
-    def list_by_status(self, status: JobStatus) -> "List[ScheduledJob]":
+    def list_by_status(self, status: JobStatus) -> builtins.list[ScheduledJob]:
         target = status.value
         with self._lock:
             snapshot = [d for d in self._jobs.values() if d.get("status") == target]
@@ -483,7 +484,7 @@ class WorkerPool:
                     job.status = JobStatus.FAILED
                     self._store.save(job)
                     self._bus.emit(job)
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: S110, BLE001
                     pass
 
     def _execute(self, job: ScheduledJob) -> None:
@@ -601,7 +602,7 @@ class WorkerPool:
         if self._on_job_done is not None:
             try:
                 self._on_job_done(job.job_id, job.status)
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: S110, BLE001
                 pass  # DAG callback must not break worker
 
 

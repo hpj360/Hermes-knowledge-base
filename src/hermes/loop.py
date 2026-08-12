@@ -16,11 +16,12 @@ from __future__ import annotations
 import json
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger("hermes.loop")
 
@@ -1913,7 +1914,7 @@ def _maybe_run_gepa(loop: LoopState, round_data: LoopRound) -> dict[str, Any]:
             benchmark_context=benchmark_context,
         )
         save_experiment(experiment)
-    except Exception as exc:  # noqa: BLE001 - GEPA 失败不能影响 record_round
+    except Exception as exc:
         logger.exception(
             "GEPA cycle failed for loop '%s'; record_round result unaffected",
             loop.name,

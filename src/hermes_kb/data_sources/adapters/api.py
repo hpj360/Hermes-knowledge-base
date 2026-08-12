@@ -77,7 +77,7 @@ class _ApiAdapter(DataSourceAdapter):
     @staticmethod
     def _get(url: str, headers: dict[str, str] | None = None) -> Any:
         req = urllib.request.Request(url, headers=headers or {})
-        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
             return json.loads(resp.read().decode("utf-8"))
 
 

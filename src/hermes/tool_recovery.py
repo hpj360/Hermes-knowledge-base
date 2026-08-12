@@ -332,11 +332,11 @@ def format_recovery_section(diagnostics: list[FailureDiagnostic]) -> str:
 
 
 __all__ = [
-    "FailurePattern",
-    "FailureDiagnostic",
     "FAILURE_PATTERNS",
     "SEVERITY_RANK",
+    "FailureDiagnostic",
+    "FailurePattern",
     "analyze_failures",
-    "get_recovery_hints",
     "format_recovery_section",
+    "get_recovery_hints",
 ]

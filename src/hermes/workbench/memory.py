@@ -227,7 +227,7 @@ class MemoryService:
         if self._memos.available:
             try:
                 self._memos.ingest(episode)
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: S110, BLE001
                 pass
 
     def list_episodes(self, kind: str | None = None, limit: int = 1000) -> list[Episode]:
@@ -525,7 +525,7 @@ class MemoryService:
                 profile = {}
             profile.setdefault("learned", {})["memory_insights"] = insights
             self.save_user_profile(profile)
-        except Exception:  # noqa: BLE001 — profile save is best-effort
+        except Exception:  # noqa: S110, BLE001 — profile save is best-effort
             pass
         return insights
 
@@ -660,7 +660,8 @@ def _parse_episode_line(line: str) -> Episode:
     import json
     obj = json.loads(line)
     if not isinstance(obj, dict):
-        raise ValueError("episode line is not an object")
+        # 调用方按 ValueError 捕获处理坏行，保持异常类型以兼容现有行为
+        raise ValueError("episode line is not an object")  # noqa: TRY004
     details = obj.get("details", {})
     if not isinstance(details, dict):
         details = {"value": details}
@@ -792,7 +793,7 @@ class FTS5Index:
     def __del__(self) -> None:
         try:
             self._conn.close()
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: S110, BLE001
             pass
 
 

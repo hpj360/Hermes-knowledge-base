@@ -127,7 +127,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def _generic_error_handler(_request: Request, exc: Exception):
         correlation_id = uuid.uuid4().hex[:8]
-        logging.exception("unhandled exception (correlation_id=%s)", correlation_id)
+        logging.getLogger("hermes_kb").exception("unhandled exception (correlation_id=%s)", correlation_id)
         if settings.debug:
             detail: str = str(exc)
         else:

@@ -207,7 +207,7 @@ async def upload_file(
     finally:
         try:
             tmp_path.unlink(missing_ok=True)
-        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
+        except Exception:  # noqa: S110, BLE001 — 软降级，不阻塞主流程
             pass
 
 
@@ -493,7 +493,7 @@ async def upload_batch(
         finally:
             try:
                 tmp_path.unlink(missing_ok=True)
-            except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
+            except Exception:  # noqa: S110, BLE001 — 软降级，不阻塞主流程
                 pass
     ok = sum(1 for r in results if r["status"] == "imported")
     # M2-08：审计批量导入（聚合一条记录，避免审计表爆炸）

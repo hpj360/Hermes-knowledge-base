@@ -22,6 +22,7 @@ from typing import Any
 from hermes.loop import (
     LOOP_PATTERNS,
     STOP_RULES,
+    advance_stage,
     audit_loop,
     check_budget,
     get_loop,
@@ -29,7 +30,6 @@ from hermes.loop import (
     init_loop,
     list_loops,
     loop_metrics,
-    advance_stage,
 )
 from hermes.runner import resume_loop, run_loop, run_loop_continuous
 
@@ -365,8 +365,12 @@ def cmd_loop_gepa(args: argparse.Namespace) -> int:
     if args.run:
         # Manual trigger: call _maybe_run_gepa directly (bypasses terminal-state
         # check since user explicitly asked). But still needs variants + evaluator.
-        from hermes.loop import _maybe_run_gepa, _GEPA_TRIGGER_STATUSES, get_gepa_evaluator
-        from hermes.loop import LoopRound
+        from hermes.loop import (
+            _GEPA_TRIGGER_STATUSES,
+            LoopRound,
+            _maybe_run_gepa,
+            get_gepa_evaluator,
+        )
 
         if not loop.gepa_variants:
             print(f"Loop '{args.name}' has no gepa_variants declared.")

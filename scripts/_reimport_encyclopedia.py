@@ -6,7 +6,7 @@ load_dotenv()
 from sqlmodel import select
 
 from hermes_kb.database import get_session
-from hermes_kb.models import Chunk, Document, QueryLog
+from hermes_kb.models import Chunk, Document
 from hermes_kb.seed import seed_encyclopedia
 
 
@@ -45,7 +45,7 @@ def reimport_encyclopedia() -> None:
             select(Document).where(Document.category == "encyclopedia")
         ).all()
         total_chunks = sum(d.chunk_count for d in enc_docs)
-        print(f"\nVerification:")
+        print("\nVerification:")
         print(f"  Encyclopedia docs: {len(enc_docs)}")
         print(f"  Total chunks: {total_chunks}")
         print(f"  Avg chunks/doc: {total_chunks / len(enc_docs) if enc_docs else 0:.1f}")

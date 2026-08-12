@@ -44,18 +44,18 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 # 项目记忆：config.py 不自动加载 .env，需手动加载
-from dotenv import load_dotenv  # noqa: E402
+from dotenv import load_dotenv
 
 load_dotenv()
 
-from sqlalchemy import text as sa_text  # noqa: E402
+from sqlalchemy import text as sa_text
 
-from hermes_kb.config import get_settings  # noqa: E402
-from hermes_kb.database import (  # noqa: E402
+from hermes_kb.config import get_settings
+from hermes_kb.database import (
     _SQLITE_VEC_AVAILABLE,
     get_engine,
 )
-from hermes_kb.embedding import EmbeddingService  # noqa: E402
+from hermes_kb.embedding import EmbeddingService
 
 
 def _serialize_vec(vec: list[float]) -> bytes:

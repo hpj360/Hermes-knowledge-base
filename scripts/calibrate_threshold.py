@@ -36,13 +36,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from hermes_kb.config import get_settings, reset_settings  # noqa: E402
-from hermes_kb.database import get_engine  # noqa: E402
-from hermes_kb.rag import ImportService  # noqa: E402
-from hermes_kb.retrieval import HybridRetriever  # noqa: E402
-from hermes_kb.seed import SEED_DOCS  # noqa: E402
-
-from tests.eval import load_eval_set  # noqa: E402
+from hermes_kb.config import get_settings, reset_settings
+from hermes_kb.database import get_engine
+from hermes_kb.rag import ImportService
+from hermes_kb.retrieval import HybridRetriever
+from hermes_kb.seed import SEED_DOCS
+from tests.eval import load_eval_set
 
 
 def setup_db(db_path: Path) -> None:

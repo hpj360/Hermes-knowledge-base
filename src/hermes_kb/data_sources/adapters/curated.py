@@ -42,7 +42,8 @@ class CuratedSourceAdapter(DataSourceAdapter):
         with open(self.snapshot_path, encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, list):
-            raise ValueError(f"策划快照需为列表: {self.snapshot_path}")
+            # 保持 ValueError 以兼容上层对快照格式错误的统一处理
+            raise ValueError(f"策划快照需为列表: {self.snapshot_path}")  # noqa: TRY004
         return data
 
     # -- validate ---------------------------------------------------------

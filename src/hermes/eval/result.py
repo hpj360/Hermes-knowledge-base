@@ -56,7 +56,7 @@ class CaseResult:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "CaseResult":
+    def from_dict(cls, data: dict[str, Any]) -> CaseResult:
         """Parse a case dict from result.json. Tolerant of missing fields."""
         # id and name: skill-up may use either; fall back to the other
         case_id = str(data.get("id") or data.get("name") or data.get("case_id") or "")
@@ -141,7 +141,7 @@ class EvalResult:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any], workspace: str = "") -> "EvalResult":
+    def from_dict(cls, data: dict[str, Any], workspace: str = "") -> EvalResult:
         """Parse result.json dict. Recomputes aggregates if summary missing."""
         summary = data.get("summary") or {}
         cases_raw = data.get("cases") or data.get("results") or []

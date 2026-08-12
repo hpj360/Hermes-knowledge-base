@@ -13,15 +13,15 @@ import sys
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from hermes.config import get_settings
 from hermes.skills import skills_dir as _hermes_skills_dir
 from hermes.workbench.agent_loop import AgentLoop, LoopStep
 from hermes.workbench.memory import MemoryService
 from hermes.workbench.skill_runner import SkillRunner
-
 
 # ---------------------------------------------------------------------------
 # Task runtime (minimal; the full scheduler lands in P2)
@@ -230,7 +230,7 @@ class TaskScheduler:
         try:
             from hermes.workbench.structured_logging import log_context
             loop_ctx = log_context(task_id=task_id, mode="loop")
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: S110, BLE001
             pass  # loop_ctx 已初始化为 nullcontext 兜底
 
         with loop_ctx:
@@ -405,20 +405,20 @@ class _SchedulerCenter:
     """
 
     __slots__ = (
-        "job_store",
-        "job_queue",
-        "status_bus",
-        "project_registry",
-        "router",
-        "trigger_store",
         "cron_scheduler",
         "dag",
+        "job_queue",
+        "job_store",
+        "project_registry",
+        "router",
+        "status_bus",
+        "trigger_store",
     )
 
     def __init__(self) -> None:
         from hermes.workbench.dag import DependencyGraph
         from hermes.workbench.projects import ProjectRegistry, Router
-        from hermes.workbench.scheduler import JobQueue, JobStore, JobStatus, StatusBus
+        from hermes.workbench.scheduler import JobQueue, JobStatus, JobStore, StatusBus
         from hermes.workbench.triggers import CronScheduler, TriggerStore
 
         self.job_store = JobStore(state_dir=_state_dir())
@@ -1488,7 +1488,7 @@ def workbench_main(argv: list[str] | None = None) -> int:
     try:
         from hermes.workbench.structured_logging import configure_logging
         configure_logging(level=args.log_level, json=(args.log_format == "json"))
-    except Exception:  # noqa: BLE001
+    except Exception:  # noqa: S110, BLE001
         pass
 
     func: Callable[[argparse.Namespace], int] | None = getattr(args, "func", None)

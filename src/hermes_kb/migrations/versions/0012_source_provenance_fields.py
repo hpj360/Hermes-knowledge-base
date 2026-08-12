@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """add source provenance fields
 
 Revision ID: 0012
@@ -16,17 +15,16 @@ New columns (all nullable with server_default for backward compat):
 """
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '0012'
-down_revision: Union[str, Sequence[str], None] = '0011_feedback_fields'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '0011_feedback_fields'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

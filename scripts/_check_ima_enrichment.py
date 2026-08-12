@@ -17,11 +17,6 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from sqlmodel import select
-
-from hermes_kb.database import get_session
-from hermes_kb.models import Document
-
 from _enrich_ima_content import (
     _ALCOHOL_KEYWORDS,
     _FRUIT_WINE_PROFILES,
@@ -33,6 +28,10 @@ from _enrich_ima_content import (
     _WINE_TYPE_PROFILES,
     _lookup_chinese_profile,
 )
+from sqlmodel import select
+
+from hermes_kb.database import get_session
+from hermes_kb.models import Document
 
 # 既有中文标题知识库 → 类别标签
 _CHINESE_KBS = (

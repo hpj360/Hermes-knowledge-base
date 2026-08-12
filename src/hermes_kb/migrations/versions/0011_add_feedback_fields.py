@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """add feedback_comment and feedback_tag to querylog
 
 Revision ID: 0011_feedback_fields
@@ -13,17 +12,16 @@ V5: 结构化反馈升级——在 querylog 表新增两列：
 """
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '0011_feedback_fields'
-down_revision: Union[str, Sequence[str], None] = '0009'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '0009'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

@@ -12,7 +12,7 @@ load_dotenv()
 sys.path.insert(0, "src")
 sys.path.insert(0, "scripts")
 
-from hermes_kb.ima_sync import sync_knowledge_base, IMAAPIError, IMAConfigError
+from hermes_kb.ima_sync import IMAAPIError, IMAConfigError, sync_knowledge_base
 from hermes_kb.rag import ImportService
 
 

@@ -352,8 +352,8 @@ def translate_title(title: str, llm_client: Any = None) -> str:
         ]
         resp = llm_client.chat(messages)
         translated = resp.content.strip()
-        # 去除可能的多余引号
-        translated = translated.strip('"\'""''')
+        # 去除可能的多余引号（双引号与单引号）
+        translated = translated.strip("\"'")
         return translated if translated else title
     except (KeyError, TypeError, ValueError, RuntimeError, OSError) as e:
         _logger.warning("LLM translate failed for '%s': %s, fallback to mock", title, e)

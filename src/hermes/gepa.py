@@ -28,10 +28,11 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger("hermes.gepa")
 
@@ -82,7 +83,7 @@ class Variant:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Variant":
+    def from_dict(cls, data: dict[str, Any]) -> Variant:
         return cls(
             variant_id=str(data.get("variant_id", "")),
             agent_file=str(data.get("agent_file", "")),
@@ -122,7 +123,7 @@ class VariantResult:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "VariantResult":
+    def from_dict(cls, data: dict[str, Any]) -> VariantResult:
         return cls(
             variant_id=str(data.get("variant_id", "")),
             success=bool(data.get("success", False)),
@@ -166,7 +167,7 @@ class GEPAExperiment:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "GEPAExperiment":
+    def from_dict(cls, data: dict[str, Any]) -> GEPAExperiment:
         return cls(
             experiment_id=str(data.get("experiment_id", "")),
             benchmark_task=str(data.get("benchmark_task", "")),
@@ -259,7 +260,7 @@ def run_gepa_cycle(
             # Sanity: ensure variant_id matches (caller may have forgotten)
             if not result.variant_id:
                 result.variant_id = variant.variant_id
-        except Exception as exc:  # noqa: BLE001 - GEPA must be crash-resistant
+        except Exception as exc:
             logger.exception(
                 "GEPA cycle %s: variant %s evaluation crashed",
                 experiment.experiment_id, variant.variant_id,

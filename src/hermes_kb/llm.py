@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import AsyncIterator, Protocol
+from typing import Protocol
 
 from hermes_kb.config import get_settings
 
@@ -149,29 +150,30 @@ class OpenAICompatBackend:
             # M2-10：请求 usage 统计（OpenAI 协议；智谱等兼容厂商也支持）
             "stream_options": {"include_usage": True},
         }
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            async with client.stream("POST", url, headers=headers, json=body) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    if not line:
+        async with httpx.AsyncClient(timeout=60.0) as client, client.stream(
+            "POST", url, headers=headers, json=body
+        ) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line:
+                    continue
+                if line.startswith("data: "):
+                    payload = line[6:].strip()
+                    if payload == "[DONE]":
+                        return
+                    try:
+                        obj = json.loads(payload)
+                    except json.JSONDecodeError:
                         continue
-                    if line.startswith("data: "):
-                        payload = line[6:].strip()
-                        if payload == "[DONE]":
-                            return
-                        try:
-                            obj = json.loads(payload)
-                        except json.JSONDecodeError:
-                            continue
-                        choices = obj.get("choices") or []
-                        if not choices:
-                            # M2-10：choices 为空但含 usage 的最后一帧，跳过
-                            # （usage 在流式中无法通过 yield 传递，留给估算）
-                            continue
-                        delta = choices[0].get("delta") or {}
-                        content = delta.get("content")
-                        if content:
-                            yield content
+                    choices = obj.get("choices") or []
+                    if not choices:
+                        # M2-10：choices 为空但含 usage 的最后一帧，跳过
+                        # （usage 在流式中无法通过 yield 传递，留给估算）
+                        continue
+                    delta = choices[0].get("delta") or {}
+                    content = delta.get("content")
+                    if content:
+                        yield content
 
 
 # ---------------------------------------------------------------------------

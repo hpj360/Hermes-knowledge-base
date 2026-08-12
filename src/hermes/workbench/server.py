@@ -104,27 +104,27 @@ _MAX_BODY_SIZE = 10 * 1024 * 1024
 class DashboardHandler(BaseHTTPRequestHandler):
     """HTTP handler dispatching to workbench services."""
 
-    def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
+    def log_message(self, format: str, *args: Any) -> None:
         pass
 
     # Dispatch -----------------------------------------------------------
 
-    def do_GET(self) -> None:  # noqa: N802
+    def do_GET(self) -> None:
         self._dispatch("GET")
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         self._dispatch("POST")
 
-    def do_DELETE(self) -> None:  # noqa: N802
+    def do_DELETE(self) -> None:
         self._dispatch("DELETE")
 
-    def do_PUT(self) -> None:  # noqa: N802
+    def do_PUT(self) -> None:
         self._method_not_allowed()
 
-    def do_PATCH(self) -> None:  # noqa: N802
+    def do_PATCH(self) -> None:
         self._method_not_allowed()
 
-    def do_OPTIONS(self) -> None:  # noqa: N802
+    def do_OPTIONS(self) -> None:
         """Handle CORS preflight requests."""
         self.send_response(204)
         self._send_cors_headers()
@@ -615,10 +615,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if not repo:
             raise ValidationError("query param 'repo' is required (e.g. owner/name)")
         label = params.get("label", "workbench")
-        try:
-            service = GitHubSyncService.from_env(repo=repo)
-        except ValidationError:
-            raise
+        service = GitHubSyncService.from_env(repo=repo)
         result = service.sync(label=label)
         self._send_json(200, result)
 
@@ -990,7 +987,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     if ep.id not in seen_ids:
                         seen_ids.add(ep.id)
                         data = json.dumps(ep.__dict__, ensure_ascii=False)
-                        self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
+                        self.wfile.write(f"data: {data}\n\n".encode())
                         self.wfile.flush()
                 # Heartbeat keeps the connection alive
                 self.wfile.write(b": heartbeat\n\n")
@@ -1270,7 +1267,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 try:
                     event = q.get(timeout=15.0)
                     data = json.dumps(event, ensure_ascii=False)
-                    self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
+                    self.wfile.write(f"data: {data}\n\n".encode())
                     self.wfile.flush()
                 except _queue.Empty:
                     # Heartbeat keeps the connection alive.

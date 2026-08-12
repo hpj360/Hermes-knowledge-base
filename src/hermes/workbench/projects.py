@@ -60,7 +60,7 @@ class ProjectConnection:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ProjectConnection":
+    def from_dict(cls, data: dict[str, Any]) -> ProjectConnection:
         return cls(
             id=data["id"],
             name=data["name"],
@@ -282,7 +282,7 @@ class ProjectRuntime:
         if self._scheduler is None:
             with self._lock:
                 if self._scheduler is None:
-                    from hermes.workbench.cli import TaskScheduler, TaskStore, TaskRegistry
+                    from hermes.workbench.cli import TaskRegistry, TaskScheduler, TaskStore
 
                     store = TaskStore(state_dir=Path(self.conn.state_dir))
                     registry = TaskRegistry()

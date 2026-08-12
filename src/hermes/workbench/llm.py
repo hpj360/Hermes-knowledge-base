@@ -198,7 +198,7 @@ class LlmClient:
             text = ""
             try:
                 text = e.read().decode("utf-8", errors="replace")
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: S110, BLE001
                 pass
             raise LlmApiError(
                 f"LLM HTTP {e.code}: {text or e.reason}", status_code=e.code

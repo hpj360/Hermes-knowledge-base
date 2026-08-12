@@ -28,7 +28,6 @@ from hermes.workbench.scheduler import (
     _now_iso,
 )
 
-
 __all__ = ["DependencyGraph"]
 
 
@@ -175,8 +174,7 @@ class DependencyGraph:
             if dep == job_id:
                 continue
             dep_depth = self._compute_depth_of_existing(dep, set())
-            if dep_depth > max_dep_depth:
-                max_dep_depth = dep_depth
+            max_dep_depth = max(max_dep_depth, dep_depth)
         return max_dep_depth + 1
 
     def _compute_depth_of_existing(self, job_id: str, visited: set[str]) -> int:

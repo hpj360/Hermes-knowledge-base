@@ -17,7 +17,6 @@ import http.client
 import json
 import logging
 import re
-import socket
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -243,7 +242,7 @@ class OpenClawClient:
             OSError,
             json.JSONDecodeError,
             http.client.HTTPException,  # BadStatusLine, IncompleteRead, RemoteDisconnected
-            socket.timeout,
+            TimeoutError,
         ) as exc:
             logger.debug("Gateway request failed: %s %s -> %s", method, path, exc)
             return None
@@ -529,8 +528,7 @@ class Orchestrator:
         # 规范化：统一用 / 分隔，去除前导 ./（注意不能用 lstrip——它是字符类剥离，
         # 会把 ".env" 错误地剥成 "env"）。只剥离字面量 "./" 前缀。
         clean = path.replace("\\", "/")
-        if clean.startswith("./"):
-            clean = clean[2:]
+        clean = clean.removeprefix("./")
         pure = PurePosixPath(clean)
         basename = pure.name
         full = str(pure)

@@ -20,7 +20,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # 让脚本无需安装即可运行（参考 scripts/ 下其他脚本写法）
@@ -28,14 +28,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
-from hermes_kb.data_sources import load_data_source_registry  # noqa: E402
-from hermes_kb.data_sources.registry import get_adapter  # noqa: E402
-from hermes_kb.iba_dataset_importer import sync_iba_dataset  # noqa: E402
-from hermes_kb.rag import ImportService  # noqa: E402
-from hermes_kb.retrieval import HybridRetriever  # noqa: E402
-from hermes_kb.thecocktaildb_sync import sync_thecocktaildb  # noqa: E402
-
-from tests.eval import load_eval_set  # noqa: E402
+from hermes_kb.data_sources import load_data_source_registry
+from hermes_kb.data_sources.registry import get_adapter
+from hermes_kb.iba_dataset_importer import sync_iba_dataset
+from hermes_kb.rag import ImportService
+from hermes_kb.retrieval import HybridRetriever
+from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
+from tests.eval import load_eval_set
 
 EVAL_SET_PATH = ROOT / "tests" / "eval" / "eval_set.jsonl"
 BASELINE_PATH = ROOT / "tests" / "eval" / "baseline.json"
@@ -82,7 +81,7 @@ def run_eval_baseline(top_k: int = 5) -> dict:
         "keyword_hit": keyword_hit,
         "recall_rate": round(recall_hit / total, 4) if total else 0.0,
         "keyword_rate": round(keyword_hit / total, 4) if total else 0.0,
-        "harvested_at": datetime.now().isoformat(),
+        "harvested_at": datetime.now(timezone.utc).isoformat(),
     }
 
     BASELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -120,8 +119,7 @@ def main() -> int:
     reg = load_data_source_registry()
     # --source 可选值：既有源 + 注册表优质源 + all + quality
     choices = ["thecocktaildb", "iba_dataset", "all", "quality"]
-    for sid in reg:
-        choices.append(sid)
+    choices.extend(reg)
 
     parser = argparse.ArgumentParser(description="外部数据收割编排")
     parser.add_argument(

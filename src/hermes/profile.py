@@ -72,7 +72,7 @@ def _load_working_principles_from_doc() -> list[str]:
 
     for line in text.splitlines():
         stripped = line.lstrip()
-        if stripped.startswith("```") or stripped.startswith("~~~"):
+        if stripped.startswith(("```", "~~~")):
             in_code_block = not in_code_block
             if current_title is not None:
                 current_body.append(line)

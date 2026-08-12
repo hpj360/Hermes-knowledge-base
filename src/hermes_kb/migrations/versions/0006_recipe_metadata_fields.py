@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """add recipe metadata fields
 
 Revision ID: 0006
@@ -18,17 +17,16 @@ long semicolon-separated string, not used for exact-match filtering).
 """
 from __future__ import annotations
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '0006'
-down_revision: Union[str, Sequence[str], None] = '0005'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '0005'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

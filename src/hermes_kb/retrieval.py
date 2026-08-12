@@ -99,7 +99,7 @@ def _tokenize_query_for_fts(q: str) -> str:
     q = q.strip().replace('"', " ")
     if not q:
         return ""
-    segments = re.split(r"[\s,，。！？、；：""''（）()【】\[\]{}]+", q)
+    segments = re.split(r"[\s,，。！？、；："r"''（）()【】\[\]{}]+", q)
     segments = [s for s in segments if s]
     if not segments:
         return ""
@@ -115,8 +115,7 @@ def _tokenize_query_for_fts(q: str) -> str:
         for i in range(len(seg) - 1):
             terms.append(seg[i : i + 2])
         # 单字也加入（提升短 query 召回）
-        for ch in seg:
-            terms.append(ch)
+        terms.extend(seg)
     # 去重保序
     seen: set[str] = set()
     unique_terms: list[str] = []

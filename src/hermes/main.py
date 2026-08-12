@@ -15,7 +15,7 @@ from hermes.cli_skill_sync import add_skill_sync_subparser
 from hermes.config import get_settings
 from hermes.logging import setup_logging
 from hermes.profile import get_profile_markdown, load_profile
-from hermes.skills import discover_skills, list_knowledge_docs, skills_dir, knowledge_dir
+from hermes.skills import discover_skills, knowledge_dir, list_knowledge_docs, skills_dir
 from hermes.workbench.cli import add_workbench_subparser
 
 
@@ -230,8 +230,8 @@ def main(argv: list[str] | None = None) -> int:
     func = getattr(args, "func", cmd_start)
     try:
         return func(args)
-    except Exception as exc:  # degraded-friendly: never crash silently
-        logging.getLogger("hermes").error("Command failed: %s", exc, exc_info=True)
+    except Exception:  # degraded-friendly: never crash silently
+        logging.getLogger("hermes").exception("Command failed")
         return 2
 
 

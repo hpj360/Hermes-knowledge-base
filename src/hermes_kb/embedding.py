@@ -15,7 +15,8 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from typing import Iterable, Protocol
+from collections.abc import Iterable
+from typing import Protocol
 
 from hermes_kb.config import get_settings
 

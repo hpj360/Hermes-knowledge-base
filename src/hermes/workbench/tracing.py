@@ -28,8 +28,9 @@ Public surface:
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 from hermes.workbench.memory import Episode, MemoryService, make_episode
 
@@ -94,10 +95,10 @@ class Tracer:
         log_ctx_token = None
         try:
             from hermes.workbench.structured_logging import _LOG_CONTEXT
-            parent_ctx = _LOG_CONTEXT.get()
+            parent_ctx = _LOG_CONTEXT.get() or {}
             merged_ctx = {**parent_ctx, "trace_id": tid}
             log_ctx_token = _LOG_CONTEXT.set(merged_ctx)
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: S110, BLE001
             pass
         try:
             yield tid
@@ -106,7 +107,7 @@ class Tracer:
             if log_ctx_token is not None:
                 try:
                     _LOG_CONTEXT.reset(log_ctx_token)
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: S110, BLE001
                     pass
 
     def record(self, episode: Episode) -> None:

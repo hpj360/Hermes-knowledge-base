@@ -28,7 +28,7 @@ import statistics
 import sys
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # 让脚本无需安装即可运行
@@ -41,11 +41,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from hermes_kb.config import get_settings  # noqa: E402
-from hermes_kb.hyde import HyDEGenerator  # noqa: E402
-from hermes_kb.query_rewriter import QueryRewriter  # noqa: E402
-from hermes_kb.retrieval import HybridRetriever  # noqa: E402
-from tests.eval import load_eval_set  # noqa: E402
+from hermes_kb.config import get_settings
+from hermes_kb.hyde import HyDEGenerator
+from hermes_kb.query_rewriter import QueryRewriter
+from hermes_kb.retrieval import HybridRetriever
+from tests.eval import load_eval_set
 
 
 def title_matches(hit_title: str, expected_titles: list[str]) -> bool:
@@ -205,7 +205,7 @@ def run_evaluation(
         "keyword_rate": keyword_rate,
         "avg_latency_ms": avg_latency,
         "p95_latency_ms": p95,
-        "evaluated_at": datetime.now().isoformat(),
+        "evaluated_at": datetime.now(timezone.utc).isoformat(),
         "embedding_provider": settings.embedding_provider,
         "top_k": top_k,
         "query_rewrite": rewrite_enabled,
@@ -277,8 +277,8 @@ def build_markdown_report(
         f"| Keyword Rate | {fmt_pct(summary['keyword_rate'])} | {fmt_pct(b_keyword)} | "
         f"{fmt_delta(summary['keyword_rate'], b_keyword)} |"
     )
-    lines.append(f"| Avg Latency | {int(round(summary['avg_latency_ms']))}ms | - | - |")
-    lines.append(f"| P95 Latency | {int(round(summary['p95_latency_ms']))}ms | - | - |")
+    lines.append(f"| Avg Latency | {round(summary['avg_latency_ms'])}ms | - | - |")
+    lines.append(f"| P95 Latency | {round(summary['p95_latency_ms'])}ms | - | - |")
     lines.append("")
     lines.append("## 按类别分组")
     lines.append("")

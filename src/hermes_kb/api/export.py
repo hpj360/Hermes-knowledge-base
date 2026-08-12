@@ -20,14 +20,14 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from sqlmodel import select
 
 from hermes_kb.api.audit import require_admin
 from hermes_kb.api.deps import require_auth
 from hermes_kb.audit import extract_user, log_action
-from hermes_kb.database import get_session, backfill_history_fts
+from hermes_kb.database import backfill_history_fts, get_session
 from hermes_kb.models import (
     AuditLog,
     Chunk,
@@ -68,7 +68,8 @@ def _serialize_row(row: Any) -> dict[str, Any]:
     datetime → ISO 字符串；其余字段原样返回。
     """
     out: dict[str, Any] = {}
-    for col in row.__table__.columns.keys():
+    # SQLAlchemy ColumnCollection 需用 .keys() 取列名，迭代对象本身返回 Column，不能省略
+    for col in row.__table__.columns.keys():  # noqa: SIM118
         val = getattr(row, col, None)
         if isinstance(val, datetime):
             out[col] = val.isoformat()

@@ -394,7 +394,7 @@ async def lab_recipe_stats(doc_id: str) -> dict[str, Any]:
                         abv = stats["estimated_abv"]
                     if calories is None:
                         calories = stats["estimated_calories"]
-        except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
+        except Exception:  # noqa: S110, BLE001 — 软降级，不阻塞主流程
             pass
 
     return {

@@ -12,18 +12,19 @@ dependencies.
 
 from __future__ import annotations
 
+import builtins
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, List
+from typing import Any
 
 from hermes.workbench.errors import ValidationError
 from hermes.workbench.persistence import atomic_write_json, safe_read_json
 from hermes.workbench.scheduler import ScheduledJob
-
 
 __all__ = [
     "CronScheduler",
@@ -129,7 +130,7 @@ class Trigger:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Trigger":
+    def from_dict(cls, data: dict[str, Any]) -> Trigger:
         return cls(
             trigger_id=data.get("trigger_id", ""),
             job_template=dict(data.get("job_template", {})),
@@ -172,12 +173,12 @@ class TriggerStore:
             data = self._triggers.get(trigger_id)
         return Trigger.from_dict(data) if data else None
 
-    def list(self) -> "List[Trigger]":
+    def list(self) -> builtins.list[Trigger]:
         with self._lock:
             snapshot = list(self._triggers.values())
         return [Trigger.from_dict(d) for d in snapshot]
 
-    def list_enabled_cron(self) -> "List[Trigger]":
+    def list_enabled_cron(self) -> builtins.list[Trigger]:
         with self._lock:
             snapshot = [
                 d
@@ -307,13 +308,14 @@ class CronScheduler:
         while not self._stop.is_set():
             try:
                 self._scan()
-            except Exception:  # noqa: BLE001 - scan must not kill the loop
+            except Exception:  # noqa: S110, BLE001 - scan must not kill the loop
                 pass
             if self._stop.wait(self._scan_interval):
                 break
 
     def _scan(self) -> None:
-        now = datetime.now()
+        # cron 表达式按服务器本地墙钟时间匹配，刻意使用 naive 本地时间（勿改 UTC）
+        now = datetime.now()  # noqa: DTZ005
         minute_key = now.strftime("%Y-%m-%d %H:%M")
         for trigger in self._store.list_enabled_cron():
             tid = trigger.trigger_id
@@ -324,7 +326,7 @@ class CronScheduler:
                 continue
             try:
                 matched = self._matches_cron(expr, now)
-            except Exception:  # noqa: BLE001 - skip bad expressions
+            except Exception:  # noqa: S112, BLE001 - skip bad expressions
                 continue
             if matched:
                 self._last_fired[tid] = minute_key

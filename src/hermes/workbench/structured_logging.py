@@ -36,27 +36,28 @@ import json
 import logging
 import sys
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 __all__ = [
     "StructuredFormatter",
     "configure_logging",
-    "log_context",
     "get_log_context",
+    "log_context",
 ]
 
 
 # Contextvar holds a dict of extra fields to inject into every log record
 # produced within the scope. Nested bindings merge with parent bindings.
-_LOG_CONTEXT: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-    "hermes_log_context", default={}
+_LOG_CONTEXT: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "hermes_log_context", default=None
 )
 
 
 def get_log_context() -> dict[str, Any]:
     """Return a snapshot of the current log context bindings."""
-    return dict(_LOG_CONTEXT.get())
+    return dict(_LOG_CONTEXT.get() or {})
 
 
 @contextmanager
@@ -71,7 +72,7 @@ def log_context(**bindings: Any) -> Iterator[dict[str, Any]]:
     Nested calls merge with the parent scope. Re-binding an existing key
     overrides it for the inner scope only.
     """
-    parent = _LOG_CONTEXT.get()
+    parent = _LOG_CONTEXT.get() or {}
     merged = {**parent, **bindings}
     token = _LOG_CONTEXT.set(merged)
     try:
@@ -108,7 +109,7 @@ class StructuredFormatter(logging.Formatter):
             "msg": record.getMessage(),
         }
         # Inject context bindings
-        for k, v in _LOG_CONTEXT.get().items():
+        for k, v in (_LOG_CONTEXT.get() or {}).items():
             payload.setdefault(k, v)
         # Inject record extras (only user-supplied ones)
         for k, v in record.__dict__.items():

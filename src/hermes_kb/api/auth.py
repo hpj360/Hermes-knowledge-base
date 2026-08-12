@@ -216,7 +216,7 @@ async def register(req: RegisterReq) -> dict[str, Any]:
 @router.post("/auth/invite")
 async def create_invite(
     req: InviteReq,
-    payload: dict[str, Any] = Depends(require_role("owner")),
+    payload: dict[str, Any] = Depends(require_role("owner")),  # noqa: B008  # require_role 为 FastAPI 依赖，需在默认参数中调用
 ) -> dict[str, Any]:
     """V3-Task10：owner 生成邀请码。
 
@@ -247,7 +247,7 @@ async def create_invite(
 
 @router.get("/auth/users")
 async def list_users_endpoint(
-    payload: dict[str, Any] = Depends(require_role("owner")),
+    payload: dict[str, Any] = Depends(require_role("owner")),  # noqa: B008  # require_role 为 FastAPI 依赖，需在默认参数中调用
 ) -> dict[str, Any]:
     """V3-Task10：owner 查看用户列表。"""
     from hermes_kb.users import list_users
@@ -257,7 +257,7 @@ async def list_users_endpoint(
 
 @router.get("/auth/invites")
 async def list_invites_endpoint(
-    payload: dict[str, Any] = Depends(require_role("owner")),
+    payload: dict[str, Any] = Depends(require_role("owner")),  # noqa: B008  # require_role 为 FastAPI 依赖，需在默认参数中调用
 ) -> dict[str, Any]:
     """V3-Task10：owner 查看邀请码列表。"""
     from hermes_kb.users import list_invite_codes
@@ -269,7 +269,7 @@ async def list_invites_endpoint(
 async def update_user_role_endpoint(
     username: str,
     req: UpdateRoleReq,
-    payload: dict[str, Any] = Depends(require_role("owner")),
+    payload: dict[str, Any] = Depends(require_role("owner")),  # noqa: B008  # require_role 为 FastAPI 依赖，需在默认参数中调用
 ) -> dict[str, Any]:
     """V3-Task10：owner 修改用户角色。"""
     from hermes_kb.users import update_user_role

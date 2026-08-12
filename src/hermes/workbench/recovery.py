@@ -25,7 +25,6 @@ from typing import Any
 from hermes.workbench.memory import make_episode
 from hermes.workbench.scheduler import JobQueue, JobStatus, JobStore
 
-
 __all__ = ["RecoveryManager"]
 
 
@@ -113,6 +112,6 @@ class RecoveryManager:
         try:
             episode = make_episode("recovery", summary, details)
             self._memory.record_episode(episode)
-        except Exception:  # noqa: BLE001
+        except Exception:  # noqa: S110, BLE001
             # Episode recording must never break recovery.
             pass

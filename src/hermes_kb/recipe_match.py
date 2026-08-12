@@ -85,8 +85,8 @@ def _load_recipes() -> list[dict[str, Any]]:
         docs = session.exec(
             select(Document).where(
                 Document.category == "recipe",
-                Document.verified == True,  # noqa: E712
-                Document.hidden == False,  # noqa: E712
+                Document.verified == True,
+                Document.hidden == False,
             )
         ).all()
         doc_ids = [d.doc_id for d in docs]

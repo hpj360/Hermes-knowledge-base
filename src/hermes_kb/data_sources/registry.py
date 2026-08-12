@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from hermes_kb.data_sources.base import DataSourceAdapter
 
 
-def get_adapter(source_id: str) -> "DataSourceAdapter":
+def get_adapter(source_id: str) -> DataSourceAdapter:
     """按注册表 import_adapter 返回适配器实例。
 
     - 注册表 access=curated 且无专属 adapter 时，回退到 CuratedSourceAdapter

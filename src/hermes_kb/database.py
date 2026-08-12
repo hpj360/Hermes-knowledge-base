@@ -16,15 +16,16 @@ from __future__ import annotations
 import json
 import logging
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 try:
     import pysqlite3 as sqlite3  # 替代标准库 sqlite3，支持 extension loading
 except ImportError:  # Windows / 非 pysqlite3 环境
     import sqlite3  # 标准库 sqlite3（extension loading 可能不可用，降级无 ANN）
-from sqlalchemy import event, text as sa_text
+from sqlalchemy import event
+from sqlalchemy import text as sa_text
 from sqlmodel import Session, SQLModel, create_engine
 
 from hermes_kb.config import get_settings
