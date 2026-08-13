@@ -2,12 +2,16 @@ name: Sync API Data Sources
 
 on:
   schedule:
-    # 每周日 00:00 UTC（北京时间 08:00）自动同步
-    - cron: '0 0 * * 0'
+    # 每日 00:00 UTC（北京时间 08:00）自动同步
+    - cron: '0 0 * * *'
   workflow_dispatch: # 支持手动触发
 
 permissions:
   contents: write
+
+concurrency:
+  group: sync-data-sources
+  cancel-in-progress: true
 
 jobs:
   sync:
@@ -37,6 +41,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "无新数据需要提交"
           else
-            git commit -m "chore(data): 自动同步 API 数据源快照 (weekly)"
+            git commit -m "chore(data): 自动同步 API 数据源快照 (daily)"
             git push
           fi
