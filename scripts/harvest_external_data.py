@@ -45,8 +45,15 @@ QUALITY_SOURCE_IDS = [
     "crossref",
     "iwsr_summary",
     "who_alcohol",
+    "oiv_stats",
+    "niaaa_alcohol",
     "iba_official",
     "thecocktaildb",
+    "wikipedia",
+    "wikipedia_snapshot",
+    "openfoodfacts",
+    "usda_fooddata",
+    "dbpedia",
 ]
 
 

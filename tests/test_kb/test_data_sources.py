@@ -166,16 +166,16 @@ class TestAdapters:
         importer = ImportService()
         adapter = CuratedSourceAdapter("iwsr_summary")
         r1 = adapter.import_data(importer)
-        assert r1["imported"] == 3, f"首次应导入 3 篇: {r1}"
+        assert r1["imported"] == 6, f"首次应导入 6 篇: {r1}"
         # 再次导入全部跳过（幂等）
         r2 = adapter.import_data(importer)
-        assert r2["skipped"] == 3, f"二次应全部跳过: {r2}"
+        assert r2["skipped"] == 6, f"二次应全部跳过: {r2}"
 
         with get_session() as session:
             docs = session.exec(
                 select(Document).where(Document.source == "iwsr_summary")
             ).all()
-            assert len(docs) == 3
+            assert len(docs) == 6
             # 溯源字段写入
             assert all(d.source_authority == "IWSR" for d in docs)
             assert all(d.source_url for d in docs)

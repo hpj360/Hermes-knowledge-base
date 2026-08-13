@@ -17,8 +17,12 @@ def get_adapter(source_id: str) -> DataSourceAdapter:
     """
     from hermes_kb.data_sources.adapters.api import (
         CrossrefAdapter,
+        DBpediaAdapter,
+        OpenFoodFactsAdapter,
         TheCocktailDBAdapter,
+        USDAFoodDataAdapter,
         WikidataAdapter,
+        WikipediaAdapter,
     )
     from hermes_kb.data_sources.adapters.curated import CuratedSourceAdapter
 
@@ -32,6 +36,14 @@ def get_adapter(source_id: str) -> DataSourceAdapter:
         return CrossrefAdapter()
     if adapter_id == "thecocktaildb":
         return TheCocktailDBAdapter()
+    if adapter_id == "wikipedia":
+        return WikipediaAdapter()
+    if adapter_id == "openfoodfacts":
+        return OpenFoodFactsAdapter()
+    if adapter_id == "usda_fooddata":
+        return USDAFoodDataAdapter()
+    if adapter_id == "dbpedia":
+        return DBpediaAdapter()
 
     # curated 源统一走策划快照适配器
     if entry.get("access") == "curated":
