@@ -1,12 +1,12 @@
 <#
 .SYNOPSIS
-    每日本地同步：拉取 GitHub Actions 生成的 API 数据快照并导入本地知识库。
+    Daily local sync: pull GitHub Actions API snapshots and import into local KB.
 .DESCRIPTION
-    配合 .github/workflows/sync-data-sources.yml 使用。
-    GitHub Actions 每日在海外服务器拉取 API 数据并提交为 JSON 快照，
-    本脚本在本地执行 git pull + 导入快照 + 验证。
+    Works with .github/workflows/sync-data-sources.yml.
+    GitHub Actions fetches API data daily on overseas servers and commits JSON snapshots.
+    This script runs locally: git pull + import snapshots + verify.
 .NOTES
-    建议通过 Windows 任务计划程序每日定时执行（如北京时间 09:00）。
+    Schedule via Windows Task Scheduler (e.g. 09:00 daily).
 #>
 
 param(
@@ -27,14 +27,14 @@ function Write-Log {
     Add-Content -Path $logFile -Value $line -Encoding UTF8
 }
 
-Write-Log "=== 每日数据源同步开始 ==="
+Write-Log "=== Daily Data Source Sync Start ==="
 
-# 1. 拉取最新快照
-Write-Log "步骤 1: git pull..."
+# 1. Pull latest snapshots
+Write-Log "Step 1: git pull..."
 git pull origin main 2>&1 | ForEach-Object { Write-Log $_ }
 
-# 2. 导入同步快照（GitHub Actions 拉取的 API 数据）
-Write-Log "步骤 2: 导入同步快照..."
+# 2. Import API sync snapshots (fetched by GitHub Actions)
+Write-Log "Step 2: Import sync snapshots..."
 $syncSources = @(
     "wikipedia_sync",
     "openfoodfacts_sync",
@@ -47,16 +47,16 @@ $syncSources = @(
 foreach ($source in $syncSources) {
     $snapshotFile = Join-Path $RepoDir "data\sources\$source.json"
     if (Test-Path $snapshotFile) {
-        Write-Log "  导入 $source ..."
+        Write-Log "  Importing $source ..."
         uv run python scripts/harvest_external_data.py --source $source 2>&1 |
             ForEach-Object { Write-Log "    $_" }
     } else {
-        Write-Log "  跳过 $source（快照文件不存在，GitHub Actions 可能尚未运行）"
+        Write-Log "  Skip $source (snapshot not found, GitHub Actions may not have run yet)"
     }
 }
 
-# 3. 导入手工策划快照（检查更新）
-Write-Log "步骤 3: 导入策划快照（幂等）..."
+# 3. Import curated snapshots (idempotent check for updates)
+Write-Log "Step 3: Import curated snapshots (idempotent)..."
 $curatedSources = @(
     "wikipedia_snapshot",
     "who_alcohol",
@@ -67,15 +67,15 @@ $curatedSources = @(
 )
 
 foreach ($source in $curatedSources) {
-    Write-Log "  检查 $source ..."
+    Write-Log "  Check $source ..."
     uv run python scripts/harvest_external_data.py --source $source 2>&1 |
         Select-String "imported|skipped|error" |
         ForEach-Object { Write-Log "    $_" }
 }
 
-# 4. 验证
-Write-Log "步骤 4: 数据源质量验证..."
+# 4. Verify
+Write-Log "Step 4: Data source quality verification..."
 uv run python scripts/_verify_data_sources.py 2>&1 |
     ForEach-Object { Write-Log "  $_" }
 
-Write-Log "=== 每日数据源同步完成 ==="
+Write-Log "=== Daily Data Source Sync Complete ==="

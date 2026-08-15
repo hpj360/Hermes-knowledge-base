@@ -54,6 +54,12 @@ QUALITY_SOURCE_IDS = [
     "openfoodfacts",
     "usda_fooddata",
     "dbpedia",
+    "wikipedia_sync",
+    "openfoodfacts_sync",
+    "usda_fooddata_sync",
+    "dbpedia_sync",
+    "wikidata_sync",
+    "crossref_sync",
 ]
 
 
