@@ -150,3 +150,8 @@ def get_rag(request: Request) -> RAGEngine:
 
 def get_importer(request: Request) -> ImportService:
     return request.app.state.importer
+
+
+def get_agent(request: Request):
+    """获取应用级鸡尾酒智能体实例（create_app() 中挂到 app.state）。"""
+    return request.app.state.agent

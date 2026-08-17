@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """增强版材料注册表测试（G1：ABV + 品牌字段 + 扩展材料）。"""
 from __future__ import annotations
 
@@ -97,11 +96,11 @@ def test_new_ingredients_have_abv_and_brands():
 def test_backward_compatible():
     """G1: 原有函数行为不变（具体烈酒英文别名已解冲突，归一化到具体条目）。"""
     from hermes_kb.ingredients import (
+        INGREDIENT_REGISTRY,
         all_canonical,
         canonicalize,
         get_category,
         list_by_category,
-        INGREDIENT_REGISTRY,
     )
 
     # canonicalize 核心映射保持

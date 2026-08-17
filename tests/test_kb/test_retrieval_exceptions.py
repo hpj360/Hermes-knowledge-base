@@ -60,9 +60,11 @@ def test_bm25_fts_failure(tmp_db):
     retriever = HybridRetriever()
     mock_engine = _make_connect_raising_engine()
 
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch("hermes_kb.retrieval.get_engine", return_value=mock_engine):
-            hits = retriever._bm25("金酒", k=5)
+    with (
+        patch("hermes_kb.retrieval.logger") as mock_logger,
+        patch("hermes_kb.retrieval.get_engine", return_value=mock_engine),
+    ):
+        hits = retriever._bm25("金酒", k=5)
 
     assert hits == []
     assert _warning_called_with(mock_logger, "BM25 FTS5 query failed")
@@ -74,9 +76,11 @@ def test_vector_scan_query_failure(tmp_db):
     retriever = HybridRetriever()
     mock_engine = _make_connect_raising_engine()
 
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch("hermes_kb.retrieval.get_engine", return_value=mock_engine):
-            hits = retriever._vector_scan([1.0, 0.0, 0.0], k=5)
+    with (
+        patch("hermes_kb.retrieval.logger") as mock_logger,
+        patch("hermes_kb.retrieval.get_engine", return_value=mock_engine),
+    ):
+        hits = retriever._vector_scan([1.0, 0.0, 0.0], k=5)
 
     assert hits == []
     assert _warning_called_with(mock_logger, "vector scan failed")
@@ -96,12 +100,11 @@ def test_vector_ann_metadata_failure(tmp_db):
     qvec = retriever.embedding.embed_one("朗姆酒")
     assert qvec and any(v != 0.0 for v in qvec)
 
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch(
-            "hermes_kb.retrieval.get_session",
-            side_effect=SQLAlchemyError("session failure"),
-        ):
-            hits = retriever._vector_ann(qvec, k=5)
+    with patch("hermes_kb.retrieval.logger") as mock_logger, patch(
+        "hermes_kb.retrieval.get_session",
+        side_effect=SQLAlchemyError("session failure"),
+    ):
+        hits = retriever._vector_ann(qvec, k=5)
 
     # 元数据查询失败 → chunk_meta 为空 → 所有 rowid 被跳过 → hits 为空
     assert hits == []
@@ -119,12 +122,11 @@ def test_vector_scan_metadata_failure(tmp_db):
     qvec = retriever.embedding.embed_one("龙舌兰")
     assert qvec and any(v != 0.0 for v in qvec)
 
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch(
-            "hermes_kb.retrieval.get_session",
-            side_effect=SQLAlchemyError("session failure"),
-        ):
-            hits = retriever._vector_scan(qvec, k=5)
+    with patch("hermes_kb.retrieval.logger") as mock_logger, patch(
+        "hermes_kb.retrieval.get_session",
+        side_effect=SQLAlchemyError("session failure"),
+    ):
+        hits = retriever._vector_scan(qvec, k=5)
 
     # 即使元数据查询失败，hits 仍返回（text 降级为空，title 降级为 doc_id）
     assert len(hits) >= 1
@@ -138,12 +140,11 @@ def test_doc_title_failure(tmp_db):
     doc_id = _seed_doc("测试文档E", "伏特加是纯净的谷物烈酒。" * 20)
     retriever = HybridRetriever()
 
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch(
-            "hermes_kb.retrieval.get_session",
-            side_effect=SQLAlchemyError("session failure"),
-        ):
-            title = retriever._doc_title(doc_id)
+    with patch("hermes_kb.retrieval.logger") as mock_logger, patch(
+        "hermes_kb.retrieval.get_session",
+        side_effect=SQLAlchemyError("session failure"),
+    ):
+        title = retriever._doc_title(doc_id)
 
     # 降级返回 doc_id 原值
     assert title == doc_id
@@ -162,12 +163,11 @@ def test_chunk_meta_failure(tmp_db):
         rowid = chunk.id
 
     retriever = HybridRetriever()
-    with patch("hermes_kb.retrieval.logger") as mock_logger:
-        with patch(
-            "hermes_kb.retrieval.get_session",
-            side_effect=SQLAlchemyError("session failure"),
-        ):
-            text, title = retriever._chunk_meta(rowid, doc_id)
+    with patch("hermes_kb.retrieval.logger") as mock_logger, patch(
+        "hermes_kb.retrieval.get_session",
+        side_effect=SQLAlchemyError("session failure"),
+    ):
+        text, title = retriever._chunk_meta(rowid, doc_id)
 
     # 降级返回 ("", doc_id)
     assert text == ""

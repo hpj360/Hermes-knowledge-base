@@ -4,19 +4,19 @@
 Now with Twitter/X, Reddit, and improved Yahoo Finance
 """
 
-import json
-import urllib.request
-import urllib.error
-import xml.etree.ElementTree as ET
 import gzip
-import subprocess
+import json
 import os
-from datetime import datetime, timezone
-from pathlib import Path
 import re
 import ssl
+import subprocess
+import urllib.error
+import urllib.request
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+from pathlib import Path
 
 # Load .env file if exists
 ENV_FILE = Path(__file__).parent.parent / ".env"
@@ -452,7 +452,7 @@ class HotScanner:
                 'UK', 'US', 'AI', 'IT', 'AT', 'TO', 'IN', 'ON', 'IS', 'IF', 'OR', 'AN',
                 'DD', 'WSB', 'YOLO', 'FD', 'OP', 'PM', 'AM'}
         
-        return list(set(t for t in tickers if t not in skip and len(t) >= 2))
+        return list({t for t in tickers if t not in skip and len(t) >= 2})
     
     def get_hot_summary(self):
         """Generate summary."""

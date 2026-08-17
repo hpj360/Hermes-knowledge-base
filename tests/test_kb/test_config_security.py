@@ -1,7 +1,6 @@
 """配置安全校验测试（A1-1）。"""
 from __future__ import annotations
 
-
 import pytest
 
 

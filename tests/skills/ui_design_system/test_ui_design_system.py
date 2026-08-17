@@ -12,11 +12,11 @@ SCRIPTS = SKILL_DIR / "scripts"
 TOKENS_BASE = SKILL_DIR / "tokens" / "tokens.base.json"
 
 
-def run_script(name: str, *args: str) -> subprocess.CompletedProcess:
+def run_script(name: str, *args: str, check: bool = True) -> subprocess.CompletedProcess:
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
         [sys.executable, str(SCRIPTS / name), *args],
-        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8",
+        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8", check=check,
     )
 
 
@@ -29,14 +29,14 @@ class TestValidate:
     def test_validate_detects_bad_color(self, tmp_path):
         bad = tmp_path / "bad.json"
         bad.write_text(json.dumps({"color": {"primary": "not-a-color"}}))
-        result = run_script("validate.py", "--tokens", str(bad))
+        result = run_script("validate.py", "--tokens", str(bad), check=False)
         assert result.returncode == 1
         assert "颜色格式错误" in result.stdout
 
     def test_validate_detects_missing_required_field(self, tmp_path):
         bad = tmp_path / "bad.json"
         bad.write_text(json.dumps({"color": {"primary": "#FFF"}}))
-        result = run_script("validate.py", "--tokens", str(bad))
+        result = run_script("validate.py", "--tokens", str(bad), check=False)
         assert result.returncode == 1
         assert "缺少必填字段" in result.stdout
 
@@ -91,7 +91,7 @@ class TestAudit:
         assert "Token 审计" in result.stdout
 
     def test_audit_strict_mode(self):
-        result = run_script("audit.py", "--tokens", str(TOKENS_BASE), "--strict")
+        result = run_script("audit.py", "--tokens", str(TOKENS_BASE), "--strict", check=False)
         # base tokens 缺 color.primary 等警告；strict 模式下会退出非零
         # 但要确保不是 crash
         assert "Token 审计" in result.stdout

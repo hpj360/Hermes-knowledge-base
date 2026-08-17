@@ -29,7 +29,6 @@ from typing import Literal
 
 import yfinance as yf
 
-
 # Top 20 supported cryptocurrencies
 SUPPORTED_CRYPTOS = {
     "BTC-USD", "ETH-USD", "BNB-USD", "SOL-USD", "XRP-USD",
@@ -98,7 +97,7 @@ class PortfolioStore:
             with open(self.path, "r", encoding="utf-8") as f:
                 self._data = json.load(f)
                 return self._data
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             self._data = {"version": 1, "portfolios": {}}
             return self._data
 

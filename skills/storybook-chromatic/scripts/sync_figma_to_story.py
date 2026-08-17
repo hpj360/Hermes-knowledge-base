@@ -25,7 +25,7 @@ def _import_figma_client():
     if not figma_reader.exists():
         raise FileNotFoundError("figma-reader skill 未安装")
     sys.path.insert(0, str(figma_reader))
-    from figma_client import list_components, get_nodes
+    from figma_client import get_nodes, list_components
     return list_components, get_nodes
 
 
@@ -175,7 +175,7 @@ def main():
     parser.add_argument("--output", required=True, help="输出目录")
     args = parser.parse_args()
 
-    list_components, get_nodes = _import_figma_client()
+    list_components, _get_nodes = _import_figma_client()
 
     if args.all:
         components = list_components(args.figma_key)

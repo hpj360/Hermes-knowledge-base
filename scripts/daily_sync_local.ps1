@@ -41,7 +41,10 @@ $syncSources = @(
     "usda_fooddata_sync",
     "dbpedia_sync",
     "wikidata_sync",
-    "crossref_sync"
+    "wikidata_cocktails_sync",
+    "crossref_sync",
+    "bar_assistant_cocktails_sync",
+    "bar_assistant_ingredients_sync"
 )
 
 foreach ($source in $syncSources) {

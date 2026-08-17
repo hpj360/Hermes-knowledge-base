@@ -20,7 +20,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 try:
     import requests
@@ -54,9 +54,9 @@ class FigmaClient:
 
     def __init__(
         self,
-        token: Optional[str] = None,
+        token: str | None = None,
         mock: bool = False,
-        mock_data_dir: Optional[Path] = None,
+        mock_data_dir: Path | None = None,
     ):
         self.token = token or os.environ.get("FIGMA_TOKEN", "")
         self.mock = mock or not self.token
@@ -64,7 +64,7 @@ class FigmaClient:
         if not self.mock and not HAS_REQUESTS:
             raise ImportError("requests 未安装，请先 pip install requests")
 
-    def _request(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
+    def _request(self, endpoint: str, params: dict | None = None) -> dict:
         """底层请求方法"""
         if self.mock:
             return self._mock_request(endpoint, params)
@@ -95,7 +95,7 @@ class FigmaClient:
 
         raise FigmaRateLimitError("重试 3 次仍触发限流")
 
-    def _mock_request(self, endpoint: str, params: Optional[Dict]) -> Dict:
+    def _mock_request(self, endpoint: str, params: dict | None) -> dict:
         """Mock 模式：从本地 fixture 读取"""
         sample = self.mock_data_dir / "sample_response.json"
         if not sample.exists():
@@ -122,18 +122,18 @@ class FigmaClient:
     def get_file(
         self,
         file_key: str,
-        depth: Optional[int] = None,
+        depth: int | None = None,
         geometry: bool = False,
-    ) -> Dict:
+    ) -> dict:
         """GET /v1/files/{file_key}"""
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         if depth is not None:
             params["depth"] = depth
         if geometry:
             params["geometry"] = "true"
         return self._request(f"/files/{file_key}", params)
 
-    def get_nodes(self, file_key: str, node_ids: List[str]) -> Dict:
+    def get_nodes(self, file_key: str, node_ids: list[str]) -> dict:
         """GET /v1/files/{file_key}/nodes"""
         return self._request(
             f"/files/{file_key}/nodes",
@@ -143,10 +143,10 @@ class FigmaClient:
     def get_images(
         self,
         file_key: str,
-        node_ids: List[str],
+        node_ids: list[str],
         fmt: str = "png",
         scale: float = 1.0,
-    ) -> Dict:
+    ) -> dict:
         """GET /v1/images/{file_key}"""
         valid_fmts = {"png", "jpg", "svg", "pdf"}
         if fmt not in valid_fmts:
@@ -160,7 +160,7 @@ class FigmaClient:
             },
         )
 
-    def get_components(self, file_key: str) -> Dict:
+    def get_components(self, file_key: str) -> dict:
         """GET /v1/files/{file_key}/components"""
         return self._request(f"/files/{file_key}/components")
 

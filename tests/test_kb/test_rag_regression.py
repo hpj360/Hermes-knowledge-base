@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Task 10.3：RAG 准确率回归测试（结构性回归）。
 
 不依赖真实 LLM / Embedding 网络，改为对 RecipeMatch 模块做结构性回归：

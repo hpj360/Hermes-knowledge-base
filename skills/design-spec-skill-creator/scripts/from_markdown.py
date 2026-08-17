@@ -13,7 +13,6 @@ import json
 import re
 from pathlib import Path
 
-
 # ── 内容提取器 ────────────────────────────────────────────────────────
 
 HEX_RE = re.compile(r"#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?\b")
@@ -114,7 +113,7 @@ def _extract_principles(md_content: str) -> list[str]:
         body = _extract_section(md_content, section)
         for line in body.split("\n"):
             line = line.strip()
-            if line.startswith("- ") or line.startswith("* "):
+            if line.startswith(("- ", "* ")):
                 principles.append(line[2:])
     return principles
 

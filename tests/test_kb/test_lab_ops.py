@@ -6,8 +6,8 @@ from sqlmodel import select
 
 def test_missing_ingredient_stats_model(tmp_db):
     """MissingIngredientStats 表可创建并写入。"""
-    from hermes_kb.models import MissingIngredientStats
     from hermes_kb.database import get_session
+    from hermes_kb.models import MissingIngredientStats
 
     with get_session() as session:
         stat = MissingIngredientStats(
@@ -73,7 +73,7 @@ def test_daily_recipe_reason_format(seeded_recipes):
 
 def test_missing_stats_increment(seeded_recipes):
     """记录缺失材料计数。"""
-    from hermes_kb.missing_stats import increment_missing, get_missing_stats
+    from hermes_kb.missing_stats import get_missing_stats, increment_missing
 
     increment_missing("君度")
     increment_missing("君度")
@@ -87,7 +87,7 @@ def test_missing_stats_increment(seeded_recipes):
 
 def test_missing_stats_top(seeded_recipes):
     """缺失材料排行。"""
-    from hermes_kb.missing_stats import increment_missing, get_top_missing
+    from hermes_kb.missing_stats import get_top_missing, increment_missing
 
     for _ in range(5):
         increment_missing("君度")
@@ -106,8 +106,8 @@ def test_missing_stats_top(seeded_recipes):
 
 def test_match_records_missing(seeded_recipes):
     """match_recipes 调用后缺失材料被统计（A3-3: 通过 _pending_stats 异步批量写入）。"""
-    from hermes_kb.recipe_match import match_recipes
     from hermes_kb.missing_stats import batch_increment_missing, get_missing_stats
+    from hermes_kb.recipe_match import match_recipes
 
     # 白色佳人需要金酒+君度+柠檬汁，只给金酒+柠檬汁 → 缺君度
     result = match_recipes({"金酒", "柠檬汁"})
@@ -193,10 +193,10 @@ def test_api_lab_dashboard(seeded_recipes, client):
 
 def test_weekly_match_count_semantics(seeded_recipes):
     """A4-1: weekly_match_count 应为本周新增匹配数，不是累计值。"""
-    from hermes_kb.recipe_stats import increment_match_count
-    from hermes_kb.lab_dashboard import get_lab_dashboard
     from hermes_kb.database import get_session
+    from hermes_kb.lab_dashboard import get_lab_dashboard
     from hermes_kb.models import Document
+    from hermes_kb.recipe_stats import increment_match_count
 
     # seeded_recipes 是 ImportService，从 DB 取前 2 个 recipe 的 doc_id
     with get_session() as session:

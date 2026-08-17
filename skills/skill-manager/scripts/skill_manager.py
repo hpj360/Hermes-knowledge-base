@@ -6,7 +6,6 @@ import json
 import shutil
 from pathlib import Path
 
-
 DEFAULT_SKILLS_DIR = ".trae/skills"
 LOCKFILE_NAME = ".skills_store_lock.json"
 

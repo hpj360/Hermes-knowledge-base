@@ -30,9 +30,12 @@ def main():
         # 框架过滤
         if args.framework and lib["framework"] != args.framework:
             continue
-        if "filter" in scenario and scenario["filter"].get("framework"):
-            if lib["framework"] not in scenario["filter"]["framework"]:
-                continue
+        if (
+            "filter" in scenario
+            and scenario["filter"].get("framework")
+            and lib["framework"] not in scenario["filter"]["framework"]
+        ):
+            continue
 
         # 加权评分
         total = 0

@@ -43,7 +43,7 @@ class TestWebToIos:
              "--props", "blur=24,alpha=0.6,highlight=true",
              "--content", 'VStack { Text("Hi") }',
              "--output", str(tmp_path / "Generated.swift")],
-            capture_output=True, text=True, timeout=10, env=env, encoding="utf-8",
+            capture_output=True, text=True, timeout=10, env=env, encoding="utf-8", check=True,
         )
         assert result.returncode == 0, f"stderr: {result.stderr}"
         assert (tmp_path / "Generated.swift").exists()

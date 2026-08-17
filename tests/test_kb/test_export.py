@@ -213,7 +213,7 @@ class TestFullExport:
         resp = client.get("/api/export/all.json")
         body = resp.json()
         docs = body["tables"]["documents"]
-        target = [d for d in docs if d["doc_id"] == doc_id][0]
+        target = next(d for d in docs if d["doc_id"] == doc_id)
         assert isinstance(target["created_at"], str)
         # ISO 格式 YYYY-MM-DDTHH:MM:SS
         assert "T" in target["created_at"]
@@ -323,7 +323,7 @@ class TestFullExport:
         body = resp.json()
         logs = body["tables"]["query_logs"]
         assert len(logs) >= 1
-        target = [log for log in logs if log["query"] == "测试问题"][0]
+        target = next(log for log in logs if log["query"] == "测试问题")
         assert target["prompt_tokens"] == 50
         assert target["completion_tokens"] == 30
         assert target["cost_cny"] == 0.001
@@ -712,7 +712,7 @@ class TestExportE2E:
         export = client.get("/api/export/all.json").json()
         # 验证导出含原内容
         docs = export["tables"]["documents"]
-        target = [d for d in docs if d["doc_id"] == doc_id][0]
+        target = next(d for d in docs if d["doc_id"] == doc_id)
         assert target["title"] == "🍷 鸡尾酒"
         assert target["content"] == content
         # 导入
@@ -728,9 +728,9 @@ class TestExportE2E:
         )
         # 验证内容仍在
         export2 = client.get("/api/export/all.json").json()
-        target2 = [
+        target2 = next(
             d for d in export2["tables"]["documents"] if d["doc_id"] == doc_id
-        ][0]
+        )
         assert target2["title"] == "🍷 鸡尾酒"
         assert target2["content"] == content
 
@@ -827,7 +827,7 @@ class TestImportUnknownFields:
         assert body["counts"]["documents"] == 1
         # 验证默认值生效
         export = client.get("/api/export/all.json").json()
-        doc = [d for d in export["tables"]["documents"] if d["doc_id"] == "doc_m5_defaults"][0]
+        doc = next(d for d in export["tables"]["documents"] if d["doc_id"] == "doc_m5_defaults")
         assert doc["content"] == ""  # 默认值
         assert doc["source_type"] == "local"  # 默认值
         assert doc["file_type"] == "txt"  # 默认值

@@ -10,11 +10,11 @@ SKILL_DIR = Path(__file__).parent.parent.parent.parent / "skills" / "component-l
 SCRIPTS = SKILL_DIR / "scripts"
 
 
-def run_script(name: str, *args: str) -> subprocess.CompletedProcess:
+def run_script(name: str, *args: str, check: bool = True) -> subprocess.CompletedProcess:
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
         [sys.executable, str(SCRIPTS / name), *args],
-        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8",
+        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8", check=check,
     )
 
 
@@ -46,7 +46,7 @@ class TestCompare:
         assert "推荐" in result.stdout
 
     def test_compare_invalid_id(self):
-        result = run_script("compare.py", "--a", "invalid", "--b", "ant-design")
+        result = run_script("compare.py", "--a", "invalid", "--b", "ant-design", check=False)
         assert result.returncode == 1
         # 错误信息可能在 stdout 或 stderr
         combined = result.stdout + result.stderr

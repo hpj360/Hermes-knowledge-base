@@ -21,7 +21,7 @@ class TestLLMOpenAICompatBackend:
     def test_chat_success(self, monkeypatch):
         """chat 成功返回带 usage 的响应。"""
         from hermes_kb.config import override_settings
-        from hermes_kb.llm import OpenAICompatBackend, LLMResponse
+        from hermes_kb.llm import LLMResponse, OpenAICompatBackend
 
         override_settings(
             llm_provider="openai",
@@ -454,7 +454,7 @@ class TestDocumentParser:
         doc = parser.parse_file(p)
         assert doc.file_type == "md"
         # 标题标记被剥离
-        assert "#" not in doc.content or "#" in "纯文本"
+        assert "#" not in doc.content or "#" in "纯文本"  # noqa: PLR0133
         assert "粗体" in doc.content
         assert "斜体" in doc.content
 
@@ -504,7 +504,7 @@ class TestDocumentParser:
 
         parser = DocumentParser()
         doc = parser.parse_text("# 标题\n\n[链接](http://x)", file_type="md")
-        assert "#" not in doc.content or "#" in "纯文本"
+        assert "#" not in doc.content or "#" in "纯文本"  # noqa: PLR0133
         assert "链接" in doc.content
         assert "http" not in doc.content
 
@@ -686,6 +686,7 @@ class TestSubstitutesAddRemove:
     def test_add_user_substitute_integrity_error_handled(self, client, monkeypatch):
         """IntegrityError（并发）被捕获并 rollback。"""
         from sqlalchemy.exc import IntegrityError
+
         from hermes_kb import substitutes
         from hermes_kb.substitutes import add_user_substitute
 
@@ -776,7 +777,7 @@ class TestSubstitutesListAll:
         from hermes_kb.substitutes import list_all_substitutes
 
         result = list_all_substitutes()
-        for canon, subs in result.items():
+        for subs in result.values():
             assert subs == sorted(subs)
 
     def test_list_all_merges_preset_and_user(self, client):

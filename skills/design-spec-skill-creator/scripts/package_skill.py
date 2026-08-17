@@ -14,7 +14,6 @@ import sys
 import zipfile
 from pathlib import Path
 
-
 REQUIRED_FILES = ["SKILL.md", "_meta.json"]
 RECOMMENDED_DIRS = ["references", "scripts", "data", "tokens"]
 

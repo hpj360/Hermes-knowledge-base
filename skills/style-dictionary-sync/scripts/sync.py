@@ -10,7 +10,7 @@ import json
 import sys
 from pathlib import Path
 
-from resolve import flatten_dtcg, resolve_aliases, is_color
+from resolve import flatten_dtcg, is_color, resolve_aliases
 
 
 def fmt_css(resolved: dict, group_by: bool = True) -> str:
@@ -99,7 +99,7 @@ def fmt_android(resolved: dict) -> str:
             if len(h) == 6:
                 h = "FF" + h
             colors.append(f'    <color name="{key}">#{h}</color>')
-        elif s.endswith("px") or s.endswith("dp"):
+        elif s.endswith(("px", "dp")):
             n = s.replace("px", "").replace("dp", "")
             dimens.append(f'    <dimen name="{key}">{n}dp</dimen>')
 

@@ -16,12 +16,15 @@ def get_adapter(source_id: str) -> DataSourceAdapter:
     - 注册表 access=api 时，映射到对应实时适配器
     """
     from hermes_kb.data_sources.adapters.api import (
+        BarAssistantCocktailsAdapter,
+        BarAssistantIngredientsAdapter,
         CrossrefAdapter,
         DBpediaAdapter,
         OpenFoodFactsAdapter,
         TheCocktailDBAdapter,
         USDAFoodDataAdapter,
         WikidataAdapter,
+        WikidataCocktailsAdapter,
         WikipediaAdapter,
     )
     from hermes_kb.data_sources.adapters.curated import CuratedSourceAdapter
@@ -44,6 +47,12 @@ def get_adapter(source_id: str) -> DataSourceAdapter:
         return USDAFoodDataAdapter()
     if adapter_id == "dbpedia":
         return DBpediaAdapter()
+    if adapter_id == "bar_assistant_cocktails":
+        return BarAssistantCocktailsAdapter()
+    if adapter_id == "bar_assistant_ingredients":
+        return BarAssistantIngredientsAdapter()
+    if adapter_id == "wikidata_cocktails":
+        return WikidataCocktailsAdapter()
 
     # curated 源统一走策划快照适配器
     if entry.get("access") == "curated":

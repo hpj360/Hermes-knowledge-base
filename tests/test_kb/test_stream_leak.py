@@ -33,7 +33,7 @@ def _parse_sse(stream_lines: list[str]) -> list[dict]:
         if line.startswith("data: "):
             try:
                 events.append(json.loads(line[6:]))
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
     return events
 

@@ -68,9 +68,11 @@ def test_vector_retrieval_batch_meta_no_n_plus_1():
         call_count += 1
         return original_get_session()
 
-    with patch("hermes_kb.retrieval.get_session", side_effect=counting_get_session):
-        with patch.object(svc.embedding, "embed_one", return_value=[1.0, 0.0]):
-            hits = svc._vector("query", k=3)
+    with (
+        patch("hermes_kb.retrieval.get_session", side_effect=counting_get_session),
+        patch.object(svc.embedding, "embed_one", return_value=[1.0, 0.0]),
+    ):
+        hits = svc._vector("query", k=3)
 
     # _vector 内部不应为每个 hit 开新 session
     # 允许 0 次（如果用 eng.connect() 直接查）或 1 次（批量查元数据）

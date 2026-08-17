@@ -20,7 +20,6 @@ from hermes.loop import (
 )
 from hermes.runner import run_loop_continuous
 
-
 # ── Stop Rules Tests ──────────────────────────────────────────────────
 
 
@@ -476,6 +475,7 @@ def test_init_and_list_loop() -> None:
 def test_record_round_persists() -> None:
     """record_round should persist round data to meta.json."""
     import shutil
+
     from hermes.loop import get_loop, loops_dir
 
     # Create a test loop
@@ -529,6 +529,7 @@ def test_meta_schema_version_v0_backcompat() -> None:
     """
     import json as _json
     import shutil
+
     from hermes.loop import _load_loop_meta, loops_dir
 
     loop_dir = loops_dir() / "test-v0-meta"
@@ -548,6 +549,7 @@ def test_meta_schema_version_v0_backcompat() -> None:
 def test_check_budget_ok() -> None:
     """check_budget should return 'ok' when under 80%."""
     import shutil
+
     from hermes.loop import loops_dir
 
     result = init_loop("test-budget-loop", pattern="knowledge-hygiene")
@@ -1285,6 +1287,7 @@ def test_audit_loop_returns_warnings_list() -> None:
             assert len(loop_result["warnings"]) > 0
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-audit-warnings"
         if test_dir.exists():
@@ -1314,6 +1317,7 @@ def test_audit_loop_warnings_persisted_to_state_md() -> None:
                 assert "Audit Warnings" in content or "## Audit" in content
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-warnings-state"
         if test_dir.exists():
@@ -1348,7 +1352,7 @@ def test_record_round_checks_deliverables() -> None:
     assert result["success"]
 
     try:
-        from hermes.loop import loops_dir, _save_loop_meta
+        from hermes.loop import _save_loop_meta, loops_dir
 
         loop = get_loop("test-deliverables")
         assert loop is not None
@@ -1365,6 +1369,7 @@ def test_record_round_checks_deliverables() -> None:
         assert "nonexistent_file.py" in record_result["missing_deliverables"]
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-deliverables"
         if test_dir.exists():
@@ -1377,7 +1382,7 @@ def test_record_round_deliverables_all_present() -> None:
     assert result["success"]
 
     try:
-        from hermes.loop import loops_dir, _save_loop_meta
+        from hermes.loop import _save_loop_meta, loops_dir
 
         # 创建一个临时文件作为 deliverable
         loop = get_loop("test-deliv-ok")
@@ -1397,6 +1402,7 @@ def test_record_round_deliverables_all_present() -> None:
         assert record_result.get("missing_deliverables", []) == []
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-deliv-ok"
         if test_dir.exists():
@@ -1426,7 +1432,7 @@ def test_run_loop_continuous_gated_pauses_after_round() -> None:
 
         def mock_run_loop(name: str, **kwargs: object) -> dict:
             # 模拟一轮未通过但未触发停止规则（current_round=1, max_rounds=5）
-            from hermes.loop import record_round, get_loop
+            from hermes.loop import get_loop, record_round
 
             loop = get_loop(name)
             if loop:
@@ -1458,6 +1464,7 @@ def test_run_loop_continuous_gated_pauses_after_round() -> None:
         assert loop.status == LoopStatus.NEEDS_HUMAN
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-gated-fix"
         if test_dir.exists():
@@ -1478,6 +1485,7 @@ def test_run_loop_continuous_gated_default_false() -> None:
         assert final_stop.get("rule_id") != "human_gate"
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-no-gated"
         if test_dir.exists():
@@ -1512,9 +1520,10 @@ def test_mcp_get_client_returns_none_for_unknown() -> None:
 
 def test_mcp_post_pr_comment_idempotent_skip() -> None:
     """post_pr_comment 幂等：相同 body 的评论已存在时跳过。"""
-    from hermes.mcp import GitHubMCPClient
-    import hermes.mcp
     import json
+
+    import hermes.mcp
+    from hermes.mcp import GitHubMCPClient
 
     client = GitHubMCPClient(token="fake_token", repo="test/repo")
 
@@ -1551,15 +1560,15 @@ def test_mcp_post_pr_comment_idempotent_skip() -> None:
 
 def test_mcp_post_pr_comment_failure_soft_degradation() -> None:
     """post_pr_comment 失败时软降级（返回 error dict，不抛异常）。"""
-    from hermes.mcp import GitHubMCPClient
     import hermes.mcp
+    from hermes.mcp import GitHubMCPClient
 
     client = GitHubMCPClient(token="fake_token", repo="test/repo")
 
     original_urlopen = hermes.mcp.urllib.request.urlopen
 
     def mock_urlopen_error(req, timeout=None):
-        raise Exception("Network error")
+        raise RuntimeError("Network error")
 
     hermes.mcp.urllib.request.urlopen = mock_urlopen_error
     try:
@@ -1580,9 +1589,10 @@ def test_mcp_post_pr_comment_failure_soft_degradation() -> None:
 
 def test_mcp_audit_log_no_token_leak() -> None:
     """audit_log 不包含 token。"""
-    from hermes.mcp import GitHubMCPClient
-    import hermes.mcp
     import json
+
+    import hermes.mcp
+    from hermes.mcp import GitHubMCPClient
 
     client = GitHubMCPClient(token="secret_token_12345", repo="test/repo")
 
@@ -1654,6 +1664,7 @@ def test_resume_loop_passes_gated_flag() -> None:
         assert captured_args.get("gated") is True
     finally:
         import shutil
+
         from hermes.loop import loops_dir
         test_dir = loops_dir() / "test-resume-gated"
         if test_dir.exists():
@@ -1808,8 +1819,9 @@ def test_audit_loop_conclusion_marker_present_passes():
 
 def test_run_parallel_perspectives_fan_out_parallel_tasks():
     """run_parallel_perspectives 构造 N 个 parallel=True 的 perspective task。"""
-    from hermes.orchestrator import AgentTask, Orchestrator
     from pathlib import Path
+
+    from hermes.orchestrator import AgentTask, Orchestrator
 
     orch = Orchestrator()
     # mock fan_out 记录 parallel 属性
@@ -1859,7 +1871,8 @@ def test_run_multi_perspective_guidance_when_gateway_unavailable():
     with patch("hermes.runner.Orchestrator") as MockOrch:
         instance = MockOrch.return_value
         instance.is_available.return_value = False
-        from hermes.runner import _run_multi_perspective, get_loop as gl
+        from hermes.runner import _run_multi_perspective
+        from hermes.runner import get_loop as gl
         loop = gl("test-mp-guidance")
         from hermes.loop import loops_dir
         result = _run_multi_perspective(
@@ -1875,8 +1888,9 @@ def test_run_multi_perspective_guidance_when_gateway_unavailable():
 
 def test_mcp_get_pr_returns_sources_field():
     """get_pr 返回 _sources 字段标记数据来源（双源验证基础）。"""
+    from unittest.mock import MagicMock, patch
+
     from hermes.mcp import GitHubMCPClient
-    from unittest.mock import patch, MagicMock
     client = GitHubMCPClient(token="fake-token", repo="test/repo")
     # mock urlopen 返回有效响应
     mock_resp = MagicMock()
@@ -1892,8 +1906,9 @@ def test_mcp_get_pr_returns_sources_field():
 
 def test_mcp_list_prs_returns_sources_field():
     """list_prs 返回 _sources 字段。"""
+    from unittest.mock import MagicMock, patch
+
     from hermes.mcp import GitHubMCPClient
-    from unittest.mock import patch, MagicMock
     client = GitHubMCPClient(token="fake-token", repo="test/repo")
     mock_resp = MagicMock()
     mock_resp.read.return_value = b'[]'
@@ -1963,6 +1978,7 @@ def test_record_round_persists_escalation_info() -> None:
     """
     import json as _json
     import shutil
+
     from hermes.loop import get_loop, loops_dir
 
     result = init_loop("test-esc-persist", pattern="knowledge-hygiene")
@@ -2004,6 +2020,7 @@ def test_record_round_persists_escalation_info() -> None:
 def test_record_round_escalation_info_empty_when_no_stop() -> None:
     """未触发停止规则时 escalation_info 应为空 dict（不应残留上次数据）。"""
     import shutil
+
     from hermes.loop import get_loop, loops_dir
 
     result = init_loop("test-esc-empty", pattern="knowledge-hygiene")
@@ -2033,6 +2050,7 @@ def test_record_round_escalation_info_empty_when_no_stop() -> None:
 def test_record_round_regression_persists_escalation_info() -> None:
     """regression 规则触发的 escalation_info（new_failures/persistent）也持久化。"""
     import shutil
+
     from hermes.loop import get_loop, loops_dir
 
     # builder-checker max_rounds=5，避免 round 2 触发 rounds_exhausted 抢先于 regression
@@ -2114,6 +2132,7 @@ def test_format_escalation_info_empty_inputs() -> None:
 def test_loop_metrics_empty_rounds_no_division() -> None:
     """loop_metrics 对空 rounds 不除零。"""
     import shutil
+
     from hermes.loop import loop_metrics, loops_dir
 
     result = init_loop("test-metrics-empty", pattern="knowledge-hygiene")
@@ -2134,6 +2153,7 @@ def test_loop_metrics_empty_rounds_no_division() -> None:
 def test_loop_metrics_aggregates_rounds() -> None:
     """loop_metrics 正确聚合 passed/failed/tokens 统计。"""
     import shutil
+
     from hermes.loop import loop_metrics, loops_dir
 
     result = init_loop("test-metrics-agg", pattern="builder-checker")
@@ -2169,6 +2189,7 @@ def test_loop_metrics_aggregates_rounds() -> None:
 def test_loop_metrics_filters_zero_token_rounds() -> None:
     """loop_metrics 计算 avg 时过滤 tokens_used=0 的轮次。"""
     import shutil
+
     from hermes.loop import loop_metrics, loops_dir
 
     result = init_loop("test-metrics-zero", pattern="builder-checker")
@@ -2208,6 +2229,7 @@ def test_loop_metrics_filters_zero_token_rounds() -> None:
 def test_estimate_cost_fallback_when_few_rounds() -> None:
     """estimate_cost：有效样本 < 3 时回退固定 50k。"""
     import shutil
+
     from hermes.loop import estimate_cost, loops_dir
 
     result = init_loop("test-cost-fallback", pattern="builder-checker")
@@ -2234,6 +2256,7 @@ def test_estimate_cost_fallback_when_few_rounds() -> None:
 def test_estimate_cost_historical_avg_when_enough_rounds() -> None:
     """estimate_cost：有效样本 >= 3 时用历史平均。"""
     import shutil
+
     from hermes.loop import estimate_cost, loops_dir
 
     result = init_loop("test-cost-hist", pattern="builder-checker")
@@ -2261,6 +2284,7 @@ def test_estimate_cost_historical_avg_when_enough_rounds() -> None:
 def test_estimate_cost_filters_zero_token_rounds_for_avg() -> None:
     """estimate_cost：计算历史平均时过滤 tokens_used=0 轮次。"""
     import shutil
+
     from hermes.loop import estimate_cost, loops_dir
 
     result = init_loop("test-cost-filter", pattern="builder-checker")

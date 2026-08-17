@@ -7,8 +7,8 @@ from sqlmodel import select
 
 def test_document_new_fields():
     """B1: Document 支持 8 个新字段且有默认值。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = Document(title="测试配方", category="recipe")
@@ -27,9 +27,10 @@ def test_document_new_fields():
 
 def test_document_with_external_source():
     """B1: Document 可标记为外部数据源 + 图片 URL + metadata。"""
-    from hermes_kb.models import Document
-    from hermes_kb.database import get_session
     import json
+
+    from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = Document(
@@ -60,8 +61,8 @@ def test_document_with_external_source():
 @pytest.fixture
 def external_recipes():
     """导入几款外部数据源配方用于筛选测试。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
     from hermes_kb.rag import ImportService
 
     importer = ImportService()
@@ -111,9 +112,9 @@ def test_filter_recipes_by_verified(external_recipes):
 
 def test_verify_recipe(external_recipes):
     """B5: 审核通过配方。"""
-    from hermes_kb.recipe_filter import verify_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_filter import verify_recipe
 
     with get_session() as session:
         doc = session.exec(
@@ -131,9 +132,9 @@ def test_verify_recipe(external_recipes):
 
 def test_hide_recipe(external_recipes):
     """B5: 隐藏配方。"""
-    from hermes_kb.recipe_filter import hide_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_filter import hide_recipe
 
     with get_session() as session:
         doc = session.exec(
@@ -169,10 +170,10 @@ def test_match_excludes_unverified(external_recipes):
 
 def test_match_excludes_hidden(external_recipes):
     """B5: 匹配排除 hidden=true 的配方。"""
-    from hermes_kb.recipe_match import match_recipes
-    from hermes_kb.recipe_filter import hide_recipe
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
+    from hermes_kb.recipe_filter import hide_recipe
+    from hermes_kb.recipe_match import match_recipes
 
     # 先隐藏 Margarita
     with get_session() as session:

@@ -11,15 +11,15 @@ Sources:
 Usage: python3 rumor_scanner.py
 """
 
+import gzip
 import json
 import os
-import subprocess
 import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import urlopen, Request
 from urllib.parse import quote_plus
-import gzip
+from urllib.request import Request, urlopen
 
 CACHE_DIR = Path(__file__).parent.parent / "cache"
 CACHE_DIR.mkdir(exist_ok=True)

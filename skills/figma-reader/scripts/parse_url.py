@@ -4,7 +4,7 @@
 import argparse
 import re
 import sys
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 
 def parse_figma_url(url: str) -> dict:

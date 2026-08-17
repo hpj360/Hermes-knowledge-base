@@ -660,6 +660,9 @@ class ImportService:
         source_url: str | None = None,
         source_refreshed_at: datetime | None = None,
         source_license: str | None = None,
+        base_spirit: str = "",
+        abv: float = 0.0,
+        ingredients_json: str = "",
     ) -> dict[str, Any]:
         """导入纯文本。
 
@@ -720,6 +723,26 @@ class ImportService:
             "source_refreshed_at": source_refreshed_at,
             "source_license": source_license,
         }
+        # V6-Phase 2：配方结构化字段（Alembic 0013，向后兼容默认值）
+        # 未显式传入时，对 recipe 类目自动从 content 推断（覆盖所有导入端）。
+        if category == "recipe" and not (base_spirit or abv or ingredients_json):
+            try:
+                from hermes_kb.recipe_structured import structured_from_content
+
+                inferred = structured_from_content(content)
+                base_spirit = inferred["base_spirit"]
+                abv = inferred["abv"]
+                ingredients_json = inferred["ingredients_json"]
+            except Exception as exc:  # noqa: BLE001 — 推断失败不阻塞导入
+                logger.warning(
+                    "recipe structured inference failed for %s: %s", title, exc
+                )
+        if base_spirit:
+            gov["base_spirit"] = base_spirit
+        if abv:
+            gov["abv"] = abv
+        if ingredients_json:
+            gov["ingredients_json"] = ingredients_json
         if source is not None:
             gov["source"] = source
         if source_id is not None:

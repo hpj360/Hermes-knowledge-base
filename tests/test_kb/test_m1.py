@@ -15,7 +15,6 @@ from __future__ import annotations
 import asyncio
 import json
 
-
 from hermes_kb.app import create_app, jwt_decode, jwt_encode
 from hermes_kb.config import get_settings
 from hermes_kb.embedding import (
@@ -80,8 +79,18 @@ def test_llm_openai_backend_falls_back_to_mock(tmp_db, monkeypatch):
 # ---------------------------------------------------------------------------
 # M1-02 Embedding Provider 抽象
 # ---------------------------------------------------------------------------
-def test_embedding_hash_default(tmp_db):
-    """默认应使用 Hash embedding。"""
+def test_embedding_hash_default(tmp_db, monkeypatch):
+    """provider=hash（代码默认值）时应使用 Hash embedding。
+
+    注意：项目根目录 .env 可能将 KB_EMBEDDING_PROVIDER 配置为
+    sentence_transformers（dev 环境真实 embedding），该环境变量会在导入
+    hermes.config 时被 load_dotenv 注入。因此这里显式固定为 hash，
+    以验证 EmbeddingService 的后端选择逻辑，而非外部环境。
+    """
+    monkeypatch.setenv("KB_EMBEDDING_PROVIDER", "hash")
+    from hermes_kb.config import reset_settings
+
+    reset_settings()
     svc = EmbeddingService()
     assert svc.backend_name == "HashEmbeddingBackend"
 

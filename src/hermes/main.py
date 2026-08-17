@@ -8,7 +8,12 @@ import sys
 from pathlib import Path
 
 from hermes.cli_eval import add_eval_subparser
-from hermes.cli_loop import add_loop_subparser
+from hermes.cli_loop import (
+    _format_escalation_info,
+    _recommend_pattern_for_pain_point,
+    _render_loop_badge,
+    add_loop_subparser,
+)
 from hermes.cli_power import add_power_subparser
 from hermes.cli_secrets import add_secrets_subparser
 from hermes.cli_skill_sync import add_skill_sync_subparser
@@ -17,6 +22,15 @@ from hermes.logging import setup_logging
 from hermes.profile import get_profile_markdown, load_profile
 from hermes.skills import discover_skills, knowledge_dir, list_knowledge_docs, skills_dir
 from hermes.workbench.cli import add_workbench_subparser
+
+__all__ = [
+    "_format_escalation_info",
+    "_recommend_pattern_for_pain_point",
+    "_render_loop_badge",
+    "add_loop_subparser",
+    "build_parser",
+    "main",
+]
 
 
 def cmd_start(args: argparse.Namespace) -> int:

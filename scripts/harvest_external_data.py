@@ -60,6 +60,12 @@ QUALITY_SOURCE_IDS = [
     "dbpedia_sync",
     "wikidata_sync",
     "crossref_sync",
+    "bar_assistant_cocktails",
+    "bar_assistant_ingredients",
+    "bar_assistant_cocktails_sync",
+    "bar_assistant_ingredients_sync",
+    "wikidata_cocktails",
+    "wikidata_cocktails_sync",
 ]
 
 

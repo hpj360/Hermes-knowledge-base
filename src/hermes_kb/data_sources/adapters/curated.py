@@ -76,6 +76,8 @@ class CuratedSourceAdapter(DataSourceAdapter):
                     skipped += 1
                     continue
                 refreshed = _parse_date(item.get("refreshed_at"))
+                # 可选配方结构化字段（IBA 官方配方快照等）
+                is_recipe = item.get("category") == "recipe"
                 importer.import_text(
                     content=item["content"],
                     title=title,
@@ -87,6 +89,11 @@ class CuratedSourceAdapter(DataSourceAdapter):
                     source_url=item.get("source_url"),
                     source_refreshed_at=refreshed,
                     source_license=item.get("license"),
+                    verified=bool(item.get("verified", False)) if is_recipe else None,
+                    glassware=item.get("glassware", "") if is_recipe else "",
+                    technique=item.get("technique", "") if is_recipe else "",
+                    iba_category=item.get("iba_category", "") if is_recipe else "",
+                    flavor_profile=item.get("flavor_profile", "") if is_recipe else "",
                 )
                 existing.add(title)
                 imported += 1

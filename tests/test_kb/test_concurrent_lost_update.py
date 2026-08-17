@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from hermes_kb.database import get_session
 from hermes_kb.models import Document
-from hermes_kb.recipe_crud import submit_recipe, create_recipe
+from hermes_kb.recipe_crud import create_recipe, submit_recipe
 
 
 def _create_test_doc(title: str = "并发测试文档", category: str = "烈酒") -> str:

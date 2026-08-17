@@ -6,10 +6,10 @@ def test_a3_2_load_recipes_no_n_plus_1(monkeypatch):
     """A3-2: _load_recipes 不应对每个 doc 单独查 first_chunk。"""
     from sqlmodel import select as _select
 
-    from hermes_kb.rag import ImportService
     from hermes_kb import recipe_match
     from hermes_kb.database import get_session as _get_session
     from hermes_kb.models import Document as _Document
+    from hermes_kb.rag import ImportService
 
     svc = ImportService()
     for i in range(5):
@@ -39,8 +39,8 @@ def test_a3_2_load_recipes_no_n_plus_1(monkeypatch):
 
 def test_a3_2_get_hot_recipes_no_n_plus_1(monkeypatch):
     """A3-2: get_hot_recipes 不应 N+1。"""
-    from hermes_kb.rag import ImportService
     from hermes_kb import recipe_stats
+    from hermes_kb.rag import ImportService
 
     svc = ImportService()
     doc_ids = []

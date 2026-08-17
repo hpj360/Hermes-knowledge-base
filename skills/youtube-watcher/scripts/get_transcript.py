@@ -6,6 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+
 def clean_vtt(content: str) -> str:
     """
     Clean WebVTT content to plain text.
@@ -22,7 +23,7 @@ def clean_vtt(content: str) -> str:
             continue
         if timestamp_pattern.match(line):
             continue
-        if line.startswith('NOTE') or line.startswith('STYLE'):
+        if line.startswith(('NOTE', 'STYLE')):
             continue
             
         if text_lines and text_lines[-1] == line:

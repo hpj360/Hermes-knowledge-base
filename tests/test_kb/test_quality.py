@@ -27,7 +27,7 @@ def test_upload_single_txt_happy(client):
     """单文件上传 txt 成功。"""
     resp = client.post(
         "/api/documents/upload",
-        files={"file": ("test.txt", io.BytesIO("测试内容".encode("utf-8")), "text/plain")},
+        files={"file": ("test.txt", io.BytesIO("测试内容".encode()), "text/plain")},
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -224,7 +224,7 @@ def test_jwt_secret_dev_default_warns(monkeypatch):
     """dev 模式未设置 → 使用默认值并告警。"""
     monkeypatch.setenv("KB_ENV", "dev")
     monkeypatch.delenv("KB_JWT_SECRET", raising=False)
-    from hermes_kb.config import reset_settings, Settings
+    from hermes_kb.config import Settings, reset_settings
     reset_settings()
     with pytest.warns(RuntimeWarning, match="KB_JWT_SECRET"):
         s = Settings()
@@ -238,7 +238,7 @@ def test_jwt_secret_dev_default_warns(monkeypatch):
 def test_cors_credentials_false_when_wildcard(monkeypatch):
     """origins 含 * 时 credentials 为 False。"""
     monkeypatch.setenv("KB_CORS", "*")
-    from hermes_kb.config import reset_settings, Settings
+    from hermes_kb.config import Settings, reset_settings
     reset_settings()
     s = Settings()
     assert "*" in s.cors_origins
@@ -248,7 +248,7 @@ def test_cors_credentials_false_when_wildcard(monkeypatch):
 def test_cors_credentials_true_when_specific(monkeypatch):
     """origins 为具体源时 credentials 为 True。"""
     monkeypatch.setenv("KB_CORS", "https://example.com,https://app.com")
-    from hermes_kb.config import reset_settings, Settings
+    from hermes_kb.config import Settings, reset_settings
     reset_settings()
     s = Settings()
     assert s.cors_credentials_allowed is True
@@ -257,7 +257,7 @@ def test_cors_credentials_true_when_specific(monkeypatch):
 def test_cors_credentials_false_when_empty(monkeypatch):
     """origins 为空时 credentials 为 False。"""
     monkeypatch.delenv("KB_CORS", raising=False)
-    from hermes_kb.config import reset_settings, Settings
+    from hermes_kb.config import Settings, reset_settings
     reset_settings()
     s = Settings()
     assert s.cors_origins == []
@@ -282,10 +282,10 @@ def test_expired_token_returns_401(client, monkeypatch):
         "exp": int(_time.time()) - 3600,  # 1 小时前过期
     }
     # 手动构造过期 token
+    import hashlib
+    import hmac
     import json
     from base64 import urlsafe_b64encode
-    import hmac
-    import hashlib
 
     def _b64e(data: bytes) -> str:
         return urlsafe_b64encode(data).rstrip(b"=").decode("ascii")

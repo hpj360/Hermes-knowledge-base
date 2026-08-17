@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
@@ -180,6 +181,12 @@ _INGREDIENT_OVERRIDES: dict[str, str] = {
 API_BASE = "https://www.thecocktaildb.com/api/json/v1/1"
 API_KEY = os.environ.get("KB_THECOCKTAILDB_API_KEY", "1")  # "1" 是官方公开测试 key，生产应购买 $10 终身 Premium
 
+# 跨源去重（Phase 1.4）：权威度高于 thecocktaildb 的来源——同标题存在时跳过。
+# IBA 官方金标准 authority=5 > thecocktaildb authority=3，不重复覆盖。
+_HIGHER_AUTHORITY_SOURCE = "iba_official"
+
+_SOURCE_AUTHORITY = "TheCocktailDB"
+
 
 def normalize_ingredient(en_name: str) -> str | None:
     """英文材料名 → 中文标准名。
@@ -205,11 +212,17 @@ def normalize_ingredient(en_name: str) -> str | None:
 
 
 def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
-    """解析 TheCocktailDB 单条 API 响应为配方 dict。"""
+    """解析 TheCocktailDB 单条 API 响应为配方 dict。
+
+    Phase 1.4：依据 API 权威字段 ``strAlcoholic`` 判定类目——
+    "Non alcoholic" → ``category="non-alcoholic"``（mocktail），否则 ``"recipe"``。
+    """
     source_id = api_data.get("idDrink", "")
     title = api_data.get("strDrink", "")
     instructions = api_data.get("strInstructions", "")
     image_url = api_data.get("strDrinkThumb") or None
+    alcoholic = (api_data.get("strAlcoholic") or "").strip().lower()
+    category = "non-alcoholic" if alcoholic == "non alcoholic" else "recipe"
 
     ingredients: list[str] = []
     measures: list[str] = []
@@ -264,6 +277,7 @@ def parse_recipe(api_data: dict[str, Any]) -> dict[str, Any]:
         "technique": technique,
         "glassware": glassware,
         "flavor_profile": flavor_profile,
+        "category": category,
     }
 
 
@@ -273,6 +287,11 @@ def sync_thecocktaildb(
     importer: ImportService | None = None,
 ) -> dict[str, Any]:
     """从 TheCocktailDB 全量同步配方。
+
+    Phase 1.4 增强：
+    - 依据 ``strAlcoholic`` 分类：无酒精饮品归入 ``category="non-alcoholic"``（mocktail）
+    - 跨源去重：同标题且已存在更高权威源（iba_official）时跳过，避免与金标准重复
+    - 类目纠正：已入库的 thecocktaildb 配方若为无酒精，原地更新类目为 non-alcoholic
 
     Args:
         limit: 每个字母最多拉取条数
@@ -303,9 +322,23 @@ def sync_thecocktaildb(
             try:
                 recipe = parse_recipe(drink)
                 all_unknown.extend(recipe.pop("unknown_ingredients", []))
+                title = recipe["title"]
+                category = recipe.pop("category", "recipe")
 
-                # 去重：source + source_id
                 with get_session() as session:
+                    # 跨源去重：同标题已有更高权威源（iba_official 金标准）时跳过，
+                    # 保持 thecocktaildb 不重复覆盖权威数据（权威度 3 < 5）。
+                    higher = session.exec(
+                        select(Document).where(
+                            Document.title == title,
+                            Document.source == _HIGHER_AUTHORITY_SOURCE,
+                        )
+                    ).first()
+                    if higher:
+                        skipped += 1
+                        continue
+
+                    # 同源去重：source + source_id
                     existing = session.exec(
                         select(Document).where(
                             Document.source == "thecocktaildb",
@@ -313,6 +346,14 @@ def sync_thecocktaildb(
                         )
                     ).first()
                     if existing:
+                        # 类目纠正：无酒精饮品入库后应归入 non-alcoholic
+                        if (
+                            category == "non-alcoholic"
+                            and existing.category != "non-alcoholic"
+                        ):
+                            existing.category = "non-alcoholic"
+                            session.add(existing)
+                            session.commit()
                         skipped += 1
                         continue
 
@@ -322,7 +363,7 @@ def sync_thecocktaildb(
                 result = importer.import_text(
                     content=recipe["content"],
                     title=recipe["title"],
-                    category="recipe",
+                    category=category,
                     source="thecocktaildb",
                     source_id=recipe["source_id"],
                     verified=False,
@@ -330,6 +371,12 @@ def sync_thecocktaildb(
                     technique=recipe.get("technique", ""),
                     glassware=recipe.get("glassware", ""),
                     flavor_profile=recipe.get("flavor_profile", ""),
+                    source_authority=_SOURCE_AUTHORITY,
+                    source_url=(
+                        f"https://www.thecocktaildb.com/drink/{recipe['source_id']}"
+                    ),
+                    source_refreshed_at=datetime.now(timezone.utc),
+                    source_license="open-access",
                 )
                 doc_id = result.get("doc_id") if isinstance(result, dict) else result
                 if doc_id:

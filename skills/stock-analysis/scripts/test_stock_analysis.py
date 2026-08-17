@@ -13,30 +13,31 @@ Tests for Stock Analysis Skill v6.0
 Run with: uv run pytest test_stock_analysis.py -v
 """
 
-import pytest
-from unittest.mock import Mock, patch
 from datetime import datetime
+from unittest.mock import Mock, patch
+
 import pandas as pd
+import pytest
 
 # Import modules to test
 from analyze_stock import (
-    detect_asset_type,
-    calculate_rsi,
-    fetch_stock_data,
-    analyze_earnings_surprise,
-    analyze_fundamentals,
-    analyze_momentum,
-    synthesize_signal,
     EarningsSurprise,
     Fundamentals,
     MarketContext,
     StockData,
+    analyze_earnings_surprise,
+    analyze_fundamentals,
+    analyze_momentum,
+    calculate_rsi,
+    detect_asset_type,
+    fetch_stock_data,
+    synthesize_signal,
 )
 from dividends import analyze_dividends
 from watchlist import (
+    WatchlistItem,
     add_to_watchlist,
     remove_from_watchlist,
-    WatchlistItem,
 )
 
 

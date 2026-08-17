@@ -14,7 +14,6 @@ import os
 import sys
 from pathlib import Path
 
-
 STORYBOOK_MAIN = """/** @type {import('@storybook/react-vite').StorybookConfig} */
 const config = {
   stories: ['../src/**/*.stories.@(ts|tsx|js|jsx)'],

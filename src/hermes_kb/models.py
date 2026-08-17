@@ -52,6 +52,12 @@ class Document(SQLModel, table=True):
     # M3+：难度与强度档位（向后兼容，默认空字符串）
     difficulty: str = Field(default="", max_length=16, index=True)  # 制作难度（easy/medium/hard）
     abv_bucket: str = Field(default="", max_length=16, index=True)  # 强度档位（low/medium/high/strong）
+    # V6-Phase 2：配方结构化字段（Alembic 0013，向后兼容，均有默认值）
+    base_spirit: str = Field(default="", max_length=32, index=True)  # 基酒（gin/vodka/rum/whiskey/tequila/brandy/other）
+    abv: float = Field(default=0.0)  # 估算酒精度（0.0-1.0，加权平均）
+    ingredients_json: str = Field(
+        default="[]", sa_column=Column("ingredients_json", Text)
+    )  # 结构化用料表 JSON：[{"name": "金酒", "measure": "45ml"}, ...]
     # 数据源溯源（V4-Phase：权威性/时效性/许可，均有默认值，向后兼容）
     source_authority: str = Field(default="", max_length=128)  # 来源机构/期刊名称（如 IWSR/WHO/J. Agric. Food Chem.）
     source_url: str | None = Field(default=None, max_length=512)  # 来源链接

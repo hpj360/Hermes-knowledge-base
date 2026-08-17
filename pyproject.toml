@@ -85,6 +85,21 @@ extend-immutable-calls = [
     "fastapi.security.HTTPAuthorizationCredentials",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# 技能脚本（独立 CLI 工具）：以下规则属命令行工具惯用法，统一在配置层豁免，
+# 避免在工具代码中散落大量 noqa —— 宽异常兜底 / 静默吞错 / 直接抛异常 /
+# 本地 naive 时间 / subprocess 手动处理错误。核心库与测试仍保持严格门禁。
+"skills/**/scripts/*.py" = [
+    "BLE001",   # CLI 工具宽异常捕获兜底
+    "S110",     # try-except-pass 可选依赖/网络兜底
+    "S112",     # try-except-continue 跳过单条失败
+    "TRY002",   # 脚本内直接 raise Exception 作为退出信号
+    "DTZ005",   # 行情/金融脚本使用本地 naive 时间
+    "DTZ006",
+    "DTZ007",
+    "PLW1510",  # subprocess 手动 check 结果并处理失败
+]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true

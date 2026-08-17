@@ -28,17 +28,24 @@ class LLMResponse:
         model: 模型名（如 "glm-4-flash" / "gpt-4o-mini"）
         prompt_tokens: 输入 token 数（M2-10），默认 0（mock / 解析失败时）
         completion_tokens: 输出 token 数（M2-10），默认 0
+        tool_calls: function calling 返回的工具调用列表（Agent 编排用），默认空列表
     """
     content: str
     model: str
     prompt_tokens: int = 0  # M2-10
     completion_tokens: int = 0  # M2-10
+    tool_calls: list[dict[str, object]] | None = None  # V6-Phase 4：function calling
 
 
 class LLMBackend(Protocol):
     """LLM 后端协议。"""
 
-    def chat(self, messages: list[dict[str, str]]) -> LLMResponse: ...
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, object]] | None = None,
+        tool_choice: str | None = None,
+    ) -> LLMResponse: ...
 
     async def chat_stream(self, messages: list[dict[str, str]]) -> AsyncIterator[str]: ...
 
@@ -54,7 +61,12 @@ class MockLLMBackend:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def chat(self, messages: list[dict[str, str]]) -> LLMResponse:
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, object]] | None = None,
+        tool_choice: str | None = None,
+    ) -> LLMResponse:
         content = self._compose(messages)
         return LLMResponse(content=content, model=self.MODEL_NAME)
 
@@ -95,7 +107,12 @@ class OpenAICompatBackend:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def chat(self, messages: list[dict[str, str]]) -> LLMResponse:
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, object]] | None = None,
+        tool_choice: str | None = None,
+    ) -> LLMResponse:
         import httpx
 
         url = f"{self.settings.llm_base_url.rstrip('/')}/chat/completions"
@@ -103,28 +120,37 @@ class OpenAICompatBackend:
             "Authorization": f"Bearer {self.settings.llm_api_key}",
             "Content-Type": "application/json",
         }
-        body = {
+        body: dict[str, object] = {
             "model": self.settings.llm_model,
             "messages": messages,
             "temperature": 0.3,
             "max_tokens": 800,
             "stream": False,
         }
+        if tools:
+            body["tools"] = tools
+        if tool_choice:
+            body["tool_choice"] = tool_choice
         with httpx.Client(timeout=30.0) as client:
             resp = client.post(url, headers=headers, json=body)
             resp.raise_for_status()
             data = resp.json()
-        content = data["choices"][0]["message"]["content"]
+        choice = data["choices"][0]["message"]
+        content = choice.get("content")
+        tool_calls = choice.get("tool_calls")
         # M2-10：解析 usage 字段（OpenAI 兼容协议标准字段）
         usage = data.get("usage") or {}
         prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
         completion_tokens = int(usage.get("completion_tokens", 0) or 0)
-        return LLMResponse(
-            content=content,
+        resp_obj = LLMResponse(
+            content=content or "",
             model=self.settings.llm_model,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
         )
+        if tool_calls:
+            resp_obj.tool_calls = tool_calls  # type: ignore[attr-defined]
+        return resp_obj
 
     async def chat_stream(self, messages: list[dict[str, str]]) -> AsyncIterator[str]:
         """流式调用 OpenAI 兼容接口。
@@ -198,9 +224,14 @@ class LLMClient:
     def backend_name(self) -> str:
         return self._backend.__class__.__name__
 
-    def chat(self, messages: list[dict[str, str]]) -> LLMResponse:
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict[str, object]] | None = None,
+        tool_choice: str | None = None,
+    ) -> LLMResponse:
         try:
-            return self._backend.chat(messages)
+            return self._backend.chat(messages, tools=tools, tool_choice=tool_choice)
         except Exception:  # noqa: BLE001 — 软降级，不阻塞主流程
             # 任何异常都降级 Mock，保证可用性
             return MockLLMBackend().chat(messages)

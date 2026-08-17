@@ -145,13 +145,14 @@ class TestLogAction:
         def _broken_session():
             raise RuntimeError("db locked")
 
-        from hermes_kb import audit as audit_mod
         from contextlib import contextmanager
+
+        from hermes_kb import audit as audit_mod
 
         @contextmanager
         def _broken_cm():
             raise RuntimeError("db locked")
-            yield  # noqa: E701 —— 不可达，仅为 contextmanager 协议
+            yield
 
         monkeypatch.setattr(audit_mod, "get_session", _broken_cm)
 

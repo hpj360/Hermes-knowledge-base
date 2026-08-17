@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """classify_abv_bucket 边界值测试。"""
 from __future__ import annotations
 

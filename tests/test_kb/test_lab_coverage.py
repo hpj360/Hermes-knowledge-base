@@ -20,7 +20,7 @@ class TestSyncAll:
 
     def test_sync_all_success(self, client, monkeypatch):
         """三数据源全部成功。"""
-        from hermes_kb import iba_dataset_importer, thecocktaildb_sync, bar_assistant_sync
+        from hermes_kb import bar_assistant_sync, iba_dataset_importer, thecocktaildb_sync
 
         monkeypatch.setattr(
             iba_dataset_importer, "sync_iba_dataset",
@@ -46,7 +46,7 @@ class TestSyncAll:
 
     def test_sync_all_partial_failure(self, client, monkeypatch):
         """单数据源失败时其他源仍同步。"""
-        from hermes_kb import iba_dataset_importer, thecocktaildb_sync, bar_assistant_sync
+        from hermes_kb import bar_assistant_sync, iba_dataset_importer, thecocktaildb_sync
 
         def iba_fail(importer=None):
             raise RuntimeError("IBA 网络故障")
@@ -73,7 +73,7 @@ class TestSyncAll:
 
     def test_sync_all_all_fail(self, client, monkeypatch):
         """三数据源全部失败仍返回 200（容错设计）。"""
-        from hermes_kb import iba_dataset_importer, thecocktaildb_sync, bar_assistant_sync
+        from hermes_kb import bar_assistant_sync, iba_dataset_importer, thecocktaildb_sync
 
         monkeypatch.setattr(
             iba_dataset_importer, "sync_iba_dataset",
@@ -113,8 +113,8 @@ class TestIMAEndpoints:
 
     def test_ima_list_kbs_success(self, client, monkeypatch):
         """配置后返回知识库列表。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
         monkeypatch.setattr(
@@ -130,8 +130,8 @@ class TestIMAEndpoints:
 
     def test_ima_list_kbs_config_error(self, client, monkeypatch):
         """IMAConfigError → 400。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 
@@ -150,8 +150,8 @@ class TestIMAEndpoints:
 
     def test_ima_list_kbs_api_error(self, client, monkeypatch):
         """其他异常 → 502。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 
@@ -177,8 +177,8 @@ class TestIMAEndpoints:
 
     def test_ima_sync_success(self, client, monkeypatch):
         """成功同步。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
         monkeypatch.setattr(
@@ -198,8 +198,8 @@ class TestIMAEndpoints:
 
     def test_ima_sync_config_error(self, client, monkeypatch):
         """IMAConfigError → 400。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 
@@ -221,8 +221,8 @@ class TestIMAEndpoints:
 
     def test_ima_sync_api_error(self, client, monkeypatch):
         """IMAAPIError → 502。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 
@@ -261,8 +261,8 @@ class TestIMAEndpoints:
 
     def test_ima_search_success(self, client, monkeypatch):
         """搜索成功。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
         monkeypatch.setattr(
@@ -277,8 +277,8 @@ class TestIMAEndpoints:
 
     def test_ima_search_config_error(self, client, monkeypatch):
         """IMAConfigError → 400。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 
@@ -300,8 +300,8 @@ class TestIMAEndpoints:
 
     def test_ima_search_api_error(self, client, monkeypatch):
         """IMAAPIError → 502。"""
-        from hermes_kb.config import override_settings
         from hermes_kb import ima_sync
+        from hermes_kb.config import override_settings
 
         override_settings(ima_client_id="test-id", ima_api_key="test-key")
 

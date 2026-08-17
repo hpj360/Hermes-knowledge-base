@@ -33,7 +33,6 @@ import tempfile
 
 import requests
 
-
 # 移动端 UA（iesdouyin 对 UA 不严格，但移动端更稳定）
 HEADERS = {
     "User-Agent": (
@@ -170,7 +169,7 @@ def extract_audio(video_path: str, output_dir: str, start: float = 0, duration: 
         cmd += ["-t", str(duration)]
     cmd += ["-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1", audio_path]
 
-    stdout, stderr, code = run_cmd(cmd, timeout=300)
+    _stdout, stderr, code = run_cmd(cmd, timeout=300)
     if code != 0:
         raise Exception(f"ffmpeg 音频提取失败: {stderr}")
     return audio_path
@@ -332,7 +331,7 @@ def extract_frames(video_path: str, output_dir: str, interval: int = 30) -> list
         "-q:v", "3",
         frame_pattern,
     ]
-    stdout, stderr, code = run_cmd(cmd, timeout=600)
+    _stdout, stderr, code = run_cmd(cmd, timeout=600)
     if code != 0:
         raise Exception(f"ffmpeg 抽帧失败: {stderr}")
 
@@ -527,10 +526,9 @@ def main():
         if transcription and "error" in transcription:
             if not args.json:
                 print(f"  转写失败: {transcription['error']}")
-        elif transcription:
-            if not args.json:
-                seg_count = len(transcription.get("segments", []))
-                print(f"  转写完成: {len(transcription['full_text'])} 字符, {seg_count} 段时间轴")
+        elif transcription and not args.json:
+            seg_count = len(transcription.get("segments", []))
+            print(f"  转写完成: {len(transcription['full_text'])} 字符, {seg_count} 段时间轴")
 
     # Step 4: 抽帧 + OCR
     frames = None

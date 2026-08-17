@@ -76,7 +76,7 @@ class WorkbenchClient:
             error_body = ""
             try:
                 error_body = e.read().decode("utf-8", errors="replace")
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
                 pass
             raise WorkbenchClientError(
                 f"HTTP {e.code} {e.reason}: {error_body}", status_code=e.code, body=error_body

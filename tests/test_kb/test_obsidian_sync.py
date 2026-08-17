@@ -732,3 +732,439 @@ class TestEventHandler:
             assert session.get(Document, r["doc_id"]) is None
         with handler._lock:
             assert str(new) in handler._pending
+
+
+# ---------------------------------------------------------------------------
+# 补充覆盖：缺失分支
+# ---------------------------------------------------------------------------
+class TestObsidianCoverage:
+    def test_should_exclude_full_relpath(self):
+        """完整相对路径匹配模式（非段匹配）。"""
+        from hermes_kb.obsidian_sync import _should_exclude
+
+        assert _should_exclude("notes/recipe.md", ["notes/*.md"])
+
+    def test_list_vault_files_excludes_md_in_private(self, tmp_path: Path):
+        """排除模式覆盖目录下的 .md 文件也被过滤。"""
+        from hermes_kb.obsidian_sync import list_vault_files
+
+        vault = tmp_path / "vault"
+        private = vault / ".obsidian" / "plugins"
+        private.mkdir(parents=True)
+        (private / "conf.md").write_text("# 内部", encoding="utf-8")
+        (vault / "ok.md").write_text("# 公开", encoding="utf-8")
+
+        files = list_vault_files(vault, [".obsidian"])
+        assert [f.name for f in files] == ["ok.md"]
+
+    def test_parse_frontmatter_yaml_error_falls_back(self, monkeypatch):
+        """YAML 解析异常降级为简单 key: value 提取。"""
+        import yaml
+
+        from hermes_kb import obsidian_sync
+
+        def boom(stream):
+            raise yaml.YAMLError("bad yaml")
+
+        monkeypatch.setattr(yaml, "safe_load", boom)
+        meta, body = obsidian_sync.parse_frontmatter(
+            "---\ntitle: 回退\n# 注释行\n\n---\n正文"
+        )
+        assert meta["title"] == "回退"
+        assert body.strip() == "正文"
+
+    def test_sync_file_skips_empty_content(self, tmp_path: Path):
+        """内容为空白时跳过。"""
+        from hermes_kb.obsidian_sync import sync_file
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        note = vault / "blank.md"
+        note.write_text("   \n\n  ", encoding="utf-8")
+        result = sync_file(note, vault)
+        assert result["status"] == "skipped"
+        assert result["reason"] == "empty_content"
+
+    def test_sync_file_meta_decode_error_then_updates(self, tmp_path: Path):
+        """存量 meta 非 JSON 时忽略并继续更新。"""
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+        from hermes_kb.obsidian_sync import sync_file
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        note = vault / "badmeta.md"
+        note.write_text("# 第一版", encoding="utf-8")
+        r1 = sync_file(note, vault)
+        assert r1["status"] == "imported"
+
+        # 破坏 meta
+        with get_session() as session:
+            doc = session.get(Document, r1["doc_id"])
+            doc.meta = "{not json"
+            session.add(doc)
+            session.commit()
+
+        time.sleep(0.05)
+        note.write_text("# 第二版", encoding="utf-8")
+        r2 = sync_file(note, vault)
+        assert r2["status"] == "updated"
+
+    def test_sync_file_wikilink_resolve_error_logged(self, tmp_path: Path, monkeypatch):
+        """wikilink 解析异常不阻塞同步。"""
+        from hermes_kb import obsidian_sync
+
+        def boom(doc_id, wikilinks):
+            raise RuntimeError("tag db down")
+
+        monkeypatch.setattr(obsidian_sync, "resolve_wikilinks", boom)
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        note = vault / "wiki_err.md"
+        note.write_text("# 笔记\n\n参见 [[金酒]]", encoding="utf-8")
+        result = obsidian_sync.sync_file(note, vault)
+        assert result["status"] == "imported"
+
+    def test_resolve_wikilinks_skips_empty_and_long(self, tmp_path: Path):
+        """跳过空名称与超长名称。"""
+        from hermes_kb.obsidian_sync import resolve_wikilinks
+        from hermes_kb.rag import ImportService
+
+        svc = ImportService()
+        r = svc.import_text(content="内容", title="文档")
+        count = resolve_wikilinks(r["doc_id"], ["", "x" * 40, "有效标签"])
+        assert count == 1
+
+    def test_remove_synced_doc_doc_missing_in_get(self, monkeypatch):
+        """_find_existing_doc 命中但 get 缺失 → False。"""
+        from hermes_kb import obsidian_sync
+
+        class FakeDoc:
+            doc_id = "ghost"
+
+        monkeypatch.setattr(
+            obsidian_sync, "_find_existing_doc", lambda sp: FakeDoc()
+        )
+        assert obsidian_sync.remove_synced_doc("vault://ghost") is False
+
+    def test_scan_vault_raises_when_disabled(self, monkeypatch):
+        """vault 未配置时 scan_vault 抛 VaultConfigError。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        monkeypatch.delenv("KB_VAULT_PATH", raising=False)
+        reset_settings()
+        with pytest.raises(obsidian_sync.VaultConfigError):
+            obsidian_sync.scan_vault()
+
+    def test_scan_vault_counts_failed_on_exception(self, tmp_path, monkeypatch):
+        """单文件同步异常计入 failed + errors。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        (vault / "bad.md").write_text("# 会失败", encoding="utf-8")
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+
+        def boom(f, vault_root, importer):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr(obsidian_sync, "sync_file", boom)
+        result = obsidian_sync.scan_vault()
+        assert result.scanned == 1
+        assert result.failed == 1
+        assert len(result.errors) == 1
+
+    def test_scan_vault_unknown_status_skipped(self, tmp_path, monkeypatch):
+        """sync_file 返回未知状态时计入 skipped。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        (vault / "weird.md").write_text("# 未知", encoding="utf-8")
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+
+        def unknown(f, vault_root, importer):
+            return {"status": "weird"}
+
+        monkeypatch.setattr(obsidian_sync, "sync_file", unknown)
+        result = obsidian_sync.scan_vault()
+        assert result.scanned == 1
+        assert result.skipped == 1
+
+    def test_list_synced_docs(self, tmp_path: Path):
+        """list_synced_docs 返回 obsidian 文档详情。"""
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+        from hermes_kb.obsidian_sync import list_synced_docs, sync_file
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        n1 = vault / "a.md"
+        n1.write_text("---\ntitle: A\ncategory: encyclopedia\n---\n\n内容A", encoding="utf-8")
+        n2 = vault / "b.md"
+        n2.write_text("# B", encoding="utf-8")
+        sync_file(n1, vault)
+        sync_file(n2, vault)
+
+        items = list_synced_docs()
+        assert len(items) == 2
+        titles = {i["title"] for i in items}
+        assert titles == {"A", "b"}
+        assert all(i["vault_path"] for i in items)
+        assert all(i["chunk_count"] is not None for i in items)
+
+        # 破坏一个 meta 验证 JSON 解码降级
+        with get_session() as session:
+            doc = session.exec(
+                select(Document).where(Document.source == "obsidian")
+            ).first()
+            doc.meta = "{oops"
+            session.add(doc)
+            session.commit()
+        items = list_synced_docs()
+        assert len(items) == 2
+
+    def test_get_vault_status_query_error(self, tmp_path, monkeypatch):
+        """状态查询异常时软降级。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+
+        def boom():
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(obsidian_sync, "get_session", boom)
+        status = obsidian_sync.get_vault_status()
+        assert status.enabled is True
+        assert status.synced_docs == 0
+
+    def test_export_doc_to_vault_missing(self, tmp_path, monkeypatch):
+        """导出不存在的文档抛 VaultSyncError。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+        with pytest.raises(obsidian_sync.VaultSyncError, match="文档不存在"):
+            obsidian_sync.export_doc_to_vault("nonexistent")
+
+    def test_export_doc_to_vault_not_configured(self, monkeypatch):
+        """vault 未配置时导出抛 VaultConfigError。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        monkeypatch.delenv("KB_VAULT_PATH", raising=False)
+        reset_settings()
+        with pytest.raises(obsidian_sync.VaultConfigError):
+            obsidian_sync.export_doc_to_vault("any")
+
+    def test_export_recipe_to_vault_missing(self, tmp_path, monkeypatch):
+        """导出不存在的 UGC 配方抛 VaultSyncError。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+        with pytest.raises(obsidian_sync.VaultSyncError, match="文档不存在"):
+            obsidian_sync.export_recipe_to_vault("nonexistent")
+
+
+class TestEventHandlerCoverage:
+    def _make_handler(self, tmp_path: Path):
+        from hermes_kb import obsidian_sync
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        return vault, obsidian_sync._VaultEventHandler(vault)
+
+    def test_on_any_event_schedules_md(self, tmp_path: Path):
+        """created/modified .md 事件进入防抖队列。"""
+        from watchdog.events import FileCreatedEvent, FileModifiedEvent
+
+        vault, handler = self._make_handler(tmp_path)
+        handler.on_any_event(FileCreatedEvent(str(vault / "n.md")))
+        handler.on_any_event(FileModifiedEvent(str(vault / "m.md")))
+        with handler._lock:
+            assert str(vault / "n.md") in handler._pending
+            assert str(vault / "m.md") in handler._pending
+
+    def test_on_any_event_ignores_dir_non_md_moved(self, tmp_path: Path):
+        """目录 / 非 md / moved 事件忽略。"""
+        from watchdog.events import FileCreatedEvent, FileMovedEvent
+
+        vault, handler = self._make_handler(tmp_path)
+
+        dir_ev = FileCreatedEvent(str(vault / "dir"))
+        dir_ev.is_directory = True
+        handler.on_any_event(dir_ev)
+
+        handler.on_any_event(FileCreatedEvent(str(vault / "a.txt")))
+        handler.on_any_event(FileMovedEvent(str(vault / "a.md"), str(vault / "b.md")))
+
+        with handler._lock:
+            assert handler._pending == {}
+
+    def test_on_deleted_ignores_dir_and_non_md(self, tmp_path: Path):
+        from watchdog.events import FileDeletedEvent
+
+        vault, handler = self._make_handler(tmp_path)
+        dir_ev = FileDeletedEvent(str(vault / "dir"))
+        dir_ev.is_directory = True
+        handler.on_deleted(dir_ev)
+        handler.on_deleted(FileDeletedEvent(str(vault / "x.txt")))  # 不报错即可
+        assert handler._pending == {}
+
+    def test_on_moved_ignores_directory(self, tmp_path: Path):
+        from watchdog.events import FileMovedEvent
+
+        vault, handler = self._make_handler(tmp_path)
+        ev = FileMovedEvent(str(vault / "a"), str(vault / "b"))
+        ev.is_directory = True
+        handler.on_moved(ev)
+        assert handler._pending == {}
+
+    def test_remove_by_path_outside_vault(self, tmp_path: Path):
+        """路径不在 vault 内时静默忽略。"""
+        _, handler = self._make_handler(tmp_path)
+        handler._remove_by_path(Path("C:/outside/x.md"))  # 不抛异常即可
+
+    def test_remove_by_path_error_logged(self, tmp_path: Path, monkeypatch):
+        """移除文档异常被捕获。"""
+        from hermes_kb import obsidian_sync
+
+        vault, handler = self._make_handler(tmp_path)
+
+        def boom(source_path):
+            raise RuntimeError("db down")
+
+        monkeypatch.setattr(obsidian_sync, "remove_synced_doc", boom)
+        handler._remove_by_path(vault / "gone.md")  # 不抛异常即可
+
+    def test_flush_loop_syncs_pending(self, tmp_path: Path):
+        """防抖线程按计划同步 pending 文件。"""
+        from sqlmodel import select
+
+        from hermes_kb.database import get_session
+        from hermes_kb.models import Document
+
+        vault, handler = self._make_handler(tmp_path)
+        note = vault / "flush.md"
+        note.write_text("# 防抖同步", encoding="utf-8")
+        with handler._lock:
+            handler._pending[str(note)] = time.time() - 1
+        # 防抖线程首次同步会触发引擎初始化（alembic 迁移约 1-2s），
+        # 固定 sleep 不可靠，改为轮询等待文档入库（上限 5s，提前出现即返回）
+        deadline = time.time() + 5
+        doc = None
+        while time.time() < deadline:
+            with get_session() as session:
+                doc = session.exec(
+                    select(Document).where(Document.source == "obsidian")
+                ).first()
+            if doc is not None:
+                break
+            time.sleep(0.2)
+        assert doc is not None
+
+    def test_flush_loop_error_logged(self, tmp_path: Path, monkeypatch):
+        """防抖同步异常被捕获。"""
+        from hermes_kb import obsidian_sync
+
+        vault, handler = self._make_handler(tmp_path)
+        note = vault / "boom.md"
+        note.write_text("# 失败", encoding="utf-8")
+
+        def boom(path, vault_root):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr(obsidian_sync, "sync_file", boom)
+        with handler._lock:
+            handler._pending[str(note)] = time.time() - 1
+        time.sleep(0.7)  # 线程内异常应被捕获，不向上抛出
+
+
+class TestVaultWatcher:
+    def test_init_raises_without_watchdog(self, monkeypatch):
+        """watchdog 不可用时构造抛 VaultConfigError。"""
+        from hermes_kb import obsidian_sync
+
+        monkeypatch.setattr(obsidian_sync, "_WATCHDOG_AVAILABLE", False)
+        with pytest.raises(obsidian_sync.VaultConfigError):
+            obsidian_sync.VaultWatcher()
+
+    def test_start_requires_enabled(self, monkeypatch):
+        """vault 未启用时 start 抛 VaultConfigError。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        monkeypatch.delenv("KB_VAULT_PATH", raising=False)
+        reset_settings()
+        watcher = obsidian_sync.VaultWatcher()
+        with pytest.raises(obsidian_sync.VaultConfigError):
+            watcher.start()
+
+    def test_start_stop_roundtrip(self, tmp_path: Path, monkeypatch):
+        """启用后 start → is_running=True，stop → False。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+
+        watcher = obsidian_sync.VaultWatcher()
+        assert watcher.is_running is False
+        watcher.start()
+        assert watcher.is_running is True
+        watcher.stop()
+        assert watcher.is_running is False
+
+    def test_start_watcher_singleton(self, tmp_path: Path, monkeypatch):
+        """全局 start_watcher 幂等，stop_watcher 清理。"""
+        from hermes_kb import obsidian_sync
+        from hermes_kb.config import reset_settings
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        monkeypatch.setenv("KB_VAULT_PATH", str(vault))
+        reset_settings()
+
+        obsidian_sync._watcher = None
+        try:
+            assert obsidian_sync.start_watcher() is True
+            assert obsidian_sync.start_watcher() is True  # 幂等
+            obsidian_sync.stop_watcher()
+            assert obsidian_sync._watcher is None
+        finally:
+            obsidian_sync.stop_watcher()
+            obsidian_sync._watcher = None
+
+    def test_start_watcher_fails_gracefully(self, monkeypatch):
+        """start 失败返回 False。"""
+        from hermes_kb import obsidian_sync
+
+        class _FakeWatcher:
+            def start(self):
+                raise obsidian_sync.VaultConfigError("no vault")
+
+        monkeypatch.setattr(obsidian_sync, "VaultWatcher", _FakeWatcher)
+        obsidian_sync._watcher = None
+        try:
+            assert obsidian_sync.start_watcher() is False
+        finally:
+            obsidian_sync._watcher = None
+

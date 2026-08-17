@@ -12,18 +12,17 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import List
 
 
 def load_patterns(patterns_path: Path) -> dict:
     return json.loads(patterns_path.read_text(encoding="utf-8"))
 
 
-def should_scan(path: Path, file_types: List[str]) -> bool:
+def should_scan(path: Path, file_types: list[str]) -> bool:
     return any(str(path).endswith(ft) for ft in file_types)
 
 
-def scan_file(file_path: Path, patterns: List[dict], category: str) -> List[dict]:
+def scan_file(file_path: Path, patterns: list[dict], category: str) -> list[dict]:
     """扫描单个文件"""
     findings = []
     try:

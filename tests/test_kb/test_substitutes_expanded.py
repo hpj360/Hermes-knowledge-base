@@ -49,10 +49,11 @@ def test_bar_assistant_sync_module_exists():
 
 def test_bar_assistant_sync_with_mock_data(monkeypatch):
     """B4: bar-assistant 同步应能处理 mock 数据并导入。"""
-    from hermes_kb.bar_assistant_sync import sync_bar_assistant_substitutes
-    from hermes_kb.models import IngredientSubstitute
-    from hermes_kb.database import get_session
     from sqlmodel import select
+
+    from hermes_kb.bar_assistant_sync import sync_bar_assistant_substitutes
+    from hermes_kb.database import get_session
+    from hermes_kb.models import IngredientSubstitute
 
     # Mock bar-assistant 数据（模拟从仓库拉取的替代关系）
     mock_data = [

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """微信文章提取器 - 带重试和多UA轮换"""
-import requests
-import re
 import json
+import random
+import re
 import sys
 import time
-import random
+
+import requests
 from bs4 import BeautifulSoup, NavigableString
 
 USER_AGENTS = [
@@ -58,7 +59,7 @@ def get_article(url, max_retries=5):
             print(f"  第{attempt+1}次尝试: 返回内容过短 (长度{len(html_content)})，重试...", file=sys.stderr)
 
         except Exception as e:
-            print(f"  第{attempt+1}次尝试: 网络错误 - {str(e)}", file=sys.stderr)
+            print(f"  第{attempt+1}次尝试: 网络错误 - {e!s}", file=sys.stderr)
             time.sleep(2)
 
     print(f"⚠️  全部{max_retries}次尝试失败，请稍后再试或检查URL", file=sys.stderr)

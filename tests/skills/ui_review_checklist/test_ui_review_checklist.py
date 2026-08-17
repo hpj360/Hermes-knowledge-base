@@ -11,11 +11,11 @@ SKILL_DIR = Path(__file__).parent.parent.parent.parent / "skills" / "ui-review-c
 SCRIPTS = SKILL_DIR / "scripts"
 
 
-def run_script(name: str, *args: str) -> subprocess.CompletedProcess:
+def run_script(name: str, *args: str, check: bool = True) -> subprocess.CompletedProcess:
     env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     return subprocess.run(
         [sys.executable, str(SCRIPTS / name), *args],
-        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8",
+        capture_output=True, text=True, timeout=30, env=env, encoding="utf-8", check=check,
     )
 
 
@@ -84,6 +84,6 @@ class TestScore:
         }
         scan_path = tmp_path / "scan.json"
         scan_path.write_text(json.dumps(scan))
-        result = run_script("score.py", "--scan-result", str(scan_path))
+        result = run_script("score.py", "--scan-result", str(scan_path), check=False)
         # 3 个 high 应扣分足够多
         assert "反模式扣分" in result.stdout

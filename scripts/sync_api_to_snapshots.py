@@ -21,11 +21,14 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 from hermes_kb.data_sources.adapters.api import (
+    BarAssistantCocktailsAdapter,
+    BarAssistantIngredientsAdapter,
     CrossrefAdapter,
     DBpediaAdapter,
     OpenFoodFactsAdapter,
     USDAFoodDataAdapter,
     WikidataAdapter,
+    WikidataCocktailsAdapter,
     WikipediaAdapter,
 )
 
@@ -38,12 +41,19 @@ API_SOURCES: list[tuple[str, object]] = [
     ("usda_fooddata_sync", USDAFoodDataAdapter()),
     ("dbpedia_sync", DBpediaAdapter()),
     ("wikidata_sync", WikidataAdapter()),
+    ("wikidata_cocktails_sync", WikidataCocktailsAdapter()),
     ("crossref_sync", CrossrefAdapter()),
+    ("bar_assistant_cocktails_sync", BarAssistantCocktailsAdapter()),
+    ("bar_assistant_ingredients_sync", BarAssistantIngredientsAdapter()),
 ]
 
 
 def _convert_to_curated(items: list[dict], source_authority: str) -> list[dict]:
-    """将 API 适配器返回的 item 格式转换为 CuratedSourceAdapter 所需的格式。"""
+    """将 API 适配器返回的 item 格式转换为 CuratedSourceAdapter 所需的格式。
+
+    透传配方结构化字段（glassware/technique/flavor_profile/verified），
+    使 IBA / bar-assistant 等配方快照在本地导入时保留结构化元数据。
+    """
     converted: list[dict] = []
     for item in items:
         dt = item.get("source_refreshed_at")
@@ -53,17 +63,20 @@ def _convert_to_curated(items: list[dict], source_authority: str) -> list[dict]:
             refreshed = dt
         else:
             refreshed = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        converted.append(
-            {
-                "title": item.get("title", ""),
-                "content": item.get("content", ""),
-                "source_url": item.get("source_url", ""),
-                "refreshed_at": refreshed,
-                "license": item.get("license", "CC0"),
-                "category": item.get("category", "encyclopedia"),
-                "source_authority": item.get("source_authority", source_authority),
-            }
-        )
+        entry = {
+            "title": item.get("title", ""),
+            "content": item.get("content", ""),
+            "source_url": item.get("source_url", ""),
+            "refreshed_at": refreshed,
+            "license": item.get("license", "CC0"),
+            "category": item.get("category", "encyclopedia"),
+            "source_authority": item.get("source_authority", source_authority),
+        }
+        # 配方结构化字段（非空时透传）
+        for field in ("glassware", "technique", "flavor_profile", "verified"):
+            if item.get(field) not in (None, "", False):
+                entry[field] = item.get(field)
+        converted.append(entry)
     return converted
 
 

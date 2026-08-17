@@ -182,11 +182,11 @@ def test_sync_iba_dataset_with_mock_data():
 
 def test_sync_iba_dataset_dedup_with_seed():
     """B3: 与种子配方去重（按 title 模糊匹配）。"""
-    from hermes_kb.iba_dataset_importer import sync_iba_dataset
-    from hermes_kb.seed_recipes import SEED_RECIPES
-    from hermes_kb.rag import ImportService
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.iba_dataset_importer import sync_iba_dataset
+    from hermes_kb.models import Document
+    from hermes_kb.rag import ImportService
+    from hermes_kb.seed_recipes import SEED_RECIPES
 
     # 先播种种子（含 莫吉托 Mojito）。seed_recipes 模块未提供 seed_all，
     # 这里复用 ImportService + SEED_RECIPES 内联播种（与 /api/seed/recipes 同逻辑）。
@@ -278,7 +278,7 @@ def test_diff_iba_official_network_fail(monkeypatch):
     from hermes_kb import iba_dataset_importer
 
     # 模拟远程拉取失败（返回空列表）
-    monkeypatch.setattr(iba_dataset_importer, "_fetch_remote_data", lambda: [])
+    monkeypatch.setattr(iba_dataset_importer, "_fetch_remote_data", list)
 
     local_data = [{"title": "Negroni"}, {"title": "Mojito"}]
     result = iba_dataset_importer.diff_iba_official(
@@ -524,8 +524,9 @@ def test_fetch_remote_data_direct_success(monkeypatch):
 
 def test_fetch_remote_data_mirror_success(monkeypatch):
     """直连失败但 gh-proxy 镜像成功时返回镜像数据。"""
-    from hermes_kb import iba_dataset_importer
     import httpx
+
+    from hermes_kb import iba_dataset_importer
 
 
     class FakeResp:
@@ -553,9 +554,11 @@ def test_fetch_remote_data_mirror_success(monkeypatch):
 
 def test_fetch_remote_data_local_fallback(monkeypatch, tmp_path):
     """所有远程都失败时回退本地 data/iba_recipes.json。"""
-    from hermes_kb import iba_dataset_importer
-    import httpx
     import json
+
+    import httpx
+
+    from hermes_kb import iba_dataset_importer
 
     def fake_get(url, timeout):
         raise httpx.HTTPError("all network down")
@@ -596,9 +599,11 @@ def test_fetch_remote_data_local_fallback(monkeypatch, tmp_path):
 
 def test_fetch_remote_data_all_fail_returns_empty(monkeypatch):
     """所有远程失败 + 无本地文件 → 返回空列表。"""
-    from hermes_kb import iba_dataset_importer
-    import httpx
     import pathlib
+
+    import httpx
+
+    from hermes_kb import iba_dataset_importer
 
     def fake_get(url, timeout):
         raise httpx.HTTPError("all down")
@@ -613,10 +618,10 @@ def test_fetch_remote_data_all_fail_returns_empty(monkeypatch):
 
 def test_diff_iba_official_with_db_local(tmp_db):
     """local_data=None 时从 DB 查询本地 IBA 配方。"""
-    from hermes_kb.iba_dataset_importer import diff_iba_official
-    from hermes_kb.rag import ImportService
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.iba_dataset_importer import diff_iba_official
+    from hermes_kb.models import Document
+    from hermes_kb.rag import ImportService
 
     # 播种一条 IBA 配方到 DB
     importer = ImportService()

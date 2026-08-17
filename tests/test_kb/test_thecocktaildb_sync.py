@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """TheCocktailDB 同步器测试（B2）。"""
 from __future__ import annotations
-
 
 from sqlmodel import select
 
@@ -361,3 +359,224 @@ def test_parse_recipe_no_inference():
     assert recipe["glassware"] == ""
     # 不应抛异常，且新字段存在
     assert "flavor_profile" in recipe
+
+
+# ===========================================================================
+# Phase 1.4: 无酒精类目（mocktail）分类 + 跨源去重
+# ===========================================================================
+def test_parse_recipe_category_non_alcoholic():
+    """Phase 1.4: strAlcoholic='Non alcoholic' → category='non-alcoholic'。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "12704",
+        "strDrink": "Limeade",
+        "strInstructions": "Mix.",
+        "strDrinkThumb": "",
+        "strAlcoholic": "Non alcoholic",
+        "strIngredient1": "Lime",
+        "strMeasure1": "1",
+        "strIngredient2": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["category"] == "non-alcoholic"
+
+
+def test_parse_recipe_category_alcoholic():
+    """Phase 1.4: strAlcoholic='Alcoholic' → category='recipe'。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "11000",
+        "strDrink": "Mojito",
+        "strInstructions": "Muddle.",
+        "strDrinkThumb": "",
+        "strAlcoholic": "Alcoholic",
+        "strIngredient1": "Light rum",
+        "strMeasure1": "2 oz",
+        "strIngredient2": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["category"] == "recipe"
+
+
+def test_parse_recipe_category_default_recipe():
+    """Phase 1.4: 无 strAlcoholic 字段时默认归入 recipe（向后兼容）。"""
+    from hermes_kb.thecocktaildb_sync import parse_recipe
+
+    api_data = {
+        "idDrink": "11001",
+        "strDrink": "Default Drink",
+        "strInstructions": "Mix.",
+        "strDrinkThumb": "",
+        "strIngredient1": "Vodka",
+        "strMeasure1": "1 oz",
+        "strIngredient2": None,
+    }
+    recipe = parse_recipe(api_data)
+    assert recipe["category"] == "recipe"
+
+
+def test_sync_imports_non_alcoholic_category(monkeypatch):
+    """Phase 1.4: 无酒精饮品入库时应归入 category='non-alcoholic'。"""
+    from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
+
+    mock_drinks = [
+        {
+            "idDrink": "12704", "strDrink": "Limeade",
+            "strInstructions": "Mix.",
+            "strDrinkThumb": "",
+            "strAlcoholic": "Non alcoholic",
+            "strIngredient1": "Lime", "strMeasure1": "1",
+            "strIngredient2": None,
+        },
+        {
+            "idDrink": "11000", "strDrink": "Mojito",
+            "strInstructions": "Muddle.",
+            "strDrinkThumb": "",
+            "strAlcoholic": "Alcoholic",
+            "strIngredient1": "Light rum", "strMeasure1": "2 oz",
+            "strIngredient2": None,
+        },
+    ]
+
+    def mock_httpx_get(url, **kwargs):
+        class MockResp:
+            status_code = 200
+            def json(self):
+                return {"drinks": mock_drinks}
+            def raise_for_status(self):
+                pass
+        return MockResp()
+
+    import httpx
+    monkeypatch.setattr(httpx, "get", mock_httpx_get)
+
+    result = sync_thecocktaildb(limit=10, letters="a")
+    assert result["imported"] == 2
+
+    with get_session() as session:
+        limeade = session.exec(
+            select(Document).where(Document.source_id == "12704")
+        ).first()
+        assert limeade is not None
+        assert limeade.category == "non-alcoholic"
+        mojito = session.exec(
+            select(Document).where(Document.source_id == "11000")
+        ).first()
+        assert mojito is not None
+        assert mojito.category == "recipe"
+
+
+def test_sync_reclassifies_existing_non_alcoholic(monkeypatch):
+    """Phase 1.4: 已入库的无酒精饮品（原为 recipe）应原地更新为 non-alcoholic。"""
+    from hermes_kb.rag import ImportService
+    from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
+
+    # 预置一条分类错误的 thecocktaildb 记录
+    ImportService().import_text(
+        content="# Limeade",
+        title="Limeade",
+        category="recipe",
+        source="thecocktaildb",
+        source_id="12704",
+        verified=False,
+    )
+
+    mock_drinks = [
+        {
+            "idDrink": "12704", "strDrink": "Limeade",
+            "strInstructions": "Mix.",
+            "strDrinkThumb": "",
+            "strAlcoholic": "Non alcoholic",
+            "strIngredient1": "Lime", "strMeasure1": "1",
+            "strIngredient2": None,
+        },
+    ]
+
+    def mock_httpx_get(url, **kwargs):
+        class MockResp:
+            status_code = 200
+            def json(self):
+                return {"drinks": mock_drinks}
+            def raise_for_status(self):
+                pass
+        return MockResp()
+
+    import httpx
+    monkeypatch.setattr(httpx, "get", mock_httpx_get)
+
+    result = sync_thecocktaildb(limit=10, letters="a")
+    assert result["imported"] == 0
+    assert result["skipped"] == 1
+
+    with get_session() as session:
+        limeade = session.exec(
+            select(Document).where(Document.source_id == "12704")
+        ).first()
+        assert limeade is not None
+        assert limeade.category == "non-alcoholic"
+
+
+def test_sync_skips_higher_authority_source(monkeypatch):
+    """Phase 1.4: 同标题已有 iba_official 金标准时跳过 thecocktaildb 导入。"""
+    from hermes_kb.rag import ImportService
+    from hermes_kb.thecocktaildb_sync import sync_thecocktaildb
+
+    # 预置 IBA 金标准（authority=5）
+    ImportService().import_text(
+        content="# Mojito\n## 配方",
+        title="Mojito",
+        category="recipe",
+        source="iba_official",
+        source_id="iba_mojito",
+        verified=True,
+    )
+
+    mock_drinks = [
+        {
+            "idDrink": "11000", "strDrink": "Mojito",
+            "strInstructions": "Muddle.",
+            "strDrinkThumb": "",
+            "strAlcoholic": "Alcoholic",
+            "strIngredient1": "Light rum", "strMeasure1": "2 oz",
+            "strIngredient2": None,
+        },
+        {
+            "idDrink": "11999", "strDrink": "Not In IBA",
+            "strInstructions": "Mix.",
+            "strDrinkThumb": "",
+            "strAlcoholic": "Alcoholic",
+            "strIngredient1": "Vodka", "strMeasure1": "1 oz",
+            "strIngredient2": None,
+        },
+    ]
+
+    def mock_httpx_get(url, **kwargs):
+        class MockResp:
+            status_code = 200
+            def json(self):
+                return {"drinks": mock_drinks}
+            def raise_for_status(self):
+                pass
+        return MockResp()
+
+    import httpx
+    monkeypatch.setattr(httpx, "get", mock_httpx_get)
+
+    result = sync_thecocktaildb(limit=10, letters="a")
+    assert result["imported"] == 1  # 仅 Not In IBA
+    assert result["skipped"] == 1   # Mojito 与 iba_official 重复
+
+    with get_session() as session:
+        # Mojito 不应被 thecocktaildb 覆盖（仍仅 iba_official 一条）
+        mojitos = session.exec(
+            select(Document).where(Document.title == "Mojito")
+        ).all()
+        assert len(mojitos) == 1
+        assert mojitos[0].source == "iba_official"
+        not_in_iba = session.exec(
+            select(Document).where(Document.source_id == "11999")
+        ).first()
+        assert not_in_iba is not None
+        assert not_in_iba.source == "thecocktaildb"

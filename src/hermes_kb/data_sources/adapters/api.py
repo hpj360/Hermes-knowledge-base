@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -16,6 +17,8 @@ from hermes_kb.data_sources.base import DataSourceAdapter
 from hermes_kb.database import get_session
 from hermes_kb.models import Document
 from hermes_kb.rag import ImportService
+
+_logger = logging.getLogger(__name__)
 
 _TIMEOUT = 15
 _MAX_ITEMS = 8
@@ -138,6 +141,158 @@ class WikidataAdapter(_ApiAdapter):
                 }
             )
         return items
+
+    def validate(self, raw: list[dict[str, Any]]) -> list[str]:
+        problems = []
+        for i, item in enumerate(raw):
+            if not item.get("title") or not item.get("content"):
+                problems.append(f"item[{i}]: 缺 title/content")
+        return problems
+
+
+class WikidataCocktailsAdapter(_ApiAdapter):
+    """Wikidata SPARQL：拉取鸡尾酒实体（Q134768）含中文别名（CC0）。
+
+    Phase 1.3：鸡尾酒智能体数据源。通过 SPARQL 批量拉取 instance of
+    (P31) = cocktail (Q134768) 及其子类的实体，再用 wbgetentities 批量
+    补全中文 label/别名/描述，用于提升中文检索召回并反哺 Phase 2 配方元数据。
+
+    网络不可达时优雅失败（返回空列表），不阻塞其他数据源。
+    """
+
+    source_id = "wikidata_cocktails"
+    _SOURCE_AUTHORITY = "Wikidata"
+    _MAX_ITEMS = 600
+    _COCKTAIL_QID = "Q134768"  # cocktail（含酒精混合饮品）
+    # wbgetentities 语言覆盖简体/繁体变体，提升中文覆盖率
+    _ZH_LANGS = ("zh", "zh-hans", "zh-cn", "zh-tw", "zh-hant")
+    _BATCH = 50  # wbgetentities 单次上限 50 个 QID
+
+    _QUERY = """
+    SELECT ?item WHERE {
+      ?item wdt:P31/wdt:P279* wd:%(qid)s .
+    }
+    LIMIT %(limit)d
+    """
+
+    def fetch(self) -> list[dict[str, Any]]:
+        query = self._QUERY % {
+            "qid": self._COCKTAIL_QID,
+            "limit": self._MAX_ITEMS,
+        }
+        url = (
+            "https://query.wikidata.org/sparql?format=json&query="
+            + urllib.parse.quote(query)
+        )
+        data = self._get(
+            url,
+            {
+                "Accept": "application/sparql-results+json",
+                "User-Agent": "HermesKB/1.0 (hermes@example.com)",
+            },
+        )
+        qids = [
+            row["item"]["value"].rsplit("/", 1)[-1]
+            for row in data.get("results", {}).get("bindings", [])
+            if row.get("item", {}).get("value")
+        ]
+
+        # 分批 wbgetentities 补全中文 label/别名/描述
+        details: dict[str, dict[str, Any]] = {}
+        for i in range(0, len(qids), self._BATCH):
+            batch = qids[i : i + self._BATCH]
+            try:
+                ent_data = self._get(
+                    "https://www.wikidata.org/w/api.php?"
+                    + urllib.parse.urlencode(
+                        {
+                            "action": "wbgetentities",
+                            "ids": "|".join(batch),
+                            "props": "labels|aliases|descriptions",
+                            "languages": "|".join((*self._ZH_LANGS, "en")),
+                            "format": "json",
+                        }
+                    ),
+                    {"User-Agent": "HermesKB/1.0 (hermes@example.com)"},
+                )
+            except Exception as e:  # noqa: BLE001
+                _logger.debug("wbgetentities failed: %s", e)
+                continue
+            for qid, ent in ent_data.get("entities", {}).items():
+                details[qid] = ent
+
+        return self._build_items(qids, details)
+
+    def _build_items(
+        self, qids: list[str], details: dict[str, dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        # 内置鸡尾酒中文词典（补全 Wikidata 缺失的中文名）
+        from hermes_kb.translation import _COMMON_TRANSLATIONS
+
+        items: list[dict[str, Any]] = []
+        seen_titles: set[str] = set()
+        for qid in qids:
+            ent = details.get(qid, {})
+            zh_labels = self._pick_zh(ent, "labels")
+            zh_aliases = self._pick_zh(ent, "aliases")
+            zh_desc = self._pick_zh(ent, "descriptions")
+            en_label = ent.get("labels", {}).get("en", {}).get("value", "")
+
+            # 标题：优先中文 label，其次内部词典翻译，最后英文
+            title = zh_labels[0] if zh_labels else ""
+            if not title and en_label:
+                title = _COMMON_TRANSLATIONS.get(en_label.lower(), "")
+            if not title:
+                title = en_label
+            if not title:
+                title = qid
+            # 词典命中补充为别名
+            if en_label:
+                dict_zh = _COMMON_TRANSLATIONS.get(en_label.lower(), "")
+                if dict_zh and dict_zh not in zh_aliases and dict_zh != title:
+                    zh_aliases.insert(0, dict_zh)
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
+
+            parts: list[str] = [f"# {title}"]
+            if en_label and en_label != title:
+                parts.append(f"英文名：{en_label}")
+            if zh_aliases:
+                parts.append(f"中文别名：{'、'.join(zh_aliases)}")
+            if zh_desc:
+                parts.append(zh_desc[0])
+            parts.append(
+                f"Wikidata 实体 {qid} 的结构化属性（含可溯源引用）概述。"
+            )
+            items.append(
+                {
+                    "title": title,
+                    "content": "\n\n".join(parts),
+                    "source_authority": self._SOURCE_AUTHORITY,
+                    "source_url": f"https://www.wikidata.org/wiki/{qid}",
+                    "source_refreshed_at": datetime.now(timezone.utc),
+                    "license": "CC0",
+                    "category": "encyclopedia",
+                }
+            )
+        return items
+
+    @staticmethod
+    def _pick_zh(ent: dict[str, Any], field: str) -> list[str]:
+        """按语言优先级取中文 label/别名/描述（去重保序）。"""
+        out: list[str] = []
+        for lang in WikidataCocktailsAdapter._ZH_LANGS:
+            values = ent.get(field, {}).get(lang)
+            if field == "aliases":
+                values = [a.get("value", "") for a in values or []]
+            else:
+                values = [values.get("value", "")] if isinstance(values, dict) else []
+            for v in values:
+                v = v.strip()
+                if v and v not in out:
+                    out.append(v)
+        return out
 
     def validate(self, raw: list[dict[str, Any]]) -> list[str]:
         problems = []
@@ -531,3 +686,82 @@ class DBpediaAdapter(_ApiAdapter):
             if not item.get("title") or not item.get("content"):
                 problems.append(f"item[{i}]: 缺 title/content")
         return problems
+
+
+class BarAssistantCocktailsAdapter(_ApiAdapter):
+    """bar-assistant/data 鸡尾酒数据（CD-1.2，MIT）。
+
+    通过 bar_assistant_sync.fetch_bar_assistant_cocktails() 拉取全量结构化鸡尾酒
+    （含用料表/技法/杯型/酒精度），供 GitHub Actions 海外生成快照后本地导入。
+    """
+
+    source_id = "bar_assistant_cocktails"
+    _SOURCE_AUTHORITY = "bar-assistant"
+
+    def fetch(self) -> list[dict[str, Any]]:
+        from hermes_kb.bar_assistant_sync import fetch_bar_assistant_cocktails
+
+        items = fetch_bar_assistant_cocktails()
+        # 转为 API 适配器 item 格式（补齐 source_refreshed_at 等字段）
+        return [
+            {
+                "title": it["title"],
+                "content": it["content"],
+                "source_authority": it["source_authority"],
+                "source_url": it["source_url"],
+                "source_refreshed_at": it.get("refreshed_at"),
+                "license": it["license"],
+                "category": it.get("category", "recipe"),
+                "glassware": it.get("glassware", ""),
+                "technique": it.get("technique", ""),
+                "flavor_profile": it.get("flavor_profile", ""),
+                "verified": it.get("verified", False),
+            }
+            for it in items
+        ]
+
+    def validate(self, raw: list[dict[str, Any]]) -> list[str]:
+        problems = []
+        for i, item in enumerate(raw):
+            if not item.get("title") or not item.get("content"):
+                problems.append(f"item[{i}]: 缺 title/content")
+        return problems
+
+    def import_data(self, importer: ImportService) -> dict[str, Any]:
+        # 复用 _ApiAdapter 通用导入（幂等 title 去重）
+        return super().import_data(importer)
+
+
+class BarAssistantIngredientsAdapter(_ApiAdapter):
+    """bar-assistant/data 原料档案（CD-1.2，MIT）。"""
+
+    source_id = "bar_assistant_ingredients"
+    _SOURCE_AUTHORITY = "bar-assistant"
+
+    def fetch(self) -> list[dict[str, Any]]:
+        from hermes_kb.bar_assistant_sync import fetch_bar_assistant_ingredients
+
+        items = fetch_bar_assistant_ingredients()
+        return [
+            {
+                "title": it["title"],
+                "content": it["content"],
+                "source_authority": it["source_authority"],
+                "source_url": it["source_url"],
+                "source_refreshed_at": it.get("refreshed_at"),
+                "license": it["license"],
+                "category": it.get("category", "ingredient_profile"),
+                "verified": it.get("verified", False),
+            }
+            for it in items
+        ]
+
+    def validate(self, raw: list[dict[str, Any]]) -> list[str]:
+        problems = []
+        for i, item in enumerate(raw):
+            if not item.get("title") or not item.get("content"):
+                problems.append(f"item[{i}]: 缺 title/content")
+        return problems
+
+    def import_data(self, importer: ImportService) -> dict[str, Any]:
+        return super().import_data(importer)

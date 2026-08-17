@@ -18,7 +18,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 REQUIRED_TOP_KEYS = ["color", "font", "space", "radius", "shadow", "motion"]
 HEX_RE = re.compile(r"^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$")
@@ -26,7 +26,7 @@ RGBA_RE = re.compile(r"^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*[\d.]+\s*)?\)
 ALIAS_RE = re.compile(r"\{([^}]+)\}")
 
 
-def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
     h = hex_color.lstrip("#")
     if len(h) == 3:
         h = "".join(c * 2 for c in h)
@@ -50,7 +50,7 @@ def contrast_ratio(fg: str, bg: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def flatten(obj: Dict, prefix: str = "") -> List[Tuple[str, Any]]:
+def flatten(obj: dict, prefix: str = "") -> list[tuple[str, Any]]:
     """递归展平嵌套 dict 为 [(path, value)]"""
     out = []
     for k, v in obj.items():
@@ -62,7 +62,7 @@ def flatten(obj: Dict, prefix: str = "") -> List[Tuple[str, Any]]:
     return out
 
 
-def validate_color(path: str, value: Any, errors: List[str]) -> None:
+def validate_color(path: str, value: Any, errors: list[str]) -> None:
     s = str(value).strip()
     if HEX_RE.match(s) or RGBA_RE.match(s):
         return
@@ -71,17 +71,16 @@ def validate_color(path: str, value: Any, errors: List[str]) -> None:
     errors.append(f"  ❌ {path}: 颜色格式错误 '{s}'（需 #HEX 或 rgba()）")
 
 
-def validate_unit(path: str, value: Any, expected_unit: str, errors: List[str]) -> None:
+def validate_unit(path: str, value: Any, expected_unit: str, errors: list[str]) -> None:
     s = str(value).strip()
     if ALIAS_RE.fullmatch(s):
         return
-    if expected_unit in ("px", "ms", "%"):
-        if not re.match(rf"^-?[\d.]+{expected_unit}$", s):
-            errors.append(f"  ❌ {path}: 单位错误 '{s}'（需 {expected_unit}）")
+    if expected_unit in ("px", "ms", "%") and not re.match(rf"^-?[\d.]+{expected_unit}$", s):
+        errors.append(f"  ❌ {path}: 单位错误 '{s}'（需 {expected_unit}）")
 
 
-def validate(tokens: Dict) -> List[str]:
-    errors: List[str] = []
+def validate(tokens: dict) -> list[str]:
+    errors: list[str] = []
 
     # 1. 必填字段
     for k in REQUIRED_TOP_KEYS:
@@ -96,9 +95,8 @@ def validate(tokens: Dict) -> List[str]:
     for path, val in flatten(tokens.get("font", {})):
         if "size" in path or "line-height" in path or path.endswith(".weight"):
             continue
-        if "family" in path:
-            if not isinstance(val, str) or not val:
-                errors.append(f"  ❌ {path}: font-family 不能为空")
+        if "family" in path and (not isinstance(val, str) or not val):
+            errors.append(f"  ❌ {path}: font-family 不能为空")
 
     # 4. space/radius/shadow 单位
     for path, val in flatten(tokens.get("space", {})):
@@ -113,12 +111,16 @@ def validate(tokens: Dict) -> List[str]:
     try:
         text = tokens["color"]["text"]
         surface = tokens["color"]["surface"]
-        if isinstance(text, str) and isinstance(surface, str):
+        if (
+            isinstance(text, str)
+            and isinstance(surface, str)
+            and not ALIAS_RE.search(text)
+            and not ALIAS_RE.search(surface)
+        ):
             # 解析简单 alias（如果是 alias，跳过对比度检查）
-            if not ALIAS_RE.search(text) and not ALIAS_RE.search(surface):
-                ratio = contrast_ratio(text, surface)
-                if ratio < 4.5:
-                    errors.append(f"  ⚠️  text vs surface 对比度 {ratio:.2f}:1（WCAG AA 需 4.5:1）")
+            ratio = contrast_ratio(text, surface)
+            if ratio < 4.5:
+                errors.append(f"  ⚠️  text vs surface 对比度 {ratio:.2f}:1（WCAG AA 需 4.5:1）")
     except KeyError:
         pass
 

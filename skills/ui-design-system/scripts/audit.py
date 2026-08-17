@@ -51,9 +51,11 @@ def main():
                 continue
             r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
             # 紫色：r 80-150, g 0-80, b 150-255；蓝色：r 0-100, g 0-150, b 200-255
-            if (60 <= r <= 180 and g < 100 and b > 150):
-                if path.endswith((".500", ".400", ".600", ".primary", ".accent")):
-                    findings["warnings"].append(f"⚠️  紫蓝系色 {path}={s}（AI 味高发，谨慎使用）")
+            if (
+                (60 <= r <= 180 and g < 100 and b > 150)
+                and path.endswith((".500", ".400", ".600", ".primary", ".accent"))
+            ):
+                findings["warnings"].append(f"⚠️  紫蓝系色 {path}={s}（AI 味高发，谨慎使用）")
 
     # 3. 缺少语义化别名
     semantic_required = ["primary", "surface", "text", "border"]

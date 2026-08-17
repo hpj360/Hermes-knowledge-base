@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-
-from hermes_kb.rag import RAGEngine
+from hermes_kb.rag import RAGEngine, _is_jailbreak, _sanitize_query
 from hermes_kb.retrieval import (
     HybridRetriever,
     _tokenize_query_for_fts,
     reciprocal_rank_fusion,
 )
-from hermes_kb.rag import _is_jailbreak, _sanitize_query
 
 
 # ---------------------------------------------------------------------------

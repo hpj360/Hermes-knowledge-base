@@ -27,6 +27,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from hermes_kb.agent import CocktailAgent
+from hermes_kb.api.agent import router as agent_router
 from hermes_kb.api.ask import router as ask_router
 from hermes_kb.api.audit import router as audit_router
 from hermes_kb.api.auth import router as auth_router
@@ -73,6 +75,7 @@ def create_app() -> FastAPI:
     # 应用级服务实例：每个 app 独立持有，避免跨测试 settings/engine 复位互相污染。
     app.state.rag = RAGEngine()
     app.state.importer = ImportService()
+    app.state.agent = CocktailAgent()
 
     # -----------------------------------------------------------------------
     # 结构化请求日志中间件：method/path/status/latency_ms/correlation_id
@@ -148,6 +151,7 @@ def create_app() -> FastAPI:
     app.include_router(documents_router)
     app.include_router(tags_router)
     app.include_router(ask_router)
+    app.include_router(agent_router)
     app.include_router(auth_router)
     app.include_router(lab_router)
     app.include_router(audit_router)

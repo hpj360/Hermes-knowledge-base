@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 
-
 def test_sync_thecocktaildb_endpoint(client, monkeypatch):
     """POST /api/lab/sync source=thecocktaildb 返回同步结果。"""
 
@@ -69,8 +68,8 @@ def test_sync_missing_source(client):
 
 def test_recipes_list_endpoint(client, tmp_db):
     """GET /api/lab/recipes 返回配方列表（含筛选）。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     # 准备测试数据
     with get_session() as session:
@@ -106,8 +105,8 @@ def test_recipes_list_endpoint(client, tmp_db):
 
 def test_recipes_list_with_limit(client, tmp_db):
     """GET /api/lab/recipes 支持 limit 参数。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         for i in range(5):
@@ -122,8 +121,8 @@ def test_recipes_list_with_limit(client, tmp_db):
 
 def test_verify_recipe_endpoint(client, tmp_db):
     """POST /api/lab/recipes/{doc_id}/verify 审核通过配方。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = Document(title="待审核", category="recipe", verified=False, status="pending")
@@ -152,8 +151,8 @@ def test_verify_recipe_not_found(client):
 
 def test_hide_recipe_endpoint(client, tmp_db):
     """POST /api/lab/recipes/{doc_id}/hide 隐藏配方。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = Document(title="待隐藏", category="recipe")
@@ -174,8 +173,8 @@ def test_hide_recipe_endpoint(client, tmp_db):
 
 def test_unhide_recipe_endpoint(client, tmp_db):
     """POST /api/lab/recipes/{doc_id}/hide?hidden=false 取消隐藏。"""
-    from hermes_kb.models import Document
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document
 
     with get_session() as session:
         doc = Document(title="已隐藏", category="recipe", hidden=True)

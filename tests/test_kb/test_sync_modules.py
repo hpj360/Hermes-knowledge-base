@@ -75,7 +75,7 @@ class TestBarAssistantSync:
         # mock _fetch_remote_data 返回空，避免真实网络
         monkeypatch.setattr(
             bar_assistant_sync, "_fetch_remote_data",
-            lambda: [],
+            list,
         )
         result = bar_assistant_sync.sync_bar_assistant_substitutes(data=None)
         assert result == {"imported": 0, "skipped": 0, "failed": 0}
@@ -95,8 +95,9 @@ class TestBarAssistantSync:
 
     def test_fetch_remote_data_network_failure(self, monkeypatch):
         """_fetch_remote_data 网络失败返回空列表。"""
-        from hermes_kb import bar_assistant_sync
         import httpx
+
+        from hermes_kb import bar_assistant_sync
 
         def failing_get(url, timeout=None):
             raise httpx.HTTPError("network failure")
@@ -169,6 +170,270 @@ class TestBarAssistantSync:
         monkeypatch.setattr(httpx, "get", fake_get)
         result = bar_assistant_sync._fetch_remote_data()
         assert result == []
+
+
+# ===========================================================================
+# bar_assistant_sync：CD-1.2 数据快照抓取
+# ===========================================================================
+class TestBarAssistantDataSync:
+    """bar-assistant/data 鸡尾酒/原料快照抓取。"""
+
+    # -- _list_data_slugs ---------------------------------------------------
+    def test_list_data_slugs_success(self, monkeypatch):
+        """按目录树过滤出 data/<kind>/<slug>/data.json。"""
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        class FakeResp:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {
+                    "tree": [
+                        {"path": "data/cocktails/gin-fizz/data.json"},
+                        {"path": "data/cocktails/mojito/data.json"},
+                        {"path": "data/ingredients/gin/data.json"},
+                        {"path": "data/cocktails/gin-fizz/other.json"},
+                    ]
+                }
+
+        monkeypatch.setattr(httpx, "get", lambda url, timeout=None: FakeResp())
+        slugs = bar_assistant_sync._list_data_slugs("cocktails")
+        assert slugs == ["gin-fizz", "mojito"]
+
+    def test_list_data_slugs_network_failure(self, monkeypatch):
+        """网络失败返回空列表。"""
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        def failing_get(url, timeout=None):
+            raise httpx.HTTPError("down")
+
+        monkeypatch.setattr(httpx, "get", failing_get)
+        assert bar_assistant_sync._list_data_slugs("cocktails") == []
+
+    # -- _fetch_data_json ---------------------------------------------------
+    def test_fetch_data_json_success(self, monkeypatch):
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        class FakeResp:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"name": "Gin Fizz"}
+
+        monkeypatch.setattr(httpx, "get", lambda url, timeout=None: FakeResp())
+        assert bar_assistant_sync._fetch_data_json("cocktails", "gin-fizz") == {
+            "name": "Gin Fizz"
+        }
+
+    def test_fetch_data_json_429_retry(self, monkeypatch):
+        """429 重试后成功。"""
+        import time
+
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        calls = {"n": 0}
+
+        class FakeResp:
+            def __init__(self, code):
+                self.status_code = code
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return {"name": "ok"}
+
+        def fake_get(url, timeout=None):
+            calls["n"] += 1
+            return FakeResp(429) if calls["n"] <= 2 else FakeResp(200)
+
+        monkeypatch.setattr(time, "sleep", lambda s: None)
+        monkeypatch.setattr(httpx, "get", fake_get)
+        result = bar_assistant_sync._fetch_data_json("cocktails", "gin-fizz")
+        assert result == {"name": "ok"}
+
+    def test_fetch_data_json_non_dict_returns_none(self, monkeypatch):
+        """返回非 dict → None。"""
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        class FakeResp:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                return [1, 2]
+
+        monkeypatch.setattr(httpx, "get", lambda url, timeout=None: FakeResp())
+        assert bar_assistant_sync._fetch_data_json("cocktails", "gin-fizz") is None
+
+    def test_fetch_data_json_all_fail_returns_none(self, monkeypatch):
+        """所有重试失败 → None。"""
+        import httpx
+
+        from hermes_kb import bar_assistant_sync
+
+        def failing_get(url, timeout=None):
+            raise httpx.HTTPError("down")
+
+        monkeypatch.setattr(httpx, "get", failing_get)
+        assert bar_assistant_sync._fetch_data_json("cocktails", "gin-fizz") is None
+
+    # -- _cocktail_content --------------------------------------------------
+    def test_cocktail_content_full(self):
+        """全字段鸡尾酒 → 完整 markdown。"""
+        from hermes_kb.bar_assistant_sync import _cocktail_content
+
+        cocktail = {
+            "name": "Gin Fizz",
+            "method": "Shake",
+            "glass": "Highball",
+            "garnish": "Lemon",
+            "abv": 12.5,
+            "tags": ["fizz", "gin"],
+            "description": "A classic.",
+            "source": "IBA",
+            "instructions": "Shake well.",
+            "ingredients": [{"name": "Gin", "amount": 45, "units": "ml"}],
+        }
+        content = _cocktail_content(cocktail, ["杜松子酒"])
+        assert "## 配方" in content
+        assert "45 ml 杜松子酒" in content
+        assert "## 调制技法" in content
+        assert "## 载杯" in content
+        assert "## 装饰" in content
+        assert "## 步骤" in content
+        assert "## 简介" in content
+        assert "12.5%" in content
+        assert "## 标签" in content
+        assert "## 来源" in content
+
+    def test_cocktail_content_minimal(self):
+        """无用料表 → 占位符。"""
+        from hermes_kb.bar_assistant_sync import _cocktail_content
+
+        content = _cocktail_content({"name": "Minimal"}, [])
+        assert "（未提供用料表）" in content
+
+    # -- fetch_bar_assistant_cocktails -------------------------------------
+    def test_fetch_cocktails_success(self, monkeypatch):
+        from hermes_kb import bar_assistant_sync
+
+        cocktail = {
+            "name": "Gin Fizz",
+            "_id": "gin-fizz",
+            "ingredients": [
+                {"name": "Gin", "amount": 45, "units": "ml"},
+                {"name": "Lemon Juice", "amount": 30, "units": "ml"},
+            ],
+            "glass": "Highball",
+            "method": "Shake",
+            "garnish": "Lemon wheel",
+            "instructions": "Shake and strain.",
+            "description": "A classic.",
+            "abv": 12.5,
+            "tags": ["fizz"],
+            "source": "IBA",
+        }
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: ["gin-fizz"])
+        monkeypatch.setattr(
+            bar_assistant_sync, "_fetch_data_json", lambda kind, slug: cocktail
+        )
+        items = bar_assistant_sync.fetch_bar_assistant_cocktails()
+        assert len(items) == 1
+        assert items[0]["title"] == "Gin Fizz"
+        assert items[0]["glassware"] == "高球杯"
+        assert items[0]["technique"] == "shake"
+        assert items[0]["category"] == "recipe"
+        assert items[0]["verified"] is False
+        assert items[0]["license"] == "MIT"
+        assert "金酒" in items[0]["content"]
+
+    def test_fetch_cocktails_empty_slugs(self, monkeypatch):
+        from hermes_kb import bar_assistant_sync
+
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: [])
+        assert bar_assistant_sync.fetch_bar_assistant_cocktails() == []
+
+    def test_fetch_cocktails_skips_no_name(self, monkeypatch):
+        from hermes_kb import bar_assistant_sync
+
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: ["a"])
+        monkeypatch.setattr(bar_assistant_sync, "_fetch_data_json", lambda kind, slug: None)
+        assert bar_assistant_sync.fetch_bar_assistant_cocktails() == []
+
+    # -- fetch_bar_assistant_ingredients -----------------------------------
+    def test_fetch_ingredients_success(self, monkeypatch):
+        from hermes_kb import bar_assistant_sync
+
+        ingredient = {
+            "name": "Gin",
+            "_id": "gin",
+            "category": "Spirits",
+            "strength": 40,
+            "origin": "UK",
+            "color": "clear",
+            "description": "Juniper-flavored spirit.",
+        }
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: ["gin"])
+        monkeypatch.setattr(
+            bar_assistant_sync, "_fetch_data_json", lambda kind, slug: ingredient
+        )
+        items = bar_assistant_sync.fetch_bar_assistant_ingredients()
+        assert len(items) == 1
+        assert items[0]["title"] == "Gin"
+        assert items[0]["category"] == "ingredient_profile"
+        assert "烈酒" in items[0]["content"]  # Spirits → 烈酒
+        assert "40%" in items[0]["content"]
+        assert "UK" in items[0]["content"]
+
+    def test_fetch_ingredients_short_content_filled(self, monkeypatch):
+        """内容过短时补充中文档案说明。"""
+        from hermes_kb import bar_assistant_sync
+
+        ingredient = {"name": "Bitters", "_id": "bitters", "category": "Bitters", "description": ""}
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: ["bitters"])
+        monkeypatch.setattr(
+            bar_assistant_sync, "_fetch_data_json", lambda kind, slug: ingredient
+        )
+        items = bar_assistant_sync.fetch_bar_assistant_ingredients()
+        assert "该条目由 bar-assistant 开源数据仓库（MIT）提供" in items[0]["content"]
+
+    def test_fetch_ingredients_empty_slugs(self, monkeypatch):
+        from hermes_kb import bar_assistant_sync
+
+        monkeypatch.setattr(bar_assistant_sync, "_list_data_slugs", lambda kind: [])
+        assert bar_assistant_sync.fetch_bar_assistant_ingredients() == []
+
+    def test_fetch_ingredients_skips_no_name(self, monkeypatch):
+        """无 name 或 None 的原料被跳过。"""
+        from hermes_kb import bar_assistant_sync
+
+        monkeypatch.setattr(
+            bar_assistant_sync, "_list_data_slugs", lambda kind: ["a", "b"]
+        )
+        monkeypatch.setattr(
+            bar_assistant_sync,
+            "_fetch_data_json",
+            lambda kind, slug: None if slug == "a" else {"name": ""},
+        )
+        assert bar_assistant_sync.fetch_bar_assistant_ingredients() == []
+
 
 
 # ===========================================================================
@@ -468,8 +733,9 @@ class TestIBADatasetImporter:
 
     def test_fetch_remote_data_network_failure_returns_empty(self, monkeypatch):
         """网络全失败 + 无本地文件 → 空列表。"""
-        from hermes_kb import iba_dataset_importer
         import httpx
+
+        from hermes_kb import iba_dataset_importer
 
         def failing_get(url, timeout=None):
             raise httpx.HTTPError("network failure")

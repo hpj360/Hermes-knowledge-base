@@ -21,13 +21,12 @@ import asyncio
 import json
 import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Literal
 
 import pandas as pd
 import yfinance as yf
-
 
 # Top 20 supported cryptocurrencies
 SUPPORTED_CRYPTOS = {
@@ -882,8 +881,9 @@ def check_breaking_news(verbose: bool = False) -> list[str] | None:
     alerts = []
 
     try:
+        from datetime import datetime, timedelta, timezone
+
         import feedparser
-        from datetime import datetime, timezone, timedelta
 
         if verbose:
             print("Checking breaking news (Google News RSS)...", file=sys.stderr)
@@ -916,7 +916,7 @@ def check_breaking_news(verbose: bool = False) -> list[str] | None:
                     text = f"{title} {summary}"
 
                     # Check for crisis keywords
-                    for category, keywords in CRISIS_KEYWORDS.items():
+                    for keywords in CRISIS_KEYWORDS.values():
                         for keyword in keywords:
                             if keyword in text:
                                 alert_text = entry.get("title", "Unknown alert")
@@ -1148,14 +1148,18 @@ def analyze_earnings_timing(data: StockData) -> EarningsTiming | None:
 
         # Post-earnings check (< 5 days)
         price_change_5d = None
-        if days_since_earnings is not None and days_since_earnings <= 5:
+        if (
+            days_since_earnings is not None
+            and days_since_earnings <= 5
+            and data.price_history is not None
+            and len(data.price_history) >= 5
+        ):
             # Calculate 5-day price change
-            if data.price_history is not None and len(data.price_history) >= 5:
-                price_5d_ago = data.price_history["Close"].iloc[-5]
-                price_current = data.price_history["Close"].iloc[-1]
-                price_change_5d = ((price_current - price_5d_ago) / price_5d_ago) * 100
+            price_5d_ago = data.price_history["Close"].iloc[-5]
+            price_current = data.price_history["Close"].iloc[-1]
+            price_change_5d = ((price_current - price_5d_ago) / price_5d_ago) * 100
 
-                if price_change_5d > 15:
+            if price_change_5d > 15:
                     timing_flag = "post_earnings"
                     confidence_adjustment = -0.2
                     caveats.append(f"Up {price_change_5d:.1f}% in 5 days - gains may be priced in")
@@ -1459,8 +1463,9 @@ async def get_insider_activity(ticker: str, period_days: int = 90) -> tuple[floa
     """
     def _fetch():
         try:
-            from edgar import Company, set_identity
             from datetime import datetime, timedelta
+
+            from edgar import Company, set_identity
 
             # Set SEC-required identity
             set_identity("stock-analysis@clawd.bot")
@@ -1860,26 +1865,32 @@ def synthesize_signal(
             if recommendation == "BUY":
                 recommendation = "HOLD"
 
-        elif earnings_timing.timing_flag == "post_earnings":
-            if earnings_timing.price_change_5d and earnings_timing.price_change_5d > 15:
-                if recommendation == "BUY":
-                    recommendation = "HOLD"
+        elif (
+            earnings_timing.timing_flag == "post_earnings"
+            and earnings_timing.price_change_5d
+            and earnings_timing.price_change_5d > 15
+            and recommendation == "BUY"
+        ):
+            recommendation = "HOLD"
 
     # Check overbought + near 52w high
-    if momentum and momentum.rsi_14d and momentum.rsi_14d > 70 and momentum.near_52w_high:
-        if recommendation == "BUY":
-            recommendation = "HOLD"
-            confidence *= 0.7
+    if (
+        momentum
+        and momentum.rsi_14d
+        and momentum.rsi_14d > 70
+        and momentum.near_52w_high
+        and recommendation == "BUY"
+    ):
+        recommendation = "HOLD"
+        confidence *= 0.7
 
     # NEW v4.0.0: Risk-off confidence penalty
-    if market_context and market_context.risk_off_detected:
-        if recommendation == "BUY":
-            confidence *= 0.7  # Reduce BUY confidence by 30%
+    if market_context and market_context.risk_off_detected and recommendation == "BUY":
+        confidence *= 0.7  # Reduce BUY confidence by 30%
 
     # NEW v4.0.0: Geopolitical sector risk penalty
-    if geopolitical_risk_penalty > 0:
-        if recommendation == "BUY":
-            confidence *= (1.0 - geopolitical_risk_penalty)  # Apply penalty
+    if geopolitical_risk_penalty > 0 and recommendation == "BUY":
+        confidence *= (1.0 - geopolitical_risk_penalty)  # Apply penalty
 
     # Generate supporting points
     supporting_points = []
@@ -1922,9 +1933,8 @@ def synthesize_signal(
         caveats.extend(sentiment.data_freshness_warnings)
 
     # Add momentum warnings
-    if momentum and momentum.rsi_14d:
-        if momentum.rsi_14d > 70 and momentum.near_52w_high:
-            caveats.append("Overbought conditions - high risk entry")
+    if momentum and momentum.rsi_14d and momentum.rsi_14d > 70 and momentum.near_52w_high:
+        caveats.append("Overbought conditions - high risk entry")
 
     # Add sector warnings
     if sector and sector.score < -0.2:

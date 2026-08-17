@@ -64,9 +64,11 @@ def test_estimate_recipe_stats():
 
 def test_fetch_iba_strength_data_network_fail(monkeypatch):
     """G2: httpx 失败且无本地文件时返回空 dict。"""
-    from hermes_kb import ingredient_strength
-    import httpx
     from pathlib import Path
+
+    import httpx
+
+    from hermes_kb import ingredient_strength
 
     def fake_get(*args, **kwargs):
         raise httpx.HTTPError("network down")
@@ -165,8 +167,9 @@ def test_fetch_iba_strength_data_direct_success(monkeypatch):
 
 def test_fetch_iba_strength_data_local_fallback(monkeypatch):
     """直连+镜像失败时回退本地文件。"""
-    from hermes_kb import ingredient_strength
     import httpx
+
+    from hermes_kb import ingredient_strength
 
 
     def fake_get(url, timeout):
@@ -189,8 +192,9 @@ def test_fetch_iba_strength_data_local_fallback(monkeypatch):
 
 def test_fetch_iba_strength_data_mirror_success(monkeypatch):
     """直连失败但 gh-proxy 镜像成功时返回镜像数据。"""
-    from hermes_kb import ingredient_strength
     import httpx
+
+    from hermes_kb import ingredient_strength
 
 
     class FakeResp:

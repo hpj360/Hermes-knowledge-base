@@ -7,8 +7,8 @@ from sqlmodel import select
 
 def test_recipe_stats_model(tmp_db):
     """RecipeStats 表可创建并写入。"""
-    from hermes_kb.models import Document, RecipeStats
     from hermes_kb.database import get_session
+    from hermes_kb.models import Document, RecipeStats
 
     with get_session() as session:
         # 先建父 Document（A2-1：RecipeStats.doc_id 有 FK 约束）
@@ -27,8 +27,8 @@ def test_recipe_stats_model(tmp_db):
 
 def test_ingredient_substitute_model(tmp_db):
     """IngredientSubstitute 表可创建并写入。"""
-    from hermes_kb.models import IngredientSubstitute
     from hermes_kb.database import get_session
+    from hermes_kb.models import IngredientSubstitute
 
     with get_session() as session:
         sub = IngredientSubstitute(
@@ -96,7 +96,7 @@ def test_substitutes_preset():
 
 def test_substitutes_merged_with_user(tmp_db):
     """L1 预置 + L2 用户自定义能合并查询。"""
-    from hermes_kb.substitutes import get_substitutes, add_user_substitute
+    from hermes_kb.substitutes import add_user_substitute, get_substitutes
 
     preset_subs = get_substitutes("君度")
     assert "橙味力娇酒" in preset_subs
@@ -111,8 +111,8 @@ def test_substitutes_remove_user(tmp_db):
     """可删除用户自定义替代（不影响预置）。"""
     from hermes_kb.substitutes import (
         add_user_substitute,
-        remove_user_substitute,
         get_substitutes,
+        remove_user_substitute,
     )
 
     add_user_substitute("君度", "临时替代")
@@ -126,8 +126,9 @@ def test_substitutes_remove_user(tmp_db):
 def test_substitute_unique_constraint(tmp_db):
     """P1-5: (canonical, substitute) 唯一约束应拒绝重复插入。"""
     from sqlalchemy.exc import IntegrityError
-    from hermes_kb.models import IngredientSubstitute
+
     from hermes_kb.database import get_session
+    from hermes_kb.models import IngredientSubstitute
 
     with get_session() as session:
         session.add(IngredientSubstitute(canonical="君度", substitute="自制橙皮酒"))
@@ -142,9 +143,9 @@ def test_substitute_unique_constraint(tmp_db):
 
 def test_add_user_substitute_duplicate_no_error(tmp_db):
     """P1-5: add_user_substitute 重复调用不报错（IntegrityError 兜底）。"""
-    from hermes_kb.substitutes import add_user_substitute, get_substitutes
-    from hermes_kb.models import IngredientSubstitute
     from hermes_kb.database import get_session
+    from hermes_kb.models import IngredientSubstitute
+    from hermes_kb.substitutes import add_user_substitute, get_substitutes
 
     add_user_substitute("君度", "自制橙皮酒")
     # 重复调用应静默返回，不抛 IntegrityError
@@ -196,8 +197,8 @@ def test_seed_recipes_martini():
 
 def test_seed_recipes_all_ingredients_canonical():
     """所有配方的材料都是标准名（在注册表中）。"""
-    from hermes_kb.seed_recipes import SEED_RECIPES
     from hermes_kb.ingredients import all_canonical
+    from hermes_kb.seed_recipes import SEED_RECIPES
 
     valid_names = set(all_canonical())
     for recipe in SEED_RECIPES:
@@ -258,8 +259,8 @@ def test_match_empty_input(seeded_recipes):
 
 def test_stats_increment_match(seeded_recipes):
     """匹配命中时 match_count +1。"""
-    from hermes_kb.recipe_stats import increment_match_count, get_stats
     from hermes_kb.recipe_match import match_recipes
+    from hermes_kb.recipe_stats import get_stats, increment_match_count
 
     result = match_recipes({"金酒", "味美思", "橄榄"})
     martini = next(r for r in result["full_match"] if "马天尼" in r["title"])
@@ -275,9 +276,8 @@ def test_stats_increment_match(seeded_recipes):
 
 def test_stats_increment_view(seeded_recipes):
     """查看详情时 view_count +1。"""
-    from hermes_kb.recipe_stats import increment_view_count, get_stats
-
     from hermes_kb.rag import ImportService
+    from hermes_kb.recipe_stats import get_stats, increment_view_count
 
     importer = ImportService()
     result = importer.import_text(
@@ -292,8 +292,8 @@ def test_stats_increment_view(seeded_recipes):
 
 def test_stats_hot_recipes(seeded_recipes):
     """热门配方按 match_count 降序。"""
-    from hermes_kb.recipe_stats import increment_match_count, get_hot_recipes
     from hermes_kb.recipe_match import match_recipes
+    from hermes_kb.recipe_stats import get_hot_recipes, increment_match_count
 
     result = match_recipes({"金酒", "味美思", "橄榄"})
     martini = next(r for r in result["full_match"] if "马天尼" in r["title"])

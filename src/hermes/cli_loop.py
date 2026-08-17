@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from typing import Any
 
 from hermes.loop import (
@@ -81,7 +82,12 @@ def cmd_loop_list(args: argparse.Namespace) -> int:
 
 def cmd_loop_init(args: argparse.Namespace) -> int:
     """Initialize a new loop."""
-    result = init_loop(args.name, pattern=args.pattern)
+    pattern = args.pattern
+    if getattr(args, "from_pain_point", None) and pattern == "custom":
+        recommended = _recommend_pattern_for_pain_point(args.from_pain_point)
+        if recommended:
+            pattern = recommended
+    result = init_loop(args.name, pattern=pattern)
     if args.json:
         _print_json(result)
         return _exit_code(result)
@@ -90,8 +96,10 @@ def cmd_loop_init(args: argparse.Namespace) -> int:
         print(f"Error: {result.get('error', 'unknown error')}")
         return 1
 
-    print(f"Initialized loop '{args.name}' (pattern={args.pattern})")
+    print(f"Initialized loop '{args.name}' (pattern={pattern})")
     print(f"  Location: {result.get('loop_dir', '?')}")
+    if getattr(args, "from_pain_point", None):
+        print(f"  Recommended pattern: {pattern}")
     return 0
 
 
@@ -174,6 +182,15 @@ def cmd_loop_audit(args: argparse.Namespace) -> int:
     if not result.get("success"):
         print(f"Error: {result.get('error', 'unknown error')}")
         return 1
+
+    if getattr(args, "badge", False):
+        badge = _render_loop_badge({
+            "loop": args.name or "all",
+            "pattern": "audit",
+            "score": result.get("score", 0),
+        })
+        print(badge["svg"] if args.badge_format == "svg" else badge["markdown"])
+        return 0
 
     print(f"Loop Audit — score: {result.get('score', 0)}/100")
     for loop_result in result.get("loops", []):
@@ -473,6 +490,97 @@ def cmd_loop_gepa(args: argparse.Namespace) -> int:
     return 0
 
 
+# ── Loop 辅助功能：pain-point 推荐 / badge 渲染 / escalation 格式化 ─────
+
+
+def _contains_keyword(text: str, keyword: str) -> bool:
+    """判断文本是否包含关键词（英文按词边界、中文按子串匹配）。"""
+    if re.search(r"[\u4e00-\u9fff]", keyword):
+        return keyword in text
+    return re.search(rf"\b{re.escape(keyword)}\b", text) is not None
+
+
+def _recommend_pattern_for_pain_point(text: str) -> str | None:
+    """根据用户痛点描述推荐 loop pattern（首个命中优先，未命中返回 None）。"""
+    if not text or not str(text).strip():
+        return None
+    lowered = str(text).lower()
+    rules: list[tuple[tuple[str, ...], str]] = [
+        (("pr",), "pr-babysitter"),
+        (("ci", "flaky"), "ci-sweeper"),
+        (("changelog", "更新日志"), "changelog-draft"),
+        (("issue", "太乱", "triage"), "issue-triage"),
+        (("bug",), "builder-checker"),
+        (("知识库", "过期", "stale", "hygiene"), "knowledge-hygiene"),
+    ]
+    for keywords, pattern in rules:
+        if any(_contains_keyword(lowered, kw) for kw in keywords):
+            return pattern
+    return None
+
+
+def _render_loop_badge(info: dict[str, Any]) -> dict[str, str]:
+    """渲染 loop readiness 徽章（markdown + svg）。
+
+    阈值：score ≥ 85 → Loop_Ready(brightgreen 🟢)；≥ 70 → Loop_Aware(yellow 🟡)；
+    其余 → Loop_Incubating(lightgrey ⚪)。
+    """
+    loop = str(info.get("loop", "loop"))
+    pattern = str(info.get("pattern", "custom"))
+    score = int(info.get("score", 0))
+    if score >= 85:
+        label, color, emoji = "Loop_Ready", "brightgreen", "🟢"
+    elif score >= 70:
+        label, color, emoji = "Loop_Aware", "yellow", "🟡"
+    else:
+        label, color, emoji = "Loop_Incubating", "lightgrey", "⚪"
+
+    markdown = (
+        f"{emoji} **{label}** {loop} · `{pattern}` · **{score}/100** · `{color}`"
+    )
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="240" height="20">'
+        f'<rect width="240" height="20" rx="3" fill="{color}"/>'
+        f'<text x="120" y="14" text-anchor="middle" fill="#ffffff" '
+        f'font-family="Arial, sans-serif" font-size="11">'
+        f"{label} {score}/100</text></svg>"
+    )
+    return {"markdown": markdown, "svg": svg}
+
+
+def _format_escalation_info(info: Any) -> list[str]:
+    """将 escalation_info 诊断字典渲染为可读行列表。
+
+    支持 beyond_capability / regression / no_progress 等规则的字段；
+    None / 空 dict / 非 dict 输入返回空列表。
+    """
+    if not isinstance(info, dict) or not info:
+        return []
+    lines: list[str] = []
+    if "matched_signals" in info or "blocker" in info:
+        signals = info.get("matched_signals") or []
+        if signals:
+            lines.append(f"匹配信号: {', '.join(str(s) for s in signals)}")
+        if info.get("blocker"):
+            lines.append(f"阻塞原因: {info['blocker']}")
+    if "new_failures" in info or "previously_fixed" in info or "persistent" in info:
+        if info.get("new_failures"):
+            lines.append(f"新增失败: {', '.join(str(f) for f in info['new_failures'])}")
+        if info.get("previously_fixed"):
+            lines.append(
+                f"此前已修复: {', '.join(str(f) for f in info['previously_fixed'])}"
+            )
+        if info.get("persistent"):
+            lines.append(f"持续失败: {', '.join(str(f) for f in info['persistent'])}")
+    if "failure_counts" in info:
+        counts = info["failure_counts"]
+        if isinstance(counts, (list, tuple)) and len(counts) >= 2:
+            lines.append(f"失败数量: {counts[0]} → {counts[1]}")
+    if info.get("suggestion"):
+        lines.append(f"建议: {info['suggestion']}")
+    return lines
+
+
 # ── Subparser registration ──────────────────────────────────────────
 
 
@@ -492,6 +600,14 @@ def add_loop_subparser(sub: argparse._SubParsersAction[argparse.ArgumentParser])
     p_init.add_argument(
         "--pattern", default="custom",
         help=f"Loop pattern (default: custom). Available: {', '.join(LOOP_PATTERNS.keys())}",
+    )
+    p_init.add_argument(
+        "--interactive", action="store_true",
+        help="Interactively recommend a pattern based on your pain point",
+    )
+    p_init.add_argument(
+        "--from-pain-point", default=None,
+        help="Describe your pain point to auto-recommend a loop pattern",
     )
     p_init.add_argument("--json", action="store_true", help="Output JSON")
     p_init.set_defaults(func=cmd_loop_init)
@@ -521,6 +637,11 @@ def add_loop_subparser(sub: argparse._SubParsersAction[argparse.ArgumentParser])
     p_audit = loop_sub.add_parser("audit", help="Run readiness audit")
     p_audit.add_argument("name", nargs="?", default=None, help="Loop name (omit to audit all)")
     p_audit.add_argument("--json", action="store_true", help="Output JSON")
+    p_audit.add_argument("--badge", action="store_true", help="Render a Loop Ready badge")
+    p_audit.add_argument(
+        "--badge-format", default="md", choices=["md", "svg"],
+        help="Badge output format (default: md)",
+    )
     p_audit.set_defaults(func=cmd_loop_audit)
 
     # status
@@ -545,6 +666,12 @@ def add_loop_subparser(sub: argparse._SubParsersAction[argparse.ArgumentParser])
     p_budget.add_argument("name", help="Loop name")
     p_budget.add_argument("--json", action="store_true", help="Output JSON")
     p_budget.set_defaults(func=cmd_loop_budget)
+
+    # cost（budget 别名，兼容旧命令习惯）
+    p_cost = loop_sub.add_parser("cost", help="Check budget status (alias of budget)")
+    p_cost.add_argument("name", help="Loop name")
+    p_cost.add_argument("--json", action="store_true", help="Output JSON")
+    p_cost.set_defaults(func=cmd_loop_budget)
 
     # advance
     p_advance = loop_sub.add_parser("advance", help="Advance to next autonomy stage (L1→L2→L3)")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """阶段 A.5：seed_recipes 扩展测试。
 
 覆盖：
@@ -11,7 +10,6 @@
 - 历史/字段类型与长度合理性
 """
 from __future__ import annotations
-
 
 
 def test_seed_recipes_count_meets_iba_minimum():
@@ -441,8 +439,8 @@ class TestNewRecipesVerification:
 
     def test_mocktail_ingredients_no_alcohol(self):
         """Mocktail 配方的材料不含酒精（abv=0）。"""
-        from hermes_kb.seed_recipes import SEED_RECIPES
         from hermes_kb.ingredients import get_abv
+        from hermes_kb.seed_recipes import SEED_RECIPES
         mocktails = [r for r in SEED_RECIPES if r.get("abv_override") == 0.0]
         assert len(mocktails) >= 3
         for recipe in mocktails:

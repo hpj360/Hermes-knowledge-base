@@ -74,11 +74,12 @@ def seeded_recipes(tmp_db: Path):
     合并自原 test_lab.py 的 seeded_recipes 与 test_lab_ops.py 的 seeded_recipes_ops
     （两者逻辑一致，仅返回值差异已消除：统一返回 importer）。
     """
-    from hermes_kb.rag import ImportService
-    from hermes_kb.seed_recipes import SEED_RECIPES
+    from sqlmodel import select
+
     from hermes_kb.database import get_session
     from hermes_kb.models import Document
-    from sqlmodel import select
+    from hermes_kb.rag import ImportService
+    from hermes_kb.seed_recipes import SEED_RECIPES
 
     importer = ImportService()
     for recipe in SEED_RECIPES:

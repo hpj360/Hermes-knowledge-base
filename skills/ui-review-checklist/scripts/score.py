@@ -10,7 +10,6 @@ import json
 import sys
 from pathlib import Path
 
-
 SEVERITY_PENALTY = {"high": 1.0, "medium": 0.6, "low": 0.3}
 
 

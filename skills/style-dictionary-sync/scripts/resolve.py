@@ -2,12 +2,12 @@
 """resolve.py - 解析 DTCG alias 引用 {path.to.token}"""
 
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 ALIAS_RE = re.compile(r"\{([^}]+)\}")
 
 
-def flatten_dtcg(obj: Dict, prefix: str = "") -> List[Tuple[str, Any, Dict]]:
+def flatten_dtcg(obj: dict, prefix: str = "") -> list[tuple[str, Any, dict]]:
     """递归展开 DTCG 格式为 [(path, value, metadata)]"""
     out = []
     for k, v in obj.items():
@@ -22,14 +22,14 @@ def flatten_dtcg(obj: Dict, prefix: str = "") -> List[Tuple[str, Any, Dict]]:
     return out
 
 
-def resolve_aliases(tokens: List[Tuple[str, Any, Dict]]) -> Dict[str, Any]:
+def resolve_aliases(tokens: list[tuple[str, Any, dict]]) -> dict[str, Any]:
     """解析 alias 引用"""
     # 先建立索引
-    path_to_val: Dict[str, Any] = {}
+    path_to_val: dict[str, Any] = {}
     for path, val, _ in tokens:
         path_to_val[path] = val
 
-    resolved: Dict[str, Any] = {}
+    resolved: dict[str, Any] = {}
     for path, val, meta in tokens:
         if isinstance(val, str):
             m = ALIAS_RE.fullmatch(val.strip())

@@ -264,3 +264,63 @@
 {"id": "q264", "query": "雅文邑白兰地单年份连续蒸馏", "expected_doc_titles": ["雅文邑白兰地文化百科"], "expected_keywords": ["雅文邑", "连续蒸馏", "单年份", "黑橡木", "Baco"], "category": "地方酒文化"}
 {"id": "q265", "query": "龙舌兰产区哈利斯科蓝色龙舌兰", "expected_doc_titles": ["龙舌兰产区文化百科"], "expected_keywords": ["龙舌兰", "哈利斯科", "蓝色龙舌兰", "piña", "jimador"], "category": "地方酒文化"}
 {"id": "q266", "query": "朗姆酒产区古巴牙买加马提尼克农业朗姆", "expected_doc_titles": ["朗姆酒产区文化百科"], "expected_keywords": ["朗姆酒", "古巴", "牙买加", "马提尼克", "农业朗姆"], "category": "地方酒文化"}
+{"id": "q267", "query": "马天尼的配料是什么", "expected_doc_titles": ["马天尼 Martini"], "expected_keywords": ["金酒", "味美思", "橄榄"], "category": "agent_recipe"}
+{"id": "q268", "query": "尼格罗尼有哪些材料", "expected_doc_titles": ["Negroni"], "expected_keywords": ["金酒", "金巴利", "味美思"], "category": "agent_recipe"}
+{"id": "q269", "query": "曼哈顿用什么基酒和辅料", "expected_doc_titles": ["Manhattan"], "expected_keywords": ["威士忌", "味美思", "苦精"], "category": "agent_recipe"}
+{"id": "q270", "query": "莫吉托的配方构成", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito", "Mojito Extra"], "expected_keywords": ["朗姆", "薄荷", "青柠", "苏打水"], "category": "agent_recipe"}
+{"id": "q271", "query": "血玛丽用什么打底", "expected_doc_titles": ["Bloody Mary"], "expected_keywords": ["伏特加", "番茄汁"], "category": "agent_recipe"}
+{"id": "q272", "query": "金汤力由哪两种材料组成", "expected_doc_titles": ["Gin Tonic"], "expected_keywords": ["金酒", "汤力水"], "category": "agent_recipe"}
+{"id": "q273", "query": "莫斯科骡子的核心材料", "expected_doc_titles": ["Moscow Mule"], "expected_keywords": ["伏特加", "姜汁啤酒", "青柠"], "category": "agent_recipe"}
+{"id": "q274", "query": "大都会鸡尾酒的材料", "expected_doc_titles": ["Cosmopolitan"], "expected_keywords": ["伏特加", "君度", "蔓越莓汁", "青柠汁"], "category": "agent_recipe"}
+{"id": "q275", "query": "新加坡司令包含哪些配料", "expected_doc_titles": ["Singapore Sling"], "expected_keywords": ["金酒", "樱桃白兰地", "菠萝汁"], "category": "agent_recipe"}
+{"id": "q276", "query": "汤姆柯林斯用什么基酒", "expected_doc_titles": ["Tom Collins"], "expected_keywords": ["金酒", "苏打水", "柠檬汁"], "category": "agent_recipe"}
+{"id": "q277", "query": "白俄罗斯配方材料", "expected_doc_titles": ["White Russian"], "expected_keywords": ["伏特加", "咖啡利口酒", "奶油"], "category": "agent_recipe"}
+{"id": "q278", "query": "螺丝刀怎么做", "expected_doc_titles": ["螺丝刀 Screwdriver"], "expected_keywords": ["伏特加", "橙汁"], "category": "agent_recipe"}
+{"id": "q279", "query": "热托迪包含什么", "expected_doc_titles": ["热托迪 Hot Toddy", "Hot Toddy"], "expected_keywords": ["威士忌", "蜂蜜", "柠檬", "热水"], "category": "agent_recipe"}
+{"id": "q280", "query": "含羞草的两种成分", "expected_doc_titles": ["Mimosa"], "expected_keywords": ["香槟", "橙汁"], "category": "agent_recipe"}
+{"id": "q281", "query": "神风特攻队配方", "expected_doc_titles": ["Kamikaze"], "expected_keywords": ["伏特加", "君度", "青柠汁"], "category": "agent_recipe"}
+{"id": "q282", "query": "没有君度用什么替代", "expected_doc_titles": ["Kamikaze", "Cosmopolitan"], "expected_keywords": ["君度", "替代", "橙味利口酒"], "category": "agent_substitute"}
+{"id": "q283", "query": "没有薄荷叶如何做莫吉托", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito"], "expected_keywords": ["薄荷", "替代"], "category": "agent_substitute"}
+{"id": "q284", "query": "没有苏打水用什么替代", "expected_doc_titles": ["Gin Tonic"], "expected_keywords": ["苏打水", "替代", "汤力水"], "category": "agent_substitute"}
+{"id": "q285", "query": "没有番茄汁替代品", "expected_doc_titles": ["Bloody Mary"], "expected_keywords": ["番茄汁", "替代"], "category": "agent_substitute"}
+{"id": "q286", "query": "没有苦精可以不用吗", "expected_doc_titles": ["Old Fashioned"], "expected_keywords": ["苦精", "替代"], "category": "agent_substitute"}
+{"id": "q287", "query": "摇和法适合哪些鸡尾酒", "expected_doc_titles": ["海明威代基里 Hemingway Daiquiri", "Whiskey Sour"], "expected_keywords": ["摇和", "shake"], "category": "agent_technique"}
+{"id": "q288", "query": "搅拌法用于哪些配方", "expected_doc_titles": ["马天尼 Martini", "Negroni"], "expected_keywords": ["搅拌", "stir"], "category": "agent_technique"}
+{"id": "q289", "query": "兑和法和搅拌法有什么区别", "expected_doc_titles": ["Old Fashioned"], "expected_keywords": ["兑和", "搅拌", "build"], "category": "agent_technique"}
+{"id": "q290", "query": "捣压法是什么 哪些酒用", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito", "Mojito Extra"], "expected_keywords": ["捣压", "muddle", "薄荷"], "category": "agent_technique"}
+{"id": "q291", "query": "拉莫斯菲士是什么技法", "expected_doc_titles": ["拉莫斯菲士 Ramos Gin Fizz"], "expected_keywords": ["摇和", "奶油", "苏打水"], "category": "agent_technique"}
+{"id": "q292", "query": "有什么无酒精鸡尾酒推荐", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito", "雪莉邓波儿 Shirley Temple"], "expected_keywords": ["无酒精", "莫吉托", "雪莉"], "category": "agent_non_alcoholic"}
+{"id": "q293", "query": "mocktail 有哪些", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito"], "expected_keywords": ["无酒精", "mocktail"], "category": "agent_non_alcoholic"}
+{"id": "q294", "query": "不含酒精的莫吉托做法", "expected_doc_titles": ["无酒精莫吉托 Virgin Mojito"], "expected_keywords": ["无酒精", "莫吉托"], "category": "agent_non_alcoholic"}
+{"id": "q295", "query": "零度鸡尾酒推荐", "expected_doc_titles": ["雪莉邓波儿 Shirley Temple"], "expected_keywords": ["无酒精", "雪莉"], "category": "agent_non_alcoholic"}
+{"id": "q296", "query": "Martini 中文叫什么", "expected_doc_titles": ["马天尼 Martini"], "expected_keywords": ["马天尼", "Martini"], "category": "agent_alias"}
+{"id": "q297", "query": "僵尸 Zombie 是什么酒", "expected_doc_titles": ["僵尸（Tiki 经典）Zombie"], "expected_keywords": ["僵尸", "Zombie", "朗姆"], "category": "agent_alias"}
+{"id": "q298", "query": "雪莉邓波儿是什么 英文名", "expected_doc_titles": ["雪莉邓波儿 Shirley Temple"], "expected_keywords": ["雪莉", "Shirley Temple"], "category": "agent_alias"}
+{"id": "q299", "query": "椰林飘香的英文名", "expected_doc_titles": ["椰林飘香 Piña Colada"], "expected_keywords": ["椰林飘香", "Piña Colada"], "category": "agent_alias"}
+{"id": "q300", "query": "迈泰 Mai Tai 配方", "expected_doc_titles": ["僵尸（Tiki 经典）Zombie"], "expected_keywords": ["朗姆", "青柠汁"], "category": "agent_recipe"}
+{"id": "q301", "query": "威士忌酸的做法", "expected_doc_titles": ["Whiskey Sour"], "expected_keywords": ["威士忌", "柠檬汁", "糖浆"], "category": "agent_recipe"}
+{"id": "q302", "query": "海明威代基里有什么特点", "expected_doc_titles": ["海明威代基里 Hemingway Daiquiri"], "expected_keywords": ["朗姆", "西柚汁", "青柠", "樱桃利口酒"], "category": "agent_recipe"}
+{"id": "q303", "query": "淘金热的配方", "expected_doc_titles": ["淘金热 Gold Rush"], "expected_keywords": ["波本", "蜂蜜糖浆", "柠檬汁"], "category": "agent_recipe"}
+{"id": "q304", "query": "白兰地亚历山大的材料", "expected_doc_titles": ["白兰地亚历山大 Brandy Alexander"], "expected_keywords": ["白兰地", "巧克力利口酒", "奶油"], "category": "agent_recipe"}
+{"id": "q305", "query": "古典鸡尾酒的做法步骤", "expected_doc_titles": ["Old Fashioned"], "expected_keywords": ["威士忌", "苦精", "方糖"], "category": "agent_recipe"}
+{"id": "q306", "query": "金酒做的经典鸡尾酒有哪些", "expected_doc_titles": ["马天尼 Martini", "Gin Tonic", "Tom Collins"], "expected_keywords": ["金酒", "马天尼", "金汤力"], "category": "agent_search"}
+{"id": "q307", "query": "伏特加鸡尾酒有哪些", "expected_doc_titles": ["White Russian", "Bloody Mary", "Moscow Mule"], "expected_keywords": ["伏特加", "白俄罗斯", "血腥玛丽"], "category": "agent_search"}
+{"id": "q308", "query": "朗姆酒鸡尾酒推荐", "expected_doc_titles": ["海明威代基里 Hemingway Daiquiri", "僵尸（Tiki 经典）Zombie"], "expected_keywords": ["朗姆", "代基里", "僵尸"], "category": "agent_search"}
+{"id": "q309", "query": "威士忌做基酒的鸡尾酒", "expected_doc_titles": ["Whiskey Sour", "Manhattan", "Old Fashioned"], "expected_keywords": ["威士忌", "曼哈顿", "古典"], "category": "agent_search"}
+{"id": "q310", "query": "Tiki 风格鸡尾酒有哪些", "expected_doc_titles": ["僵尸（Tiki 经典）Zombie", "椰林飘香 Piña Colada"], "expected_keywords": ["Tiki", "僵尸", "朗姆"], "category": "agent_search"}
+{"id": "q311", "query": "含奶油的鸡尾酒配方", "expected_doc_titles": ["White Russian", "白兰地亚历山大 Brandy Alexander"], "expected_keywords": ["奶油", "白俄罗斯"], "category": "agent_recipe"}
+{"id": "q312", "query": "适合新手的第一杯鸡尾酒", "expected_doc_titles": ["Gin Tonic", "螺丝刀 Screwdriver"], "expected_keywords": ["简单", "金汤力", "螺丝刀"], "category": "agent_recommend"}
+{"id": "q313", "query": "餐后甜酒推荐", "expected_doc_titles": ["白兰地亚历山大 Brandy Alexander", "Grasshopper"], "expected_keywords": ["甜", "奶油", "亚历山大"], "category": "agent_recommend"}
+{"id": "q314", "query": "高球 Highball 类饮品", "expected_doc_titles": ["Gin Tonic", "Moscow Mule"], "expected_keywords": ["高球", "苏打水", "姜汁啤酒"], "category": "agent_technique"}
+{"id": "q315", "query": "僵尸酒的基酒组成", "expected_doc_titles": ["僵尸（Tiki 经典）Zombie"], "expected_keywords": ["朗姆", "多种", "苦精"], "category": "agent_recipe"}
+{"id": "q316", "query": "提基杯装什么酒", "expected_doc_titles": ["僵尸（Tiki 经典）Zombie", "椰林飘香 Piña Colada"], "expected_keywords": ["提基", "僵尸", "椰林飘香"], "category": "agent_search"}
+{"id": "q317", "query": "拉莫斯菲士为什么要大力摇和", "expected_doc_titles": ["拉莫斯菲士 Ramos Gin Fizz"], "expected_keywords": ["摇和", "奶油", "泡沫"], "category": "agent_technique"}
+{"id": "q318", "query": "君度可以做什么鸡尾酒", "expected_doc_titles": ["Kamikaze", "Cosmopolitan", "Margarita"], "expected_keywords": ["君度", "神风", "大都会"], "category": "agent_search"}
+{"id": "q319", "query": "蔓越莓汁做的鸡尾酒", "expected_doc_titles": ["Cosmopolitan"], "expected_keywords": ["蔓越莓汁", "大都会"], "category": "agent_recipe"}
+{"id": "q320", "query": "青柠汁为主的鸡尾酒", "expected_doc_titles": ["海明威代基里 Hemingway Daiquiri", "无酒精莫吉托 Virgin Mojito"], "expected_keywords": ["青柠", "代基里", "莫吉托"], "category": "agent_search"}
+{"id": "q321", "query": "姜汁啤酒搭配什么烈酒", "expected_doc_titles": ["Moscow Mule"], "expected_keywords": ["姜汁啤酒", "伏特加", "莫斯科骡子"], "category": "agent_recipe"}
+{"id": "q322", "query": "马天尼杯适合什么鸡尾酒", "expected_doc_titles": ["马天尼 Martini", "Cosmopolitan"], "expected_keywords": ["马天尼杯", "马天尼"], "category": "agent_technique"}
+{"id": "q323", "query": "古典杯适合什么酒", "expected_doc_titles": ["Old Fashioned", "Negroni"], "expected_keywords": ["古典杯", "古典", "尼格罗尼"], "category": "agent_technique"}
+{"id": "q324", "query": "樱桃利口酒有哪些用途", "expected_doc_titles": ["海明威代基里 Hemingway Daiquiri"], "expected_keywords": ["樱桃利口酒", "樱桃"], "category": "agent_recipe"}
+{"id": "q325", "query": "血腥玛丽适合什么时候喝", "expected_doc_titles": ["Bloody Mary"], "expected_keywords": ["血腥玛丽", "番茄汁"], "category": "agent_recommend"}
+{"id": "q326", "query": "家庭自制鸡尾酒推荐", "expected_doc_titles": ["螺丝刀 Screwdriver", "Gin Tonic"], "expected_keywords": ["简单", "伏特加", "橙汁"], "category": "agent_recommend"}

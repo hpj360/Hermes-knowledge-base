@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """M3 配方元数据字段持久化测试（Task 3.1）。
 
 覆盖 Document 新增四字段（glassware/technique/iba_category/flavor_profile）的
@@ -98,7 +97,6 @@ def test_seed_recipes_flavor_profile_aggregated():
     实际多数配方含金酒/威士忌等带 tags 的基酒。
     """
     from hermes_kb.seed import seed_recipes
-    from hermes_kb.seed_recipes import SEED_RECIPES
 
     seed_recipes()
 
