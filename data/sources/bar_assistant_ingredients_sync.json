@@ -3,7 +3,7 @@
     "title": "Absinthe",
     "content": "# Absinthe\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：France\n颜色：#b7ca8e\n\nAbsinthe is a highly alcoholic and anise-flavored spirit that is historically known for its association with bohemian culture and its supposed hallucinogenic properties. It is typically green in color, but clear variations also exist. Absinthe is renowned for its distinctive herbal and botanical profile, which often includes ingredients like wormwood (Artemisia absinthium), anise, fennel, and other herbs.\n\nThe production of absinthe involves macerating and distilling these botanicals to create a highly concentrated liquid. The key component, wormwood, was once believed to contain a compound called thujone, thought to induce hallucinations. However, modern absinthes are produced with strict regulations regarding thujone content, and the hallucinogenic effects of traditional absinthe are now considered to be largely exaggerated.\n\nAbsinthe is often served by diluting it with water, typically by pouring cold water over a sugar cube placed on a slotted spoon, which is then held over the glass. This process, known as the \"louche,\" causes the absinthe to cloud and release its herbal flavors.\n\nThe drink gained notoriety in the late 19th and early 20th centuries, particularly in the bohemian and artistic communities of Europe. It was banned in many countries for a period due to concerns about its alleged psychoactive effects and its association with absinthe-induced madness. However, the ban has been lifted in most places, and today absinthe is produced and consumed legally with regulated thujone levels.\n\nAbsinthe has experienced a resurgence in popularity, and while its reputation as a mind-altering substance has been debunked, it is still enjoyed for its unique flavor and the ritualistic manner in which it is often served.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/absinthe",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -12,7 +12,7 @@
     "title": "Activated charcoal",
     "content": "# Activated charcoal\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Worldwide\n\nActivated, food-grade charcoal became a food trend in 2016, being used as an additive to impart a \"slightly smoky\" taste and a dark coloring to products including hotdogs, ice cream, pizza bases and bagels.\n\n**Activated charcoal can interfere with many medications**",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/activated-charcoal",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -21,7 +21,7 @@
     "title": "Agave Syrup",
     "content": "# Agave Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#deca3f\n\nAgave syrup, also known as agave nectar, is a sweetener that is derived from the sap of the agave plant, primarily the blue agave plant native to Mexico. The syrup is a popular alternative to traditional sweeteners like sugar and honey, particularly in the context of natural and organic food products.\n\nAgave syrup is praised for its sweetness and versatility. It is sweeter than sugar, so smaller amounts can be used to achieve the same level of sweetness. Additionally, it has a lower glycemic index compared to some other sweeteners, meaning it has a smaller impact on blood sugar levels.\n\nAgave syrup has a mild, neutral flavor, making it suitable for a variety of culinary applications. It is commonly used as a sweetener in beverages, baked goods, and desserts. However, it's essential to note that agave syrup, like any sweetener, should be consumed in moderation due to its high fructose content.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/agave-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -30,7 +30,7 @@
     "title": "Allspice dram",
     "content": "# Allspice dram\n\n## 原料档案\n类别：利口酒\n酒精度：22.5%\n产地：Greater Antilles\n颜色：#69341b\n\nAllspice dram, also known as pimento dram, is a liqueur made from the dried berries of the allspice tree (Pimenta dioica). Despite its name, allspice is a single spice, not a blend. The berries have flavors reminiscent of a combination of cinnamon, cloves, and nutmeg, hence the name \"allspice.\"\n\nTo make allspice dram, the dried allspice berries are crushed or ground and then steeped in high-proof alcohol to extract their flavors. This infusion is typically sweetened with sugar, resulting in a sweet and spiced liqueur. The final product often has a warm and aromatic profile, with notes of cinnamon, clove, and nutmeg.\n\nAllspice dram is used as a flavoring agent in cocktails, adding depth and complexity to drinks. It's a common ingredient in classic and modern tiki cocktails, where its spice-forward profile complements tropical fruit flavors.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/allspice-dram",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -39,7 +39,7 @@
     "title": "Amaretto",
     "content": "# Amaretto\n\n## 原料档案\n类别：利口酒\n酒精度：24%\n产地：Italy\n颜色：#d62b0e\n\nAmaretto is a sweet Italian liqueur that is known for its distinct almond flavor. The name \"Amaretto\" is derived from the Italian word \"amaro,\" which means bitter, indicating the traditional bitter almond flavor. However, modern Amaretto is typically sweet rather than bitter.\n\nThe primary flavor in Amaretto comes from apricot pits or almonds, though today many commercial brands use a combination of both. The production process involves soaking the almonds or apricot pits in alcohol, which extracts their flavors. The resulting liquid is then sweetened with sugar, and sometimes flavored with vanilla or other spices.\n\nAmaretto is often enjoyed on its own as a digestif or as an ingredient in various cocktails and culinary recipes. It is a versatile liqueur that adds a rich and nutty flavor to beverages and desserts. Classic cocktails like the Amaretto Sour, as well as desserts like tiramisu, often feature this popular Italian liqueur.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/amaretto",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -48,7 +48,7 @@
     "title": "Amaro Averna",
     "content": "# Amaro Averna\n\n## 原料档案\n类别：苦味酒\n酒精度：29%\n产地：Italy\n颜色：#603724\n\nAmaro Averna is the most popular cocktail amaro in the amber, bittersweet style that makes up much of the “common” amari stocked on shelves. Because of this, Averna is often one of the easiest bottles to procure, and may be used as a substitute in a pinch for other harder to find styles like Montenegro, Ramazzotti, and Ciociaro. Most folks will tell you that “each amaro is different” and effectively—yes—this is true, but many amari will substitute for one-another just fine, with the understanding that the drink will be subtly different.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/amaro-averna",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -57,7 +57,7 @@
     "title": "Amaro Montenegro",
     "content": "# Amaro Montenegro\n\n## 原料档案\n类别：苦味酒\n酒精度：23%\n产地：Italy\n颜色：#3c130a\n\nAlthough not as popular as Averna, Montenegro packs an incredible bouquet of flavors ranging from carmel and chocolate to chartreuse-like herbals, all at a very workable price. As an added bonus, Montenegro is delicious on the rocks and sports an eye-catching bottle.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/amaro-montenegro",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -66,7 +66,7 @@
     "title": "Amaro Nonino",
     "content": "# Amaro Nonino\n\n## 原料档案\n类别：苦味酒\n酒精度：35%\n产地：Italy\n颜色：#c16e4b\n\nAmaro Nonino is an Italian herbal liqueur produced by the Nonino family. It is known for its bittersweet and complex flavor profile, featuring herbs, spices, and citrus. Amaro Nonino is often enjoyed as a digestif and is recognized for its smoothness and balance. It is produced in Friuli, Italy, and has gained popularity both in Italy and internationally as a high-quality amaro.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/amaro-nonino",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -75,7 +75,7 @@
     "title": "Amer Picon",
     "content": "# Amer Picon\n\n## 原料档案\n类别：苦味酒\n酒精度：21%\n产地：France\n颜色：#451709\n\nAmer Picon is a bitter, citrus-infused liqueur, and might best be thought of as a distant cousin to the Italian amaro family. The French term “Amer” literally means “bitter,” and Amers are thus a category in the French spirits world, with many variations that are all bitter and flavored with fruit, herbs and spices.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/amer-picon",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -84,7 +84,7 @@
     "title": "Angostura aromatic bitters",
     "content": "# Angostura aromatic bitters\n\n## 原料档案\n类别：苦精\n酒精度：44.7%\n产地：Trinidad & Tobago\n颜色：#e95310\n\nAngostura bitters is a concentrated bitters (herbal alcoholic preparation) and highly aromatic flavoring agent used in the preparation of cocktails and various culinary applications. It is a dark brown liquid made from a secret blend of herbs and spices, created by the House of Angostura in Trinidad and Tobago. Despite its name, Angostura bitters does not contain angostura bark; instead, it features a proprietary combination of botanical ingredients.\n\nAngostura bitters typically comes in small bottles with a distinctive oversized label and a built-in dasher top, allowing for controlled and precise pouring.\n\nDespite the name, Angostura bitters is non-alcoholic in the sense that it is not consumed in large quantities and is used as a flavoring agent rather than a beverage on its own.\n\nAngostura bitters has become an iconic and essential ingredient in the world of cocktails, appreciated for its ability to elevate and enhance the overall drinking experience.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/angostura-aromatic-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -93,7 +93,7 @@
     "title": "Angostura cocoa bitters",
     "content": "# Angostura cocoa bitters\n\n## 原料档案\n类别：苦精\n酒精度：38%\n产地：Trinidad & Tobago\n颜色：#894c36\n\nTop notes of rich bitter, floral, nutty cocoa with a bold infusion of aromatic botanicals provide endless possibilities to remix classic cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/angostura-cocoa-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -102,7 +102,7 @@
     "title": "Aperol",
     "content": "# Aperol\n\n## 原料档案\n类别：利口酒\n酒精度：11%\n产地：Italy\n颜色：#fa4321\n\nAperol is an Italian orange-flavored aperitif liqueur known for its vibrant orange color and bittersweet taste. It is produced by the Campari Group and contains a blend of herbs, spices, and botanicals. Aperol is characterized by its lower alcohol content compared to some other aperitifs, making it a popular choice for refreshing cocktails. Aperol's distinct flavor profile and versatility make it a favorite ingredient in a variety of cocktails and spritz variations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/aperol",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -111,7 +111,7 @@
     "title": "Apple Brandy",
     "content": "# Apple Brandy\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：France\n颜色：#ca5210\n\nApple brandy is a distilled spirit made from fermented apple juice or cider. The production involves fermenting apples, distilling the resulting liquid, and often aging it in oak barrels. The final product can range from clear to amber in color and exhibits a variety of apple-derived flavors, influenced by the apple varieties used and the aging process. Apple brandy can be enjoyed on its own or used in cocktails and culinary applications. The term encompasses a broad category of apple-based spirits produced globally, with variations in production methods and flavor profiles.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/apple-brandy",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -120,7 +120,7 @@
     "title": "Apple Cider",
     "content": "# Apple Cider\n\n## 原料档案\n类别：饮料\n酒精度：8%\n产地：Worldwide\n颜色：#eae1b0\n\nApple cider is a beverage made from the pressed and fermented juice of apples. The process typically involves crushing apples to extract their juice, which is then fermented by natural yeasts or added commercial yeast to convert the sugars into alcohol. The fermentation process can take place over several weeks, resulting in hard apple cider, which contains alcohol.\n\nHowever, the term \"apple cider\" can also refer to a non-alcoholic beverage, particularly in the United States and parts of Canada. In this context, apple cider is the fresh, unfiltered, and unpasteurized juice of apples. It is often characterized by its cloudy appearance due to the presence of apple solids and sediment.\n\nThe flavor of apple cider can vary depending on the apple varieties used and whether any additional spices, such as cinnamon or cloves, are added. It is a popular beverage in the fall, especially in regions with apple orchards, and is often enjoyed hot or cold. Some people also use apple cider as a base for other drinks or as an ingredient in cooking and baking.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/apple-cider",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -129,7 +129,7 @@
     "title": "Apple Juice",
     "content": "# Apple Juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n产地：Worldwide\n颜色：#e9e0b5\n\nJuice made from apples. Apple juice and apple cider offer different levels of sweetness and tartness. Freshly pressed apple juice tends to be sweeter and more aromatic, while apple cider, especially hard cider, adds a tangy, fermented flavor that can complement both light and dark spirits.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/apple-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -138,7 +138,7 @@
     "title": "Apple",
     "content": "# Apple\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Worldwide\n颜色：#d64737\n\nApple is a versatile fruit commonly used in cocktails for its crisp, sweet, and sometimes tart flavor. It can be incorporated in various forms, including fresh slices, apple juice, apple cider, or apple liqueur, each bringing a unique character to a drink. Fresh apple slices or wedges are often used as a garnish, adding a refreshing element and a touch of natural sweetness to cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/apple",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -147,7 +147,7 @@
     "title": "Apricot Brandy",
     "content": "# Apricot Brandy\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Worldwide\n颜色：#ca5210\n\nApricot brandy is a fruit-flavored liqueur made by infusing apricots in brandy or by distilling apricot fruit. The result is a sweet and flavorful spirit with the essence of apricots. Apricot brandy is commonly used in cocktails, adding a fruity and aromatic dimension to mixed drinks. It can vary in sweetness and intensity of apricot flavor depending on the production methods and the brand. Apricot brandy is versatile and can be enjoyed on its own, in cocktails, or as an ingredient in both sweet and savory culinary applications.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/apricot-brandy",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -156,7 +156,7 @@
     "title": "Aquavit",
     "content": "# Aquavit\n\n## 原料档案\n类别：烈酒\n酒精度：37.5%\n产地：North Europe\n颜色：#f2e6bb\n\nAquavit is a strong spirit originating in the Nordic countries, at least 37.5% in the alcohol strength department. While caraway is a defining characteristic, the diverse range of botanicals used in aquavit production results in a spirit with a complex and nuanced flavor profile. Aquavit is appreciated for its role in cultural rituals and celebrations, as well as its versatility in various serving contexts.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/aquavit",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -165,7 +165,7 @@
     "title": "Armagnac",
     "content": "# Armagnac\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：France\n颜色：#d16616\n\nArmagnac is a type of brandy produced in the Gascony region of southwestern France. It is one of the oldest and most traditional types of brandy, with a production history dating back several centuries. Armagnac is distinct from another well-known French brandy, Cognac, which is produced in the Charente region.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/armagnac",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -174,7 +174,7 @@
     "title": "Arrack",
     "content": "# Arrack\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：India\n颜色：#cb5d0e\n\nArrack is a distilled alcoholic drink typically produced in India, Sri Lanka and Southeast Asia, made from the fermented sap of coconut flowers or sugarcane, and also with grain (e.g. red rice) or fruit depending upon the country of origin.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/arrack",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -183,7 +183,7 @@
     "title": "Baileys Irish Cream",
     "content": "# Baileys Irish Cream\n\n## 原料档案\n类别：利口酒\n酒精度：17%\n产地：Ireland\n颜色：#efe6dc\n\nBaileys Irish Cream is an Irish cream liqueur, an alcoholic drink flavoured with cream, cocoa and Irish whiskey. It is made by Diageo at Nangor Road, in Dublin, Ireland and in Mallusk, Northern Ireland. It is the original Irish cream, invented by a team headed by Tom Jago in 1971 for Gilbeys of Ireland.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/baileys-irish-cream",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -192,7 +192,7 @@
     "title": "Basil",
     "content": "# Basil\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Worldwide\n颜色：#15a905\n\nBasil is an annual, or sometimes perennial, herb used for its leaves.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/basil",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -201,7 +201,7 @@
     "title": "Beet juice",
     "content": "# Beet juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#8c0941\n\nFresh juice made from beets.\n\nBeet juice 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/beet-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -210,7 +210,7 @@
     "title": "Bénédictine",
     "content": "# Bénédictine\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#f39100\n\nHerbal liqueur flavored with twenty-seven flowers, berries, herbs, roots, and spices. The liqueur has a complex flavor profile with notes of honey, citrus, herbs, and spices. Bénédictine is often enjoyed as a sipping liqueur and is also used as an ingredient in various cocktails, including classic drinks like the Bénédictine and Brandy. The production of Bénédictine dates back to the 19th century, and the liqueur is known for its unique and distinctive taste.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/benedictine",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -219,7 +219,7 @@
     "title": "Blackberries",
     "content": "# Blackberries\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#16173d\n\nBlackberries are known for their sweet and tart flavor, and they are commonly used in a variety of culinary applications, including desserts, jams, jellies, and beverages.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/blackberries",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -228,7 +228,7 @@
     "title": "Blood Orange Juice",
     "content": "# Blood Orange Juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#c41c09\n\nBlood orange juice is a distinctive and flavorful citrus juice known for its deep red color and complex taste, which combines the sweetness of regular orange juice with a subtle, tart berry-like undertone. This unique flavor profile makes it a popular choice in cocktails, where it adds both vibrant color and a burst of fresh, citrusy flavor.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/blood-orange-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -237,7 +237,7 @@
     "title": "Blue Curaçao",
     "content": "# Blue Curaçao\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：Netherlands\n颜色：#0192fe\n\nCuraçao with added blue dye. Blue Curaçao has a sweet and slightly bitter orange flavor with citrus undertones. It is a versatile mixer, adding both color and a distinct citrusy taste to a variety of drinks, including tropical cocktails like the Blue Lagoon and the Blue Margarita.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/blue-curacao",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -246,7 +246,7 @@
     "title": "Bourbon Whiskey",
     "content": "# Bourbon Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：North America\n颜色：#d54a06\n\nA type of American whiskey, primarily made from corn and aged in new charred oak barrels. Bourbon has a sweet and full-bodied flavor profile.\n\nTo be labeled as bourbon, a whiskey must meet the following criteria:\n\n1. Grain Mash Composition: Bourbon must be made from a grain mash that is at least 51% corn. The remaining portion of the mash can include other grains such as barley, rye, and wheat.\n\n2. Distillation: Bourbon must be distilled to no more than 160 proof (80% alcohol by volume) and entered into the barrel for aging at no more than 125 proof (62.5% alcohol by volume).\n\n3. Barrel Aging: Bourbon must be aged in new charred oak barrels. There is no minimum aging requirement for bourbon, but to be labeled as \"straight bourbon,\" it must be aged for at least two years.\n\n4. No Additives: Bourbon must not contain any additives except water to adjust the proof.\n\n5. Bottling Strength: Bourbon must be bottled at a minimum of 80 proof (40% alcohol by volume).\n\n6. Geographic Origin: While bourbon can be produced anywhere in the United States, it is strongly associated with Kentucky, and many consider Kentucky bourbon to be a distinctive category.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/bourbon-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -255,7 +255,7 @@
     "title": "Brandy",
     "content": "# Brandy\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Worldwide\n颜色：#e66500\n\nBrandy is a distilled alcoholic beverage made from fermented fruit juice, most commonly derived from wine. The fruit used can include grapes, apples, pears, or other fruits. The process of making brandy involves fermenting the fruit sugars into alcohol and then distilling the resulting liquid to increase its alcohol content. After distillation, brandy is often aged in wooden barrels, which contributes to its flavor, color, and aroma.\n\nThere are a few types of brandy:\n\n- V.S. (\"very special\") or ✯✯✯ (three stars) designates a blend in which the youngest brandy has been stored for at least two years in a cask.\n- V.S.O.P. (\"very superior old pale\"), Reserve or ✯✯✯✯✯ (five stars) designates a blend in which the youngest brandy is stored for at least four years in a cask.\n- XO (\"extra old\") or Napoléon designates a blend in which the youngest brandy is stored for at least six years.\n- Hors d'âge ('beyond age') is a designation formally equal to XO for Cognac, but for Armagnac it designates brandy that is at least ten years old. In practice, the term is used by producers to market a high-quality product beyond the official age scale.\n\nBrandy has a rich history and is produced in many regions around the world, each with its own traditions and methods. The quality and characteristics of brandy can vary widely based on factors such as the type of fruit used, the distillation process, and the aging conditions.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/brandy",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -264,7 +264,7 @@
     "title": "Cachaça",
     "content": "# Cachaça\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Brazil\n颜色：#ffffff\n\nCachaça is a Brazilian distilled spirit made from fermented sugarcane juice. It is a key ingredient in the famous Brazilian cocktail, the Caipirinha. Cachaça is often compared to rum, but there are distinct differences in the production process and flavor profile.\n\nCachaça is classified based on aging:\n- White (Prata or Silver): Unaged or briefly aged, maintaining a clear appearance.\n- Gold (Ouro): Aged cachaça, which takes on a golden hue from the wooden barrels.\n- Premium/Extra Aged (Extra Premium or Extra Envelhecida): Aged for an extended period, often in exotic wood barrels.\n\nCachaça holds cultural significance in Brazil and is enjoyed in various ways, from sipping neat to being used as a base spirit in cocktails. It has gained international recognition for its unique production methods and the distinct flavors it brings to mixology.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cachaca",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -273,7 +273,7 @@
     "title": "Campari",
     "content": "# Campari\n\n## 原料档案\n类别：利口酒\n酒精度：25%\n产地：Italy\n颜色：#ca101e\n\nCampari is an Italian bright red aperitif known for its distinctive bitter and herbal flavor profile. It is made from a proprietary blend of herbs, spices, and fruit peels, with a secret recipe that has been closely guarded since its creation in 1860. The primary flavor component in Campari comes from the infusion of bitter herbs, resulting in a bold and complex taste.\n\nCampari has a strong and memorable flavor that elicits strong reactions, making it a beloved ingredient in classic and contemporary cocktails. It has become a symbol of Italian aperitif culture and is enjoyed worldwide for its unique and iconic taste.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/campari",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -282,7 +282,7 @@
     "title": "Candied Ginger",
     "content": "# Candied Ginger\n\n## 原料档案\n类别：香料\n酒精度：0%\n产地：Worldwide\n颜色：#ecca79\n\nCandied ginger, also known as crystallized ginger, is made from fresh ginger root that has been cooked in a sugar syrup and then coated with sugar.\n\nThe result is sweet and chewy candied ginger with a combination of the spicy, warm flavor of ginger and the sweetness of sugar. Candied ginger is commonly used in baking, particularly in desserts like cookies, cakes, and muffins. It can also be enjoyed on its own as a sweet and spicy treat or used as a flavorful addition to teas, cocktails, and various dishes. Additionally, candied ginger is sometimes used in certain cuisines for its unique taste and texture.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/candied-ginger",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -291,7 +291,7 @@
     "title": "Cask-Proof Whiskey",
     "content": "# Cask-Proof Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：55%\n产地：North America\n颜色：#b8430d\n\nCask-proof bourbon, also known as barrel-strength or barrel-proof bourbon, refers to bourbon whiskey that is bottled directly from the cask without being diluted with water before bottling. This means that the bourbon is presented to consumers at its natural, undiluted alcohol strength, as it was when it matured in the barrel.\n\nWhen bourbon is aging in barrels, it undergoes changes in flavor and character as it interacts with the wood and other compounds present in the cask. Cask strength bourbon captures the full intensity of these flavors without the addition of water to lower the alcohol content.\n\nThe alcohol by volume (ABV) of cask-strength bourbon can be significantly higher than standard bottlings, often ranging from 110 proof (55% ABV) to well over 130 proof (65% ABV) or more. This higher proof can intensify the flavors and provide a more robust and concentrated drinking experience.\n\nCask-strength bourbons have gained popularity among whiskey enthusiasts who appreciate the opportunity to experience the full, unaltered expression of the bourbon as it was intended by the distiller. Some bourbon brands release limited-edition cask-strength bottlings, and these releases can be highly sought after by collectors and connoisseurs. When enjoying cask-strength bourbon, it is not uncommon for individuals to add a splash of water to their glass to personalize the drinking experience and open up additional flavors.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cask-proof-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -300,7 +300,7 @@
     "title": "Chambord",
     "content": "# Chambord\n\n## 原料档案\n类别：利口酒\n酒精度：16.5%\n产地：Worldwide\n颜色：#6f1123\n\nChambord is a premium black raspberry liqueur produced in the Loire Valley of France. It is renowned for its rich and luxurious flavor profile, which combines blackberries, Madagascan vanilla, Moroccan citrus peel, honey, and cognac. The liqueur is known for its deep purple color and its distinctive, ornate bottle.\n\nChambord is often used as a flavoring agent in cocktails, adding a sweet and fruity dimension to drinks. It is a popular ingredient in classic cocktails like the \"Chambord Royale,\" where it is mixed with champagne or sparkling wine, and in modern mixology for creating a variety of creative and flavorful beverages.\n\nAdditionally, Chambord can be enjoyed on its own or drizzled over desserts, as its complex and indulgent taste makes it a versatile addition to both cocktails and culinary creations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/chambord",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -309,7 +309,7 @@
     "title": "Chamomile cordial",
     "content": "# Chamomile cordial\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#e2dccc\n\nChamomile cordial is a sweet, floral liqueur made by infusing chamomile flowers in a base spirit, typically combined with sugar and sometimes citrus to enhance its flavor. Chamomile, known for its soothing and aromatic properties, imparts a delicate, honeyed, and slightly earthy flavor to the cordial. This makes it an intriguing and versatile ingredient in cocktails, where it can add a subtle floral note and natural sweetness.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/chamomile-cordial",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -318,7 +318,7 @@
     "title": "Champagne",
     "content": "# Champagne\n\n## 原料档案\n类别：葡萄酒\n酒精度：12%\n产地：France\n颜色：#f6e1b0\n\nChampagne is a sparkling wine that comes from the Champagne region of France. It is one of the most famous and prestigious types of sparkling wine globally. The name \"Champagne\" is legally protected, and only wines produced in the Champagne region using specific methods can be labeled as such.\n\nChampagne is often associated with celebrations and is widely used in toasts. It comes in various styles, including non-vintage (a blend of multiple years), vintage (made from grapes of a single year), and prestige cuvées (high-quality, limited-production wines from a specific producer). The versatility of Champagne allows it to be enjoyed on its own or paired with a variety of foods.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/champagne",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -327,7 +327,7 @@
     "title": "Cherry heering",
     "content": "# Cherry heering\n\n## 原料档案\n类别：利口酒\n酒精度：21%\n产地：Denmark\n颜色：#540b0b\n\nCherry Heering is a Danish cherry-flavored liqueur with a deep red color. It is made from a base of spirits, sugar, and cherries, specifically sour cherries, which contribute to its rich and sweet flavor profile. Cherry Heering is known for its versatility in cocktails and is often used in classic and modern mixology. One of the most famous cocktails featuring Cherry Heering is the Singapore Sling. The liqueur has a distinct cherry taste with hints of almond and spices, making it a popular choice for adding depth and complexity to a variety of drinks.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cherry-heering",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -336,7 +336,7 @@
     "title": "Chilli Pepper",
     "content": "# Chilli Pepper\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#f23506\n\nChili peppers are known for their pungent and spicy flavor, attributed to the compound capsaicin. They come in various shapes, sizes, and colors, ranging from mild to extremely hot varieties.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/chilli-pepper",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -345,7 +345,7 @@
     "title": "Cilantro",
     "content": "# Cilantro\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Worldwide\n颜色：#0e630a\n\nAn annual herb in the family Apiaceae. All parts of the plant are edible, but the fresh leaves and the dried seeds are the parts most traditionally used in cooking.\n\nMost people perceive coriander as having a tart, lemon/lime taste, but to some individuals the leaves taste like dish soap. The perception of a soapy taste in certain aldehydes is linked to a specific gene.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cilantro",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -354,7 +354,7 @@
     "title": "Cinnamon syrup",
     "content": "# Cinnamon syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#b65713\n\nSimple syrup infused with cinnamon. Follow the recipe to make your own at home:\n\n- 1 cup granulated sugar\n- 1 cup water\n- 4 cinnamon sticks, broken into large pieces\n\nBring all ingredients to a boil over medium heat. Reduce heat to medium-low and let simmer for 8-10 minutes until sugar has dissolved, stirring frequently. Remove from heat and let cool. Discard cinnamon sticks, strain into a clean glass jar and cover. Store refrigerated for up to 2 weeks.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cinnamon-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -363,7 +363,7 @@
     "title": "Clove",
     "content": "# Clove\n\n## 原料档案\n类别：香料\n酒精度：0%\n产地：Indonesia\n颜色：#782803\n\nThe spice, cloves, is known for its warm, sweet, and aromatic flavor with a hint of spiciness. It has a strong, pungent aroma and is used in both culinary and medicinal applications. Cloves are often used in spice blends, such as pumpkin pie spice and garam masala, and are a key ingredient in many cuisines.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/clove",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -372,7 +372,7 @@
     "title": "Club soda",
     "content": "# Club soda\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Worldwide\n颜色：#ffffff\n\nClub soda is a carbonated water that contains added minerals such as sodium bicarbonate, sodium chloride, and potassium sulfate, which give it a slightly salty and mineral-rich flavor. It is commonly used in cocktails as a mixer to add effervescence and a light, refreshing touch without altering the drink’s flavor profile significantly. The bubbles in club soda help to lift and blend the flavors of other ingredients, creating a more balanced and lively drink.\n\nIn cocktails, club soda is often used to top off drinks, adding volume and fizz. It's a key ingredient in classics like the Tom Collins, where it complements the gin, lemon juice, and simple syrup by adding a sparkling finish. It is also essential in making a Highball, where it dilutes the whiskey and adds a refreshing effervescence, or in a Mojito, where it lightens the mixture of rum, mint, lime, and sugar.\n\nClub soda is preferred over other carbonated waters like tonic water or seltzer when the goal is to add carbonation without additional flavors. Its clean, neutral taste makes it an ideal mixer for a wide range of cocktails, contributing to the drink’s texture and mouthfeel without overshadowing the primary ingredients.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/club-soda",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -381,7 +381,7 @@
     "title": "Cocchi Aperitivo Americano",
     "content": "# Cocchi Aperitivo Americano\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：16.5%\n产地：Italy\n颜色：#fef4cd\n\nCocchi Americano is an aromatized wine created in 1891 by Giulio Cocchi and since then produced without interruption according to the original recipe.\nThe name “Americano” is both due to the alcohol made bitter (“amaricato”) by the addition of herbs and spices and to the American habit of drinking vermouth with ice and soda.\nProduced according to Giulio Cocchi original recipe, Cocchi Americano is recognized in Asti as the aperitif par excellence – a real piece of history of our town.\nOn its label the original futurist rooster designed in the 30’s and representing his aperitif function (“it awakes the appetite”) as well as one of the symbols of the town of Asti.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cocchi-aperitivo-americano",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -390,7 +390,7 @@
     "title": "Cocchi di Torino",
     "content": "# Cocchi di Torino\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：16.5%\n产地：Italy\n颜色：#86351d\n\nExciting vermouth with medicinal and aromatic spices, and the taste of bitter orange and notes of cocoa that characterizes the cocchi style.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cocchi-di-torino",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -399,7 +399,7 @@
     "title": "Cocktail cherry",
     "content": "# Cocktail cherry\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Croatia\n颜色：#4e0b02\n\nThese are candied cherries soaked in Luxardo marasca cherry syrup. The percentage of marasca cherries in jars and tins is about 50% and so is the percentage of syrup. No thickening agents of any type and no preservatives are used and the dark red color is all natural. Their unique taste comes from the marasca cherry syrup which is made starting from the same juice used to prepare the infusion for the Cherry Liqueur “Sangue Morlacco”. A cutting edge system of pasteurization guarantees the maximum level of preservation and safety. Luxardo Original Maraschino Cherries accurate candying process confers to the fruit a crispiness which is rare to find amongst competing brands. Today, like in the golden age of cocktails, Luxardo Original Maraschino Cherries are used in the worlds’ best bars and by the most famous mixologists as a garnish in their creations. The syrup itself may be used in many cocktails as a flavored sugar. They are also ideal over ice cream.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cocktail-cherry",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -408,7 +408,7 @@
     "title": "Coconut Cream",
     "content": "# Coconut Cream\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Tropical\n颜色：#ffffff\n\nCoconut cream is a thick, rich, and smooth substance extracted from the flesh of mature coconuts. Coconut cream is similar to coconut milk, but it has a higher concentration of coconut solids, giving it a thicker consistency. It is often used in both savory and sweet recipes, including curries, soups, desserts, and beverages. Coconut cream is a key ingredient in many dishes in Southeast Asian, Caribbean, and other tropical cuisines.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coconut-cream",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -417,7 +417,7 @@
     "title": "Coconut Rum",
     "content": "# Coconut Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Tropical\n颜色：#fbf9f4\n\nCoconut rum is a flavored rum that incorporates the sweet and tropical taste of coconut. It is a popular and versatile spirit used in various cocktails, providing a distinct coconut flavor to mixed drinks. Coconut rum is typically made by infusing or flavoring rum with natural or artificial coconut extracts. It is often enjoyed in tropical and beach-themed cocktails, where its coconut notes complement other fruity or citrusy ingredients. Coconut rum is a key component in cocktails like Piña Colada and Coconut Mojito, adding a hint of the tropics to the overall flavor profile.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coconut-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -426,7 +426,7 @@
     "title": "Coconut Syrup",
     "content": "# Coconut Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Tropical\n颜色：#ffffff\n\nSyrup infused with coconut flavor\n\nCoconut Syrup 为调酒原料档案，属于 糖浆 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coconut-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -435,7 +435,7 @@
     "title": "Coconut water",
     "content": "# Coconut water\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Indonesia\n颜色：#f5f3ef\n\nCoconut water (also coconut juice) is the clear liquid inside young coconuts (fruits of the coconut palm).",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coconut-water",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -444,7 +444,7 @@
     "title": "Coffee liqueur",
     "content": "# Coffee liqueur\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：Mexico\n颜色：#1a0d0a\n\nCoffee liqueur is a sweet and flavored liqueur that is infused with the rich and robust taste of coffee. It typically combines distilled spirits like vodka or rum with coffee extracts, sweeteners, and sometimes additional flavorings. Coffee liqueur is known for its dark color and the deep, complex flavor profile that includes the bold essence of coffee along with sweetness and often a touch of bitterness. It is a versatile ingredient used in various cocktails, desserts, and coffee-based beverages. Popular brands include Kahlúa and Tia Maria, and common cocktails featuring coffee liqueur include the White Russian and Espresso Martini.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coffee-liqueur",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -453,7 +453,7 @@
     "title": "Coffee",
     "content": "# Coffee\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Africa\n颜色：#654332\n\nCoffee is a beverage made from roasted coffee beans. The beans are ground and brewed with hot water to produce a flavorful and aromatic drink. Coffee is enjoyed worldwide and comes in various styles, including espresso, drip coffee, and specialty beverages. It contains caffeine, a natural stimulant, and is often consumed for its energizing effects and rich, complex taste.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/coffee",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -462,7 +462,7 @@
     "title": "Cognac",
     "content": "# Cognac\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：France\n颜色：#7b1c0a\n\nCognac is a high-quality French brandy produced in the Cognac region, located in the Charente department. It is renowned for its refined and complex flavor profile, resulting from a meticulous production process. Cognac is made exclusively from white grapes, primarily Ugni Blanc, Folle Blanche, and Colombard, which are fermented and distilled using traditional copper pot stills.\n\nCognac's aging process plays a crucial role in its development, as it absorbs characteristics from the oak barrels, contributing notes of vanilla, caramel, and spices. The region's unique maritime climate, with a mix of oceanic and continental influences, further enhances the maturation process.\n\nCognac is renowned for its smooth and elegant taste, with a harmonious balance of fruity, floral, and oaky elements. It is often enjoyed as a sipping spirit and is a key ingredient in classic cocktails like the Sidecar and Brandy Alexander. The production of Cognac is strictly regulated, ensuring that only spirits meeting specific criteria can bear the prestigious Cognac label.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cognac",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -471,7 +471,7 @@
     "title": "Cointreau",
     "content": "# Cointreau\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#ffffff\n\nOrange-flavoured triple sec liqueur, it was originally called Curaçao Blanco Triple Sec. Usually more dry tasting than Orange Curaçao.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cointreau",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -480,7 +480,7 @@
     "title": "Cola",
     "content": "# Cola\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Worldwide\n颜色：#411919\n\nCola is a carbonated soft drink flavored with vanilla, cinnamon, citrus oils and other flavorings.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cola",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -489,7 +489,7 @@
     "title": "Cranberry juice",
     "content": "# Cranberry juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#9c0024\n\nJuice made from cranberries.\n\nCranberry juice 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cranberry-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -498,7 +498,7 @@
     "title": "Cream",
     "content": "# Cream\n\n## 原料档案\n类别：其他\n酒精度：0%\n颜色：#fff5e8\n\nCream is a dairy product composed of the higher-fat layer skimmed from the top of milk before homogenization.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cream",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -507,7 +507,7 @@
     "title": "Crème de banane",
     "content": "# Crème de banane\n\n## 原料档案\n类别：奶油利口酒\n酒精度：0%\n产地：Worldwide\n颜色：#b28432\n\nPerfectly ripened bananas are small-batch distilled to extract the rich banana flavor and natural amber color",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-banane",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -516,7 +516,7 @@
     "title": "Crème de Cacao (Dark)",
     "content": "# Crème de Cacao (Dark)\n\n## 原料档案\n类别：奶油利口酒\n酒精度：25%\n产地：France\n颜色：#1f0f0c\n\nCrème de Cacao is a sweet liqueur with a rich chocolate flavor. It is made from cacao beans, which are the primary source of chocolate, and often includes additional ingredients such as vanilla and sugar. Dark Crème de Cacao has a deeper, more intense chocolate flavor and a dark brown color.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-cacao-dark",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -525,7 +525,7 @@
     "title": "Crème de Cacao (White)",
     "content": "# Crème de Cacao (White)\n\n## 原料档案\n类别：奶油利口酒\n酒精度：25%\n产地：France\n颜色：#ffffff\n\nCrème de Cacao is a sweet liqueur that captures the essence of chocolate in a clear, colorless form. Despite its name, it contains no cream; \"crème\" refers to its rich, smooth texture. This liqueur is made by macerating cacao beans and vanilla in neutral spirits, then filtering and sweetening the result.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-cacao-white",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -534,7 +534,7 @@
     "title": "Crème de cassis",
     "content": "# Crème de cassis\n\n## 原料档案\n类别：奶油利口酒\n酒精度：25%\n产地：France\n颜色：#2c1227\n\nCrème de Cassis is a sweet liqueur made from blackcurrants. It has a deep red-purple color and a rich, fruity flavor with a combination of sweetness and tartness. The liqueur is often used as a key ingredient in cocktails, with the Kir and Kir Royale being classic examples. Crème de Cassis can also be enjoyed on its own over ice or used in culinary applications to add a burst of blackcurrant flavor to desserts or sauces.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-cassis",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -543,7 +543,7 @@
     "title": "Crème de menthe",
     "content": "# Crème de menthe\n\n## 原料档案\n类别：奶油利口酒\n酒精度：20%\n产地：France\n颜色：#ddfdc8\n\nSweet, mint-flavored alcoholic beverage. It is available commercially in a colorless version (called \"white\") and a green version (colored by the mint leaves or by added coloring if made from extract instead of leaves). Both varieties have similar flavor and are interchangeable in recipes, except where color is important. It is usually made with Corsican mint or peppermint, which is steeped in grain alcohol for several weeks before it is filtered and sweetened to create the final product. It typically has 25% alcohol by volume.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-menthe",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -552,7 +552,7 @@
     "title": "Crème de mûre",
     "content": "# Crème de mûre\n\n## 原料档案\n类别：奶油利口酒\n酒精度：42.3%\n产地：France\n颜色：#5f1933\n\nCrème de Mûre is a sweet liqueur made from blackberries. It features a deep purple color and a rich, fruity flavor that combines sweetness with the natural tartness of blackberries. Crème de Mûre is commonly used as an ingredient in cocktails, adding a vibrant berry character to mixed drinks. It can also be enjoyed on its own or used to enhance the flavor of desserts and other culinary creations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-mure",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -561,7 +561,7 @@
     "title": "Crème de Violette",
     "content": "# Crème de Violette\n\n## 原料档案\n类别：奶油利口酒\n酒精度：16%\n产地：Worldwide\n颜色：#a5a2fd\n\nCrème de Violette is a floral liqueur with a violet flower flavor. It is known for its vibrant purple color and delicate, aromatic taste. Crème de Violette is often used as an ingredient in cocktails, adding a floral and sweet dimension to drinks. It gained popularity in classic cocktails like the Aviation, where it contributes both flavor and a distinctive hue. The liqueur is made by infusing or distilling violet flowers, sugar, and sometimes additional botanicals. Crème de Violette is enjoyed for its unique and fragrant profile, and its use extends beyond cocktails to include desserts and culinary creations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/creme-de-violette",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -570,7 +570,7 @@
     "title": "Cucumber",
     "content": "# Cucumber\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#e3efd6\n\nCucumber 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cucumber",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -579,7 +579,7 @@
     "title": "Cynar",
     "content": "# Cynar\n\n## 原料档案\n类别：苦味酒\n酒精度：16.5%\n产地：Italy\n颜色：#5c0805\n\nBitter apéritif of the amaro variety. It is made from 13 herbs and plants, predominant among which is the artichoke (Cynara scolymus), from which the drink derives its name.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/cynar",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -588,7 +588,7 @@
     "title": "Dark Rum",
     "content": "# Dark Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Caribbean\n颜色：#ca5210\n\nDark rum is a type of rum that is aged longer and often in charred barrels, giving it a darker color and a richer, more robust flavor compared to lighter rums. It typically has notes of caramel, molasses, and sometimes spices. Dark rum is commonly used in cocktails, especially those with a strong, flavorful profile, and it is also enjoyed neat or on the rocks. The aging process contributes to the development of complex flavors and a smoother texture.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/dark-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -597,7 +597,7 @@
     "title": "Demerara Rum",
     "content": "# Demerara Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：South America\n颜色：#ca5210\n\nDemerara rum is a type of dark rum produced on the banks of the Demerara River in Guyana, a country on the northern coast of South America. All Demerara rum is distilled in Guyana, regardless of where it may be aged and bottled. There is only one remaining active distiller in Guyana, Demerara Distillers Limited (DDL).\n\nDespite sharing the name, demerara rum is not necessarily made with demerara sugar.\n\nWhile the vast majority of rum sold today is produced using molasses, Demerara rum is produced using sugarcane juice or “backend,” as it is sometimes called. This gives the rum a flavor profile that is more fruity and grassy than molasses-based rums.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/demerara-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -606,7 +606,7 @@
     "title": "Demerara Syrup",
     "content": "# Demerara Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#7f372a\n\nSyrup made with demerara sugar\n\nDemerara Syrup 为调酒原料档案，属于 糖浆 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/demerara-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -615,7 +615,7 @@
     "title": "Donn's Mix",
     "content": "# Donn's Mix\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#c6972c\n\nDonn's Mix is a signature ingredient created by Donn Beach, the legendary tiki bartender and founder of the tiki bar movement. This mix is a combination of two parts fresh grapefruit juice and one part cinnamon syrup. It was originally used in many of Donn Beach’s classic tiki cocktails, such as the Zombie and the Navy Grog, where it added a unique blend of tart, citrusy, and warm, spiced flavors.\n\n## Recipe\n\n- 3 cinnamon sticks, crushed\n- 1 cup sugar\n- 1 cup water\n- Fresh grapefruit juice\n\nCreate an infused simple syrup by heating cinnamon sticks, sugar and water. Bring to a boil, stirring until sugar is dissolved. Simmer for 2 minutes, then remove from heat and let sit for at least 2 hours before straining into a clean glass bottle. To finish making the mix, add 1 part of the syrup to 2 parts fresh grapefruit juice. Cover and keep refrigerated for up to 2 weeks.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/donns-mix",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -624,7 +624,7 @@
     "title": "Drambuie",
     "content": "# Drambuie\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：Scotland\n颜色：#ea7e00\n\nDrambuie is a sweet and herbal liqueur from Scotland. It is made from Scotch whisky, honey, herbs, and spices. Drambuie has a distinctive flavor profile that combines the warmth of Scotch whisky with the sweetness of honey and the complexity of herbs and spices. It is often enjoyed on its own, over ice, or used as a key ingredient in cocktails. One of the most well-known cocktails featuring Drambuie is the Rusty Nail, where it is typically mixed with Scotch whisky.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/drambuie",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -633,7 +633,7 @@
     "title": "Dry Curaçao",
     "content": "# Dry Curaçao\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：Italy\n颜色：#ffc613\n\nDry Curaçao is a type of orange-flavored liqueur that originated on the Caribbean island of Curaçao. Dry Curaçao is made from the peels of bitter oranges, and it is characterized by its dry and less sweet profile compared to regular Curaçao. It is often used as a premium orange liqueur in cocktails, imparting a bright citrus flavor without the added sweetness. Dry Curaçao is a versatile ingredient and is commonly featured in classic and modern mixology, contributing to a variety of cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/dry-curacao",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -642,7 +642,7 @@
     "title": "Dry Vermouth",
     "content": "# Dry Vermouth\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：18%\n产地：Worldwide\n颜色：#ffffff\n\nDry Vermouth is a type of fortified wine that is aromatized with various botanicals, including herbs, spices, and sometimes citrus peels. It is characterized by its dry and less sweet profile compared to sweet vermouth. Dry Vermouth is a key ingredient in classic cocktails such as the Martini and the Manhattan, where it adds complexity and a subtle herbal note to the drink. It is typically white or pale yellow in color and is often enjoyed as a chilled aperitif on its own. The alcohol content of Dry Vermouth is fortified with additional spirits, usually grape brandy, which also contributes to its flavor and preservation.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/dry-vermouth",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -651,7 +651,7 @@
     "title": "Egg White",
     "content": "# Egg White\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Worldwide\n\nEgg white is the clear liquid part of an egg that surrounds the yolk. It is rich in proteins and is commonly used in cooking and baking for its ability to add structure, foam, and a smooth texture to various dishes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/egg-white",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -660,7 +660,7 @@
     "title": "Egg",
     "content": "# Egg\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Worldwide\n颜色：#e19f26\n\nChicken eggs are a versatile and commonly consumed food product, used in various culinary applications for their nutritional content and cooking properties.\n\nWhole egg is commonly used in \"flip\" style of cocktails.\n\nThe term \"flip\" refers to a category of cocktails that traditionally includes a combination of spirits, sweeteners, and a whole egg. Flips are characterized by their smooth and frothy texture, achieved by vigorously shaking or \"flipping\" the ingredients, which incorporates air and emulsifies the egg.\n\nThe ingredients are shaken together without ice first (a \"dry shake\") to emulsify the egg, and then ice is added for a second round of shaking to chill the mixture. The final drink is strained into a glass, and a sprinkle of nutmeg on top is a common finishing touch.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/egg",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -669,7 +669,7 @@
     "title": "Elderflower Cordial",
     "content": "# Elderflower Cordial\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#d9cfae\n\nHerbal juice made from elderflower.\n\nElderflower Cordial 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/elderflower-cordial",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -678,7 +678,7 @@
     "title": "Espresso",
     "content": "# Espresso\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Italy\n颜色：#743c0e\n\nEspresso is generally thicker than coffee brewed by other methods, with a viscosity similar to that of warm honey.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/espresso",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -687,7 +687,7 @@
     "title": "Falernum",
     "content": "# Falernum\n\n## 原料档案\n类别：利口酒\n酒精度：11%\n产地：Caribbean\n颜色：#f4f2e5\n\nLiqueur with flavors of ginger, lime, and almond, and frequently cloves or allspice. It may be thought of as a spicier version of orgeat syrup.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/falernum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -696,7 +696,7 @@
     "title": "Fernet Branca",
     "content": "# Fernet Branca\n\n## 原料档案\n类别：利口酒\n酒精度：39%\n产地：Italy\n颜色：#471a0c\n\nFernet Branca is a bittersweet, herbal liqueur made with a number of different herbs and spices, including myrrh, rhubarb, chamomile, cardamom, aloe, and gentian root.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/fernet-branca",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -705,7 +705,7 @@
     "title": "Galliano",
     "content": "# Galliano\n\n## 原料档案\n类别：利口酒\n酒精度：42.3%\n产地：Italy\n颜色：#caa701\n\nGalliano is sweet with vanilla-anise flavour and subtle citrus and woodsy herbal undernotes.\n\nGalliano L'Autentico is a popular Italian liqueur with a golden yellow color. The unique herbal flavor medley is dominated by vanilla and anise, though its taste is complex. Developed in the late 19th century, Galliano is used in a variety of cocktails and is a staple in well-rounded bars today. Its most famous cocktails are the Harvey Wallbanger and golden Cadillac from the 1970s. While it's great for those retro drinks and many others, it also makes a nice digestif to enjoy after a meal.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/galliano",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -714,7 +714,7 @@
     "title": "Gin",
     "content": "# Gin\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Worldwide\n颜色：#ffffff\n\nGin is a distilled alcoholic beverage that derives its predominant flavor from juniper berries and other botanicals. It falls under the category of distilled spirits and is known for its diverse and complex flavor profile, which can include herbal, floral, citrus, and spicy notes. The production of gin involves distilling a neutral spirit with botanicals, with juniper being the key botanical required for a spirit to be classified as gin.\n\nThe defining characteristic of gin is the prominent presence of juniper berries in its flavor profile. The name \"gin\" is derived from the French word \"genièvre,\" meaning juniper.\n\nThere are several styles of gin, including London Dry Gin, Plymouth Gin, and New Western or Contemporary-style Gin. Each style has its own production methods and regulations.\n\nGin has a long history and has evolved over centuries, becoming one of the most popular and beloved spirits globally. Its association with a wide array of cocktails makes it a staple in bars and households alike.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/gin",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -723,7 +723,7 @@
     "title": "Ginger ale",
     "content": "# Ginger ale\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Worldwide\n颜色：#edcdb6\n\nGinger ale is a non-alcoholic carbonated beverage flavored with ginger. It is known for its fizzy and slightly spicy taste, derived from the natural or artificial ginger flavorings used in its production. Ginger ale is often consumed on its own as a refreshing soft drink, and it is also a common mixer in various cocktails. There are both commercial and homemade versions of ginger ale, with variations that may include additional ingredients such as citrus or sweeteners.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/ginger-ale",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -732,7 +732,7 @@
     "title": "Ginger syrup",
     "content": "# Ginger syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#c6972c\n\nGinger syrup is a spicy-sweet cocktail ingredient that adds a bold, zesty kick to drinks. Made by simmering fresh ginger root with sugar and water, this syrup captures the root's fiery heat and distinctive flavor, offering a perfect balance of sweetness and warmth.\n\nWhen using ginger syrup, it's important to consider its potency. A little can go a long way in terms of both flavor and heat. Homemade versions allow for control over the ginger intensity and sweetness level, though quality commercial options are available. The syrup's versatility makes it a valuable addition to both classic and contemporary cocktail recipes, offering a quick way to infuse drinks with ginger's unique character.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/ginger-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -741,7 +741,7 @@
     "title": "Ginger",
     "content": "# Ginger\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n\nGinger root used as a spice\n\nGinger 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/ginger",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -750,7 +750,7 @@
     "title": "Gold Rum",
     "content": "# Gold Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Caribbean\n颜色：#c79141\n\nGold rum, also referred to as amber or golden rum, is a type of rum that falls between light and dark rum in terms of color and flavor. It is a versatile and widely used category of rum with characteristics that make it suitable for various cocktails and sipping neat.\n\nWhile not aged as long as dark rum, gold rum often undergoes some degree of aging in barrels. The aging contributes to the development of color, flavor, and a smoother texture.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/gold-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -759,7 +759,7 @@
     "title": "Grand Marnier",
     "content": "# Grand Marnier\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#f34e02\n\nGrand Marnier is a premium French liqueur known for its distinctive orange flavor and versatility in cocktails. It belongs to the category of orange liqueurs but stands out due to its unique combination of Cognac (a type of brandy) and bitter orange essence.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grand-marnier",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -768,7 +768,7 @@
     "title": "Grapefruit bitters",
     "content": "# Grapefruit bitters\n\n## 原料档案\n类别：苦精\n酒精度：44%\n产地：Worldwide\n颜色：#fbd3ac\n\nThese grapefruit bitters are best friends to gin, vodka, Blanco tequila, and light rum and are a wonderful ingredient for drinks that may otherwise taste excessively sweet. Give a modern twist to a classic Gin & Tonic, add a few dashes to a Daiquiri or Margarita or add a new layer of complexity to cocktails that traditionally didn’t include bitters.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grapefruit-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -777,7 +777,7 @@
     "title": "Grapefruit juice",
     "content": "# Grapefruit juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#ed7500\n\nGrapefruit juice is a bold and distinctive cocktail ingredient, known for its tart, bitter-sweet flavor profile. Extracted from the grapefruit, a citrus fruit larger and more acidic than oranges, this juice brings a complex taste that can range from bracingly sour to subtly sweet, depending on the variety of grapefruit used.\n\n\nIn cocktails, grapefruit juice adds a sophisticated and refreshing element. Its natural bitterness and acidity make it an excellent counterpoint to sweet liqueurs and spirits, creating well-balanced drinks. The juice also contributes a lovely pink or ruby hue to cocktails, enhancing their visual appeal.\nPopular in classics like the Paloma and the Greyhound, grapefruit juice pairs particularly well with tequila, vodka, and gin. When using grapefruit juice in cocktails, freshly squeezed is ideal for the brightest flavor, though high-quality bottled juices can be a convenient alternative. The amount used can vary, but its strong flavor means a little often goes a long way in cocktail recipes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grapefruit-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -786,7 +786,7 @@
     "title": "Grapefruit soda",
     "content": "# Grapefruit soda\n\n## 原料档案\n类别：果汁\n酒精度：0%\n产地：Worlwide\n颜色：#f87d67\n\nCarbonized grapefruit soda\n\nGrapefruit soda 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grapefruit-soda",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -795,7 +795,7 @@
     "title": "Grapefruit",
     "content": "# Grapefruit\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Barbados\n颜色：#ec770d\n\nGrapefruit is a citrus fruit known for its slightly bitter and tangy flavor. It comes in various colors, including pink, red, and white, and is commonly eaten fresh, juiced, or used in salads and beverages. Grapefruit is rich in vitamins and antioxidants and is often enjoyed for its refreshing taste.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grapefruit",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -804,7 +804,7 @@
     "title": "Grappa",
     "content": "# Grappa\n\n## 原料档案\n类别：烈酒\n酒精度：50%\n产地：Italy\n颜色：#ffffff\n\nGrappa is an Italian grape-based pomace brandy. It is made by distilling the residue (skins, pulp, seeds, and stems) left after pressing grapes during the winemaking process. Grappa is known for its strong and distinct flavor, which can vary depending on the grape varieties used. It is often consumed as a digestif and is enjoyed for its robust character. Grappa is produced in various regions of Italy and has a long history as a traditional Italian spirit.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grappa",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -813,7 +813,7 @@
     "title": "Green Chartreuse",
     "content": "# Green Chartreuse\n\n## 原料档案\n类别：利口酒\n酒精度：55%\n产地：France\n颜色：#80FF00\n\nGreen Chartreuse is a herbal liqueur made by the Carthusian monks in France. It is known for its vibrant green color and complex flavor profile derived from a secret blend of 130 herbs and botanicals. Green Chartreuse has a strong and distinct taste, featuring herbal, floral, and spicy notes. It has a high alcohol content, typically 55% ABV (alcohol by volume). Green Chartreuse can be enjoyed on its own as a digestif or used in cocktails for its unique and intense flavor.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/green-chartreuse",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -822,7 +822,7 @@
     "title": "Green grapes",
     "content": "# Green grapes\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Worlwide\n颜色：#e3f3b1\n\nGreen grapes, often simply referred to as white grapes, are a variety of grapes that are typically green or yellowish-green in color when ripe.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/green-grapes",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -831,7 +831,7 @@
     "title": "Grenadine Syrup",
     "content": "# Grenadine Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#bb0014\n\nGrenadine syrup is a sweet, vibrant red syrup made from pomegranate juice, sugar, and water, often used as a flavoring and coloring agent in cocktails. Traditionally, grenadine derives its name from the French word \"grenade,\" meaning pomegranate, highlighting its original base ingredient. The syrup is known for its balanced flavor, combining the sweetness of sugar with the tartness of pomegranate, which adds a fruity complexity to drinks.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/grenadine-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -840,7 +840,7 @@
     "title": "Honey Syrup",
     "content": "# Honey Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#f2a900\n\nHoney syrup is a natural sweetener used in cocktails to add depth and complexity beyond what standard simple syrup offers. Made by diluting honey with water, usually in a 1:1 ratio, this syrup brings not only sweetness but also subtle floral, herbal, or fruity notes depending on the type of honey used.\n\nWhen incorporating honey syrup into drinks, it's important to consider its distinct flavor profile. The type of honey used can significantly impact the final taste of the cocktail, allowing for creative variations. Bartenders often prefer to make their own honey syrup to control the consistency and flavor, though commercial versions are available. As with other syrups, the amount used can be adjusted to balance the cocktail's sweetness with other components.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/honey-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -849,7 +849,7 @@
     "title": "Ice cream",
     "content": "# Ice cream\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Worldwide\n颜色：#ffffff\n\nIce cream is a frozen dessert made from a mixture of cream, sugar, and flavorings, often with the addition of fruits, nuts, or other ingredients. It is churned and frozen to create a creamy and sweet treat enjoyed in various flavors and forms.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/ice-cream",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -858,7 +858,7 @@
     "title": "Irish whiskey",
     "content": "# Irish whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Ireland\n颜色：#d54a06\n\nProduced in Ireland, often made from a mix of malted and unmalted barley and aged for a minimum period in wooden casks. Styles include single malt, single pot still, blended Irish whiskey, and others.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/irish-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -867,7 +867,7 @@
     "title": "Islay Scotch Whiskey",
     "content": "# Islay Scotch Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Isle of Islay\n颜色：#d54a06\n\nIslay Scotch refers to Scotch whisky that is produced on the Isle of Islay, which is one of the whisky-producing regions of Scotland. Islay whiskies are renowned for their distinctive and peaty character, often featuring robust and smoky flavors that set them apart from whiskies produced in other regions.\n\nWell-known Islay distilleries include Ardbeg, Laphroaig, Lagavulin, and Bowmore, among others. Islay Scotch whiskies are appreciated by enthusiasts who enjoy the bold and distinctive flavor profile associated with the region. They are often enjoyed neat or with a splash of water to unlock the complexities of the spirit.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/islay-scotch-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -876,7 +876,7 @@
     "title": "Italicus Rosolio di Bergamotto",
     "content": "# Italicus Rosolio di Bergamotto\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：Italy\n颜色：#ffffff\n\nItalicus Rosolio di Bergamotto is an Italian liqueur based around the brilliance of bergamot! By combining Italian bergamot alongside a selection of other tasty botanicals including chamomile, lavender, Melissa balm and more, the producers have made a tipple excellent for enjoying on toasty evenings in the summer. Enjoy over ice, or splashed in a glass of Prosecco.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/italicus-rosolio-di-bergamotto",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -885,7 +885,7 @@
     "title": "Jägermeister",
     "content": "# Jägermeister\n\n## 原料档案\n类别：苦味酒\n酒精度：35%\n产地：Germany\n颜色：#341f08\n\nJägermeister is a German herbal liqueur made with a blend of 56 different herbs, fruits, roots, and spices. It is known for its unique and complex flavor profile, with herbal, spicy, and citrus notes. Jägermeister is often consumed as a digestif or in various cocktails, and it is recognized by its distinctive green bottle and iconic logo featuring a stag.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/jagermeister",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -894,7 +894,7 @@
     "title": "Jamaican Rum",
     "content": "# Jamaican Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Jamaica\n颜色：#ca5210\n\nJamaican rum refers to rum produced in Jamaica, a Caribbean island known for its rich history of rum production. Jamaican rum is renowned for its bold and distinctive flavor profile, often characterized by robust and complex notes.\n\nJamaican rum has a strong cultural and historical significance, and the island is home to several well-known distilleries, each with its unique approach to rum production. Brands such as Appleton Estate and Wray & Nephew are examples of Jamaican rums that have gained international acclaim.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/jamaican-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -903,7 +903,7 @@
     "title": "Japanese Whiskey",
     "content": "# Japanese Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Japan\n颜色：#9d510b\n\nJapanese whisky is a style of whisky that is produced in Japan, and it has gained international acclaim for its quality, craftsmanship, and unique characteristics. Japanese whisky is often crafted using traditional Scottish methods, with an emphasis on precision and attention to detail.\n\nJapanese whisky makers are known for their innovative approaches to whisky production. They may experiment with different types of grains, yeast strains, and cask finishes to create unique and interesting expressions.\n\nIt's important to note that while Japanese whisky draws inspiration from Scotch whisky traditions, it has developed its own identity and style. The category has grown in popularity, leading to increased global demand for Japanese whiskies. As a result, some expressions may be limited or harder to find in certain markets.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/japanese-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -912,7 +912,7 @@
     "title": "Kiwi",
     "content": "# Kiwi\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#146705\n\nKiwi, is a small, brown, fuzzy fruit with vibrant green flesh and tiny black seeds. It has a sweet and slightly tangy flavor, and its texture is both juicy and slightly grainy.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/kiwi",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -921,7 +921,7 @@
     "title": "Lemon juice",
     "content": "# Lemon juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#f3efda\n\nLemon juice is a versatile and essential ingredient in many cocktails, prized for its bright, tart flavor and ability to balance sweetness. Extracted from fresh lemons, this citrus juice adds a refreshing zing and acidity that can elevate and harmonize other flavors in a drink.\n\nIn cocktails, lemon juice serves multiple purposes. It provides a crisp, clean finish. Its high acidity also helps to cut through rich or sweet components, creating a more balanced and complex taste experience.\n\n\nWhen using lemon juice in cocktails, freshly squeezed is always preferred over bottled versions for its superior flavor and aroma. The amount used can vary greatly depending on the recipe, but even a small quantity can significantly impact the final taste of a drink.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lemon-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -930,7 +930,7 @@
     "title": "Lemon",
     "content": "# Lemon\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#fdf26f\n\nLemon is a citrus fruit known for its bright yellow color and tart flavor.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lemon",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -939,7 +939,7 @@
     "title": "Lillet Blanc",
     "content": "# Lillet Blanc\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：17%\n产地：France\n颜色：#f7ec77\n\nLillet Blanc is a French aperitif wine that falls under the category of aromatized wines. It is crafted from a blend of white wine and citrus liqueurs, primarily made from sweet oranges from Spain and bitter green oranges from Morocco. Lillet Blanc is known for its light and floral profile, with hints of citrus, honey, and a subtle bitterness.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lillet-blanc",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -948,7 +948,7 @@
     "title": "Lillet Rose",
     "content": "# Lillet Rose\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：17.5%\n产地：France\n颜色：#f09c93\n\nLillet Rosé is a French aromatized wine, belonging to the Lillet family of aperitifs. It is crafted from a blend of wines, fruit liqueurs, and a variety of herbs. Lillet Rosé is known for its light and refreshing character, offering a fruity and floral profile with a slightly bitter edge.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lillet-rose",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -957,7 +957,7 @@
     "title": "Lillet Rouge",
     "content": "# Lillet Rouge\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：17.5%\n产地：France\n颜色：#a71703\n\nLillet Rouge is a French aromatized wine and a member of the Lillet family of aperitifs. It is known for its rich and robust flavor profile, offering a combination of red and dark fruit notes with a slightly spicy and bitter undertone.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lillet-rouge",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -966,7 +966,7 @@
     "title": "Lime juice",
     "content": "# Lime juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#e9f1d7\n\nLime juice is a key player in the world of cocktails, renowned for its bright, sharp, and slightly sweeter flavor compared to lemon juice. Extracted from fresh limes, this citrus juice adds a vibrant, zesty kick to drinks, making it an indispensable ingredient in many classic and contemporary cocktails.\n\n\nWhen using lime juice in cocktails, freshly squeezed is highly recommended for its superior taste and aroma. The amount used can vary depending on the recipe, but even a small quantity can significantly brighten and enliven a drink. Its versatility allows it to pair well with a wide range of spirits, from tequila and rum to gin and vodka.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lime-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -975,7 +975,7 @@
     "title": "Lime",
     "content": "# Lime\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#c9f27b\n\nLime is a citrus fruit known for its small size, vibrant green color, and tart flavor.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/lime",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -984,7 +984,7 @@
     "title": "Limoncello",
     "content": "# Limoncello\n\n## 原料档案\n类别：利口酒\n酒精度：26%\n产地：Italy\n颜色：#ffff00\n\nItalian lemon liqueur mainly produced in Southern Italy, especially in the region around the Gulf of Naples, the Amalfi Coast, and Sicily. It is the second-most popular liqueur in Italy and is traditionally served chilled as an after-dinner digestivo. It is also a popular homemade liqueur, with various recipes available online and in print.\n\nLimoncello is made from the zest of lemons and usually has a slightly turbid appearance, which originates from the presence of small essential oil droplets suspended in the drink.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/limoncello",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -993,7 +993,7 @@
     "title": "Mango puree",
     "content": "# Mango puree\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Worldwide\n颜色：#ffbe3d\n\nMango puree is a fruit puree made with pure, ripe mangos. You can add a bit of sugar depending on the ripeness of the fruit and how you’re planning to serve it. But it can be as tangy or as sweet as you like! All you have to do is blend the following in a blender:",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/mango-puree",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1002,7 +1002,7 @@
     "title": "Maple syrup",
     "content": "# Maple syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Canada\n颜色：#bb6f44\n\nMaple syrup is a syrup made from the sap of maple trees.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/maple-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1011,7 +1011,7 @@
     "title": "Maraschino",
     "content": "# Maraschino\n\n## 原料档案\n类别：利口酒\n酒精度：32%\n产地：Croatia\n颜色：#ffffff\n\nLiqueur obtained from the distillation of Marasca cherries. The small, slightly sour fruit of the Tapiwa cherry tree, which grows wild along parts of the Dalmatian coast in Croatia, lends the liqueur its unique aroma.\n\nThe Luxardo family, an Italian producer, is particularly well-known for its Maraschino liqueur.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/maraschino",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1020,7 +1020,7 @@
     "title": "Marmalade",
     "content": "# Marmalade\n\n## 原料档案\n类别：其他\n酒精度：0%\n产地：Worldwide\n颜色：#f48a20\n\nMarmalade is a fruit preserve made from the peel and juice of citrus fruits, typically oranges. The fruit is boiled with sugar and water to create a sweet and tangy spread with a distinctive citrus flavor. The peel gives marmalade its characteristic texture.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/marmalade",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1029,7 +1029,7 @@
     "title": "Mezcal",
     "content": "# Mezcal\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Mexico\n颜色：#ffffff\n\nMezcal is a distilled alcoholic beverage that originates from Mexico, known for its distinctive smoky flavor. It is made from the agave plant, primarily the species Agave espadin, although other agave varieties can be used. The production of mezcal involves roasting the agave hearts (piñas) in underground pits, which imparts a smoky character to the final product. After roasting, the agave is crushed, fermented, and then distilled, resulting in a spirit with a wide range of flavors, including earthy, fruity, and herbal notes.\n\nThe traditional production methods involve cooking the agave in earthen pits lined with lava rocks and filled with wood and charcoal. This underground roasting process gives mezcal its distinctive smoky taste.\n\nMezcal is produced in specific regions of Mexico, with Oaxaca being a particularly renowned area for its high-quality mezcals. The production of mezcal is regulated, and the spirit has a Denomination of Origin (DO) to ensure authenticity and quality.\n\nUnlike some other agave spirits, such as tequila, which is made from Blue Agave, mezcal can be produced from a variety of agave types, contributing to the spirit's diversity.\n\nMezcal is deeply rooted in Mexican culture and has gained international recognition for its artisanal production methods and diverse flavor profile.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/mezcal",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1038,7 +1038,7 @@
     "title": "Mint",
     "content": "# Mint\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#8dcb56\n\nMint refers to a family of aromatic herbs known for their refreshing flavor and fragrance. The most commonly used and recognized type of mint is spearmint (Mentha spicata), but there are various other species and hybrids, including peppermint (Mentha × piperita).",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/mint",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1047,7 +1047,7 @@
     "title": "Mole Bitters",
     "content": "# Mole Bitters\n\n## 原料档案\n类别：苦精\n酒精度：53%\n产地：Mexico\n颜色：#3a0118\n\nMole (pronounced MO-lay) bitters are inspired by mole, a spicy Mexican chocolate sauce",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/mole-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1056,7 +1056,7 @@
     "title": "Old Tom Gin",
     "content": "# Old Tom Gin\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：UK\n颜色：#ffffff\n\nIt is slightly sweeter than London Dry, but slightly drier than the Dutch Jenever, thus is sometimes called \"the missing link\".",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/old-tom-gin",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1065,7 +1065,7 @@
     "title": "Orange bitters",
     "content": "# Orange bitters\n\n## 原料档案\n类别：苦精\n酒精度：28%\n产地：Worldwide\n颜色：#ed8300\n\nOrange bitters is a form of bitters, a cocktail flavoring made from such ingredients as the peels of Seville oranges, cardamom, caraway seed, coriander, anise, and burnt sugar in an alcohol base.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1074,7 +1074,7 @@
     "title": "Orange Curaçao",
     "content": "# Orange Curaçao\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：Netherlands\n颜色：#edaa53\n\nLiqueur flavored with the dried peel of the bitter orange laraha, a citrus fruit grown on the Dutch island of Curaçao. Curaçao is used by liqueur makers overt the world as a generic name for orange-flavoured liqueurs.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange-curacao",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1083,7 +1083,7 @@
     "title": "Orange Flower Water",
     "content": "# Orange Flower Water\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Mediterranean\n颜色：#fff\n\nClear aromatic by-product of the distillation of fresh bitter-orange blossoms for their essential oil.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange-flower-water",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1092,7 +1092,7 @@
     "title": "Orange juice",
     "content": "# Orange juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#ff9518\n\nOrange juice is a popular and versatile cocktail ingredient, known for its sweet and tangy flavor profile. Extracted from fresh oranges, it brings a natural sweetness and subtle acidity to drinks, along with a bright, sunny color that enhances the visual appeal of cocktails.\n\nWhen using orange juice in cocktails, freshly squeezed is ideal for the best flavor, though high-quality, not-from-concentrate commercial juices can be a convenient alternative. The amount used can vary widely depending on the recipe, from a splash for flavor to being the primary mixer in a drink. Its natural sweetness means it's often used in place of simple syrup in some recipes, adding both flavor and sweetness in one ingredient.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1101,7 +1101,7 @@
     "title": "Orange Soda",
     "content": "# Orange Soda\n\n## 原料档案\n类别：果汁\n酒精度：0%\n产地：Worldwide\n颜色：#f5cd52\n\nOrange soda is a carbonated soft drink flavored with orange flavoring. It is a non-alcoholic beverage that typically combines carbonated water, sweeteners, and artificial or natural orange flavoring. Orange sodas are known for their vibrant orange color and sweet, citrusy taste.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange-soda",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1110,7 +1110,7 @@
     "title": "Orange",
     "content": "# Orange\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n\nOrange fruit\n\nOrange 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orange",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1119,7 +1119,7 @@
     "title": "Orgeat Syrup",
     "content": "# Orgeat Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#d9ca9f\n\nOrgeat syrup is a sweet, nutty syrup that plays a crucial role in many classic and tiki-style cocktails. Traditionally made from almonds, sugar, and orange flower water, orgeat has a distinctive flavor profile that combines nuttiness with subtle floral notes and a rich sweetness.\n\n\nIn cocktails, orgeat syrup adds depth, complexity, and a silky texture. Its unique taste complements a wide range of spirits, particularly rum and whiskey, and it's an essential ingredient in iconic drinks like the Mai Tai and the Japanese Cocktail. The syrup's ability to smooth out harsh edges in spirits while adding its own character makes it a valuable tool in a mixologist's arsenal.\n\n\nWhen using orgeat syrup, a little goes a long way due to its concentrated flavor and sweetness. High-quality commercial versions are readily available, but some bartenders prefer to make their own to control the flavor profile and ingredients. While almond is the traditional base, variations using other nuts like pistachio or hazelnut have become popular in craft cocktail scenes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/orgeat-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1128,7 +1128,7 @@
     "title": "Ouzo",
     "content": "# Ouzo\n\n## 原料档案\n类别：利口酒\n酒精度：35%\n产地：Greece\n颜色：#ffffff\n\nDry anise-flavored aperitif that is widely consumed in Greece.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/ouzo",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1137,7 +1137,7 @@
     "title": "Overproof Rum",
     "content": "# Overproof Rum\n\n## 原料档案\n类别：烈酒\n酒精度：50%\n产地：Caribbean\n颜色：#5d201a\n\nRum much higher than the standard 40% ABV (80 proof), with many as high as 75% (150 proof) to 80% (160 proof) available.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/overproof-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1146,7 +1146,7 @@
     "title": "Pamplemousse Liqueur",
     "content": "# Pamplemousse Liqueur\n\n## 原料档案\n类别：利口酒\n酒精度：16%\n产地：Worldwide\n颜色：#ffe4c9\n\nFresh, pink grapefruit peels are steam-distilled to extract the intense, bright aromatic essential oils contained within. Giffard Pamplemousse is the perfect way to add a citrus boost to creative cocktails or to brighten up some bubbles.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pamplemousse-liqueur",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1155,7 +1155,7 @@
     "title": "Passionfruit syrup",
     "content": "# Passionfruit syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#f9e2b9\n\nPassionfruit syrup is a vibrant and tropical ingredient that brings an intense, exotic flavor to cocktails. Made from the pulp and juice of passionfruit combined with sugar, this syrup captures the fruit's unique balance of sweet and tart notes, along with its distinctive tropical aroma.\n\nThe syrup's bold flavor can stand up to strong spirits and other intense ingredients, allowing it to shine even in complex drink recipes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/passionfruit-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1164,7 +1164,7 @@
     "title": "Passionfruit",
     "content": "# Passionfruit\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#000\n\nPassionfruit 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/passionfruit",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1173,7 +1173,7 @@
     "title": "Passoã",
     "content": "# Passoã\n\n## 原料档案\n类别：利口酒\n酒精度：17%\n产地：France\n颜色：#ea5f4c\n\nLiqueur with passion fruit being the main ingredient.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/passoa",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1182,7 +1182,7 @@
     "title": "Peach liqueur",
     "content": "# Peach liqueur\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：Worldwide\n颜色：#f2a557\n\nA peach liqueur is any liqueur that is made through the distillation of peaches and has sugar added to it. Peach liqueurs gained popularity in the mid-20th century, but their exact date of origin is unknown.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/peach-liqueur",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1191,7 +1191,7 @@
     "title": "Peach syrup",
     "content": "# Peach syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#f3da76\n\nPeach Simple Syrup is a 3-ingredient homemade add-in that’s used to sweeten all of your favorite cocktails, lemonades, and teas! Ready in just 45 minutes!",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/peach-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1200,7 +1200,7 @@
     "title": "Peach",
     "content": "# Peach\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n\nPeach fruit\n\nPeach 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/peach",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1209,7 +1209,7 @@
     "title": "Pear Brandy (Williams)",
     "content": "# Pear Brandy (Williams)\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Germany\n颜色：#fbf8e3\n\nThe Purkhart Pear Williams Brandy uses only “Williams” pears from South Tirol (also known as Alto Adige or Südtirol), whose pears are prized for their opulent and creamy ripe fruit fragrance. Lively and stimulating on the palate, this eau-de-vie reveals a depth of pear flavor that carries well into the finish. Made only from distilled pears and water. Enjoy on its own, stir with dry vermouth for a perfumed Martini variation, or make uncommonly aromatic sour cocktails. 100% Reines Destillat Williamsbrand.\n\n- Lively eau-de-vie distilled from Williams pears\n- Williams pears have an opulent and creamy ripe fruit fragrance\n- Floral, fruity complexity; makes aromatic sour cocktails\n- Mix with dry vermouth and orange bitters for a Martini variation\n- Purkhart has captured authentic regional tastes since 1932",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pear-brandy-williams",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1218,7 +1218,7 @@
     "title": "Pelinkovac",
     "content": "# Pelinkovac\n\n## 原料档案\n类别：苦味酒\n酒精度：32%\n产地：Southeast Europe\n颜色：#573f42\n\nPelinkovac is a liqueur based on wormwood, it has a very bitter taste, resembling that of Jägermeister.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pelinkovac",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1227,7 +1227,7 @@
     "title": "Pepper",
     "content": "# Pepper\n\n## 原料档案\n类别：香料\n酒精度：0%\n\nBlack pepper\n\nPepper 为调酒原料档案，属于 香料 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pepper",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1236,7 +1236,7 @@
     "title": "Pernod",
     "content": "# Pernod\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#c6c0a0\n\nPernod is a brand of anise-flavored aperitif that originated in France. It is known for its licorice-like flavor and is often enjoyed as a refreshing apéritif or used as an ingredient in cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pernod",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1245,7 +1245,7 @@
     "title": "Peychauds Bitters",
     "content": "# Peychauds Bitters\n\n## 原料档案\n类别：苦精\n酒精度：35%\n产地：North America\n颜色：#622426\n\nIt is a gentian-based bitters, comparable to Angostura bitters, but with a predominant anise aroma combined with a background of mint.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/peychauds-bitters",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1254,7 +1254,7 @@
     "title": "Pineapple juice",
     "content": "# Pineapple juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#eadb34\n\nJuice from pineapple fruit.\n\nPineapple juice 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pineapple-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1263,7 +1263,7 @@
     "title": "Pineapple Syrup",
     "content": "# Pineapple Syrup\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nPineapple Syrup 为调酒原料档案，属于 其他 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pineapple-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1272,7 +1272,7 @@
     "title": "Pineapple",
     "content": "# Pineapple\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n\nPineapple fruit\n\nPineapple 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pineapple",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1281,7 +1281,7 @@
     "title": "Pisco",
     "content": "# Pisco\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：South America\n颜色：#ffffff\n\nPisco is a type of brandy that originates from the winemaking regions of Peru and Chile. It is produced through the distillation of fermented grape juice, and its production is governed by strict regulations in both countries.\n\nPisco is typically distilled only once, which sets it apart from some other brandies that may undergo multiple distillations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pisco",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1290,7 +1290,7 @@
     "title": "Plum Brandy",
     "content": "# Plum Brandy\n\n## 原料档案\n类别：烈酒\n酒精度：38%\n产地：Balkan\n颜色：#fff8ec\n\nPlum brandy, often known as slivovitz or \"šljivovica\", is a fruit brandy made from fermented and distilled plums. This type of brandy is popular in various cultures and regions, including Eastern Europe and the Balkans, where it holds cultural significance. The production process typically involves fermenting ripe plums, distilling the fermented mash, and then aging the resulting spirit in wooden barrels. Plum brandy can vary in color, flavor, and aroma, influenced by factors such as the type of plums used, the distillation process, and the length of aging. It is enjoyed as a sipping spirit, a digestive after meals, or as a key ingredient in traditional cocktails and culinary recipes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/plum-brandy",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1299,7 +1299,7 @@
     "title": "Pomegranate",
     "content": "# Pomegranate\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n产地：Afghanistan\n颜色：#d73506\n\nPomegranate is a fruit known for its vibrant red seeds, which are packed with sweet-tart juice. In cocktails, pomegranate is used in various forms, including fresh juice, seeds (known as arils), and pomegranate syrup or liqueur. Its flavor is both fruity and tangy, making it an excellent ingredient for adding depth and complexity to drinks.\n\nPomegranate seeds can be used as a garnish, adding a burst of flavor and texture to cocktails. They are also sometimes muddled in the drink to release their juice.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/pomegranate",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1308,7 +1308,7 @@
     "title": "Prosecco",
     "content": "# Prosecco\n\n## 原料档案\n类别：葡萄酒\n酒精度：11%\n产地：Italy\n颜色：#a57600\n\nProsecco is a sparkling wine that originates from the Veneto region of Italy. It is made primarily from the Glera grape variety, although other permitted grape varieties may also be used in smaller quantities. Prosecco is known for its fresh and fruity character, and it is one of the most popular and widely consumed sparkling wines globally.\n\nProsecco is known for its effervescence, and the bubbles are generally lighter and less persistent than those in traditional method sparkling wines like Champagne.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/prosecco",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1317,7 +1317,7 @@
     "title": "Raspberry Syrup",
     "content": "# Raspberry Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#b71f23\n\nFruit syrup made from raspberries.\n\nRaspberry Syrup 为调酒原料档案，属于 糖浆 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/raspberry-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1326,7 +1326,7 @@
     "title": "Red wine",
     "content": "# Red wine\n\n## 原料档案\n类别：葡萄酒\n酒精度：11%\n产地：Worldwide\n颜色：#801212\n\nRed wine is a type of wine made from dark-colored grape varieties. The color of red wine comes from the skin of the grapes, which is included in the fermentation process. The skins impart color, tannins, and various flavors to the wine. Red wines can range from light and fruity to rich and full-bodied, and they are typically enjoyed at room temperature. Popular red grape varieties include Cabernet Sauvignon, Merlot, Pinot Noir, and Syrah, among others. Red wine is known for its diverse flavor profiles and is often paired with a variety of foods.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/red-wine",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1335,7 +1335,7 @@
     "title": "Rhum agricole",
     "content": "# Rhum agricole\n\n## 原料档案\n类别：烈酒\n酒精度：50%\n产地：Caribbean\n颜色：#ffffff\n\nRhum Agricole is a style of rum that is made from fresh sugarcane juice rather than molasses, which is the byproduct of sugar production. The term \"agricole\" is French for \"agricultural,\" highlighting the agricultural origin of the sugarcane used in the production.\n\nRhum Agricole is particularly associated with regions like Martinique and Guadeloupe, where the production of this style of rum has a long and established tradition. The distinctive character of Rhum Agricole has contributed to its popularity among rum enthusiasts and mixologists seeking unique and flavorful spirits.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/rhum-agricole",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1344,7 +1344,7 @@
     "title": "Root beer",
     "content": "# Root beer\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：North America\n颜色：#492f14\n\nRoot beer is a sweet North American soft drink traditionally made using the root bark of the sassafras tree Sassafras albidum or the vine of Smilax ornata (known as sarsaparilla, also used to make a soft drink, sarsaparilla) as the primary flavor. Root beer is typically, but not exclusively, non-alcoholic, caffeine-free, sweet, and carbonated. Like cola, it usually has a thick and foamy head. A well-known use is to add vanilla ice cream to make a root beer float.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/root-beer",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1353,7 +1353,7 @@
     "title": "Rose syrup",
     "content": "# Rose syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n产地：Worldwide\n颜色：#b11f30\n\nPure sugar syrup made from the natural aroma of rose.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/rose-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1362,7 +1362,7 @@
     "title": "Rose water",
     "content": "# Rose water\n\n## 原料档案\n类别：其他\n酒精度：0%\n颜色：#ffffff\n\nRose water is a fragrant liquid that is created by distilling rose petals with water. It is widely used for culinary, cosmetic, and medicinal purposes, valued for its distinct floral aroma and subtle flavor.\n\nWhen using rose water, it is important to choose a product made specifically for culinary use, as not all rose waters are suitable for consumption. It is a versatile ingredient that can add a unique and aromatic touch to a wide range of dishes and products.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/rose-water",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1371,7 +1371,7 @@
     "title": "Rosé wine",
     "content": "# Rosé wine\n\n## 原料档案\n类别：葡萄酒\n酒精度：17%\n颜色：#bf573d\n\nRosé wine is a type of wine that falls between red and white wine, characterized by its pink or blush color. It is typically made from red grape varieties, where the grape skins are in contact with the grape juice for a shorter period compared to red wine production. The result is a wine with a range of pink hues, from pale salmon to deep rose, depending on the grape variety and winemaking process.\n\nRosé wines can exhibit a diverse array of flavors, ranging from light and crisp to more full-bodied and fruit-forward. They are known for their refreshing qualities and are often enjoyed chilled. Rosé wines can be produced in various regions around the world and are popular choices for warm-weather drinking and versatile food pairings.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/rose-wine",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1380,7 +1380,7 @@
     "title": "Rye whiskey",
     "content": "# Rye whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：North America\n颜色：#d54a06\n\nRye whiskey is a type of whiskey made primarily from rye grain. To be labeled as rye whiskey in the United States, the mash (grain mixture fermented to make alcohol) must be composed of at least 51% rye. The remaining ingredients in the mash can include other grains such as corn and barley. Rye whiskey is aged in new charred oak barrels, and the final product must be distilled to no more than 160 proof and entered into the barrel for aging at no more than 125 proof.\n\nAmerican rye whiskey tends to have a spicier and more robust flavor profile compared to bourbon, which is primarily made from corn.\n\nIn Canada, the term \"rye\" is often used broadly and doesn't necessarily mean that the whiskey is made predominantly from rye grain. Canadian rye whisky can contain a mix of grains, and the flavor profile may vary. Some Canadian whiskies labeled as \"rye\" are made with little or no rye content.\n\nRye whiskey is known for its distinctive taste, which can include spicy, fruity, and sometimes peppery notes. It can be enjoyed neat, on the rocks, or used in various cocktails such as the classic Manhattan or Old Fashioned.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/rye-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1389,7 +1389,7 @@
     "title": "Sake",
     "content": "# Sake\n\n## 原料档案\n类别：烈酒\n酒精度：20%\n产地：Japan\n颜色：#ffffff\n\nSake is a traditional Japanese alcoholic beverage made from fermented rice. Unlike wine, which is fermented from fruit, sake is brewed more like beer, where the starch from rice is converted into sugars before being fermented into alcohol. Sake has a delicate, nuanced flavor profile that can range from sweet to dry, with notes of fruit, flowers, herbs, and umami, depending on the style and brewing process. The alcohol content typically ranges between 14% and 20%.\n\nIn cocktails, sake is often used as a base spirit or a modifier, bringing a subtle, smooth flavor that complements other ingredients without overpowering them. Its versatility allows it to pair well with a variety of flavors, from citrus and fruit to herbs and spices. Sake-based cocktails, like the Sake Martini or the Tokyo Mule, often emphasize its lightness and delicate flavor, making them ideal for those seeking a refined and refreshing drink.\n\nSake can also be enjoyed on its own, either chilled, at room temperature, or warm, depending on the type and the occasion. It is traditionally served in small ceramic cups and is an integral part of Japanese cuisine and culture. Sake's unique flavor and brewing process make it a distinct and sophisticated option for both traditional and modern cocktail creations.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sake",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1398,7 +1398,7 @@
     "title": "Saline solution",
     "content": "# Saline solution\n\n## 原料档案\n类别：其他\n酒精度：0%\n颜色：#ffffff\n\nSaline solution 为调酒原料档案，属于 其他 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/saline-solution",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1407,7 +1407,7 @@
     "title": "Salt",
     "content": "# Salt\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nSalt\n\nSalt 为调酒原料档案，属于 其他 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/salt",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1416,7 +1416,7 @@
     "title": "Sanbitter",
     "content": "# Sanbitter\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Italy\n颜色：#f72d2d\n\nSanbittèr is very similar to Campari, with a bold bitter orange flavor and notes of grapefruit. A key distinction is that Sanbittèr contains no alcohol. It’s mildly carbonated and refreshingly dry on the finish. Despite the bitter profile, it is fairly sweet, with 15.8g of sugar per bottle.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sanbitter",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1425,7 +1425,7 @@
     "title": "Scotch whiskey",
     "content": "# Scotch whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Scotland\n颜色：#d54a06\n\nProduced in Scotland, typically made from malted barley, and aged for a minimum period in oak barrels. Scotch can be further classified into single malt, single grain, blended malt, blended grain, and blended Scotch whisky.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/scotch-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1434,7 +1434,7 @@
     "title": "Sherry",
     "content": "# Sherry\n\n## 原料档案\n类别：葡萄酒\n酒精度：17%\n产地：Spain\n颜色：#8c4122\n\nSherry is a fortified wine that originates from the Jerez region in southwestern Spain. It is made from white grapes, primarily the Palomino grape variety, and is known for its unique production process, diverse styles, and complex flavors. Sherry has a protected designation of origin (DO) status, meaning that only wines produced in the designated region can be labeled as Sherry.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sherry",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1443,7 +1443,7 @@
     "title": "Simple Syrup",
     "content": "# Simple Syrup\n\n## 原料档案\n类别：糖浆\n酒精度：0%\n颜色：#e6dfcc\n\nSimple syrup is a basic sweetener used in cocktails, made by dissolving sugar in water. The standard recipe is a 1:1 ratio of sugar to water, although variations exist, such as rich simple syrup, which uses a 2:1 ratio for a thicker, sweeter result. The syrup is clear and easily mixes with both cold and hot liquids, making it an essential ingredient in many drinks.\n\nSimple syrup can also be infused with additional flavors like herbs, spices, or fruits, adding a layer of complexity to cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/simple-syrup",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1452,7 +1452,7 @@
     "title": "Sloe Gin",
     "content": "# Sloe Gin\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：UK\n颜色：#d74536\n\nSloe gin is a red liqueur made with gin and sloes. Sloes are the fruit (drupe) of Prunus spinosa, the blackthorn plant, a relative of the plum.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sloe-gin",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1461,7 +1461,7 @@
     "title": "St-Germain",
     "content": "# St-Germain\n\n## 原料档案\n类别：利口酒\n酒精度：20%\n产地：France\n颜色：#f8e888\n\nSt-Germain is an elderflower liqueur It is made using the petals of Sambucus nigra from the Savoie region in France, and each bottle is numbered with the year the petals were collected. Petals are collected annually in the spring over a period of three to four weeks, and are often transported by bicycle to collection points to avoid damaging the petals and impacting the flavour.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/st-germain",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1470,7 +1470,7 @@
     "title": "Star anise",
     "content": "# Star anise\n\n## 原料档案\n类别：香料\n酒精度：0%\n\nStar anise 为调酒原料档案，属于 香料 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/star-anise",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1479,7 +1479,7 @@
     "title": "Strawberry",
     "content": "# Strawberry\n\n## 原料档案\n类别：果蔬\n酒精度：0%\n颜色：#990202\n\nStrawberry 为调酒原料档案，属于 果蔬 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/strawberry",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1488,7 +1488,7 @@
     "title": "Sugar",
     "content": "# Sugar\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nSugar is a fundamental ingredient in cocktails, used primarily as a sweetener to balance the flavors of sour, bitter, or strong alcoholic components. It comes in various forms, including granulated sugar, superfine sugar, and sugar cubes, each of which can be used differently depending on the cocktail. Sugar can also be transformed into simple syrup, a liquid form that dissolves easily in cold beverages, making it a versatile option for many drinks.\n\nIn cocktails, sugar is often used to rim glasses, such as in a classic Margarita or a Sidecar, where the rim is coated with sugar to add sweetness with every sip. Superfine sugar is preferred for drinks like the Daiquiri or the Mojito, where it is muddled with lime or mint to create a balanced and refreshing flavor. Sugar cubes are a key component in classic cocktails like the Old Fashioned, where they are soaked in bitters before being muddled to release their sweetness.\n\nBeyond its role as a sweetener, sugar can also influence the texture and mouthfeel of a cocktail, adding a slight viscosity that enhances the drink's overall experience. Whether used in its solid form or as a syrup, sugar is an essential ingredient that helps create harmony and depth in a wide range of cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sugar",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1497,7 +1497,7 @@
     "title": "Suze",
     "content": "# Suze\n\n## 原料档案\n类别：利口酒\n酒精度：15%\n产地：Switzerland\n颜色：#f5dda1\n\nBitter flavored drink made with the roots of the plant gentian.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/suze",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1506,7 +1506,7 @@
     "title": "Swedish punsch",
     "content": "# Swedish punsch\n\n## 原料档案\n类别：利口酒\n酒精度：26%\n产地：Sweden\n颜色：#f1b337\n\nSwedish Punsch (not to be confused with punch) is also known as Arrack Punsch, Caloric Punch, Punssi in Finnish, and simply as Punsch. Based on Batavia arrack, it is a style of liqueur popular in Sweden and other Nordic countries (Norwegian Punsch was also produced by the state-owned monopoly), with a strength ranging from 27% - 50% alc./vol.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/swedish-punsch",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1515,7 +1515,7 @@
     "title": "Sweet Vermouth",
     "content": "# Sweet Vermouth\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：18%\n产地：Worldwide\n颜色：#8e4201\n\nSweet vermouth, often simply referred to as \"vermouth,\" is a fortified and aromatized wine that is flavored with a variety of botanicals, herbs, and spices. It belongs to the category of vermouth, which includes both sweet (red) and dry (white) vermouth.\n\nVermouth is a wine-based product, and like wine, it should be stored in a cool, dark place, and once opened, it is often recommended to be refrigerated to maintain its freshness.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/sweet-vermouth",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1524,7 +1524,7 @@
     "title": "Tabasco",
     "content": "# Tabasco\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nHot sauce made from vinegar, tabasco peppers, and salt.\n\nTabasco 为调酒原料档案，属于 其他 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tabasco",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1533,7 +1533,7 @@
     "title": "Tennessee Whiskey",
     "content": "# Tennessee Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：America\n颜色：#dc7a0e\n\nTennessee whiskey is a specific type of American whiskey that is closely associated with the state of Tennessee and is known for its distinctive production process, which includes the Lincoln County Process.\n\nThe distinguishing feature of Tennessee whiskey is the use of the Lincoln County Process, a filtration method in which the whiskey is filtered through, or steeped in, sugar maple charcoal before entering the barrels for aging. This process is believed to impart additional smoothness and mellowness to the final product. Not all Tennessee whiskeys use this process, but it is a defining characteristic for those that do.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tennessee-whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1542,7 +1542,7 @@
     "title": "Tequila Añejo",
     "content": "# Tequila Añejo\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Mexico\n颜色：#f5d58a\n\nTequila Añejo is a category of tequila that has been aged and matured in oak barrels for a specific period, resulting in a more complex and nuanced flavor profile compared to younger tequilas. The term \"Añejo\" means \"aged\" or \"vintage\" in Spanish. According to Mexican regulations governing tequila production, Añejo tequila must be aged for a minimum of one year but less than three years.\n\nTequila Añejo sits between the younger, brighter styles of tequila and the more mature, heavily aged Extra Añejo category, which requires aging for a minimum of three years.\n\nWhen selecting a Tequila Añejo, it's advisable to explore various brands and expressions, as the aging process and barrel types can lead to unique and diverse flavor profiles across different bottles.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tequila-anejo",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1551,7 +1551,7 @@
     "title": "Tequila Blanco",
     "content": "# Tequila Blanco\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Mexico\n颜色：#ffffff\n\nTequila is a distilled alcoholic beverage made from the fermented juice of the blue agave plant, primarily grown in the Jalisco region of Mexico. The production of tequila is regulated by Mexican law, specifying the geographical areas where it can be produced and the methods used in its production.\n\nTequila Blanco, also known as Tequila Silver or Tequila Plata, is a type of tequila that is typically unaged or aged for a very short period. It is the purest expression of the blue agave flavor, as it is not influenced by the characteristics of aging in oak barrels.\n\nBlanco tequila is a popular choice for those who want to experience the true essence of the agave plant without the influence of aging. It provides a lively and authentic representation of tequila's primary ingredient.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tequila-blanco",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1560,7 +1560,7 @@
     "title": "Tequila Extra Añejo",
     "content": "# Tequila Extra Añejo\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Mexico\n颜色：#db5b0f\n\nTequila Extra Añejo is the most aged and mature category of tequila, representing the highest level of aging among tequila expressions. The term \"Extra Añejo\" translates to \"extra aged\" in Spanish. To be classified as Extra Añejo, tequila must be aged in oak barrels for a minimum of three years. This extended aging period imparts a rich and complex flavor profile, often with pronounced oak characteristics.\n\nExtra Añejo tequila is often considered a sipping tequila, meant to be enjoyed slowly to appreciate its depth and complexity. While it can be sipped neat, some enthusiasts may also enjoy it with a few drops of water to unlock additional flavors.\n\nTequila Extra Añejo represents the pinnacle of aging in the tequila category, appealing to connoisseurs who appreciate the intricate interplay between agave, wood, and time. Due to its premium quality and rarity, Extra Añejo tequilas are typically priced higher than younger expressions.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tequila-extra-anejo",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1569,7 +1569,7 @@
     "title": "Tequila Reposado",
     "content": "# Tequila Reposado\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Mexico\n颜色：#d8cca6\n\nTequila Reposado is a type of tequila that has been aged or \"rested\" in oak barrels for a specific period, giving it a mellower and more complex flavor compared to Tequila Blanco (unaged tequila). The term \"reposado\" translates to \"rested\" in Spanish.\n\nReposado occupies a middle ground between the youthful vibrancy of Blanco tequila and the more mature and complex characteristics of Añejo tequila. It appeals to those who appreciate a balance of agave flavor and the influence of oak aging.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tequila-reposado",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1578,7 +1578,7 @@
     "title": "Teranino",
     "content": "# Teranino\n\n## 原料档案\n类别：利口酒\n酒精度：19%\n产地：Croatia\n颜色：#450011\n\nTeranino is a unique Croatian liqueur produced with fruit or pomace brandy and red wine made from Teran variety—hence the name. This liqueur is usually sweetened and flavored with various botanicals such as cinnamon, cloves, star anise, lemon, vanilla, or fennel.\n\nThe result is a ruby red liqueur with an earthy and herbaceous character, fruity notes, and sweet, spicy aromas. Teranino is sweet and typically has between 15 to 20% ABV. It is best to serve it chilled and enjoy it as an aperitif or a digestif. Teranino can be served neat or on the rocks.\n\nThis traditional liqueur is mainly produced in Istria, where Teran is one of the most common red grape varieties.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/teranino",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1587,7 +1587,7 @@
     "title": "Tomato juice",
     "content": "# Tomato juice\n\n## 原料档案\n类别：果汁\n酒精度：0%\n颜色：#f16624\n\nJuice made from tomatoes.\n\nTomato juice 为调酒原料档案，属于 果汁 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tomato-juice",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1596,7 +1596,7 @@
     "title": "Tonic",
     "content": "# Tonic\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Worldwide\n颜色：#ffffff\n\nTonic water is a carbonated beverage that is flavored with quinine, a bitter compound derived from the bark of the cinchona tree. Originally used as a prophylactic against malaria due to its quinine content, tonic water has evolved into a popular mixer for various cocktails, especially the classic Gin and Tonic.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/tonic",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1605,7 +1605,7 @@
     "title": "Triple Sec",
     "content": "# Triple Sec\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#ffffff\n\nTriple sec is usually made from orange peels steeped in a spirit derived from sugar beet due to its neutral flavor.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/triple-sec",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1614,7 +1614,7 @@
     "title": "Vanilla Extract",
     "content": "# Vanilla Extract\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nSolution made by macerating and percolating vanilla pods in a solution of ethanol and water.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/vanilla-extract",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1623,7 +1623,7 @@
     "title": "Vanilla Vodka",
     "content": "# Vanilla Vodka\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Russia\n颜色：#ffffff\n\nVodka with added vanilla essence.\n\nVanilla Vodka 为调酒原料档案，属于 烈酒 类，典型酒精度 40%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/vanilla-vodka",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1632,7 +1632,7 @@
     "title": "Vermouth Bianco",
     "content": "# Vermouth Bianco\n\n## 原料档案\n类别：加强葡萄酒\n酒精度：15%\n产地：Italy\n颜色：#ffffff\n\nFirst launched way back in 1910, Bianco is a wonderful style of vermouth. First inspired by the white flowers of vanilla plants, the bottling has been nicknamed ‘Bianchissimo’, meaning “the whitest of the white”.\n\nWhilst it looks like a dry vermouth, this is a sweeter style, which offers flavours of juicy citrus, berries, peaches and apricots, some mixed herbs, a touch of charcoal, vanilla, honey, apples, and some faint herby bitterness.\n\nDelicate and well balanced, this vermouth is a bartender’s dream, offering sweet complexity that is perfect in White Negronis and Martini style drinks.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/vermouth-bianco",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1641,7 +1641,7 @@
     "title": "Vodka Citron",
     "content": "# Vodka Citron\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Sweden\n颜色：#ffffff\n\nVodka with added lemon essence.\n\nVodka Citron 为调酒原料档案，属于 烈酒 类，典型酒精度 40%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/vodka-citron",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1650,7 +1650,7 @@
     "title": "Vodka",
     "content": "# Vodka\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Russia\n颜色：#ffffff\n\nVodka is a distilled spirit that is known for its clear and colorless appearance. It is typically produced from the fermentation and distillation of grains, potatoes, or sometimes fruits. The resulting alcohol is then often filtered and diluted with water to achieve the desired alcohol content.\n\nVodka is characterized by its relatively neutral taste and aroma. It is intentionally distilled to be a clean and pure spirit, allowing it to take on the characteristics of its base ingredients.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/vodka",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1659,7 +1659,7 @@
     "title": "Walnut Liqueur",
     "content": "# Walnut Liqueur\n\n## 原料档案\n类别：利口酒\n酒精度：32%\n产地：Worldwide\n颜色：#3b0e04\n\nWalnut liqueur is known in Austria and Germany as Nüsse or Nüssenschnaps, in France as Noix, and in Italy as Nocino. Residents of Alpine regions traditionally drink walnut liqueurs during Christmastime. The spice and depth pair well with wintery nights and hearty meals. Serve to guests in a cordial glass, post-dinner or as an unexpected dessert pairing. In cocktails, Nux Alpina is an extraordinary complement to brown spirits and dark fortified wines, like Madeira, sherry and sweet red vermouth.\n\n- Aromatic liqueur renowned for its balance, depth and smooth finish\n- Made from fresh green “Weinsberg” walnuts steeped in grape brandy\n- Infused with spices and alpine botanicals\n- Serve after hearty meals or in coffee, cream or egg drinks\n- Complements brown spirits and dark fortified wines\n- Produced by Austria's Purkhart family for three generations",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/walnut-liqueur",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1668,7 +1668,7 @@
     "title": "Water",
     "content": "# Water\n\n## 原料档案\n类别：饮料\n酒精度：0%\n产地：Worldwide\n颜色：#fff\n\nIt's water.\n\nWater 为调酒原料档案，属于 饮料 类，典型酒精度 0%。该条目由 bar-assistant 开源数据仓库（MIT）提供，用于鸡尾酒配方用料标准化与风味匹配。",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/water",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1677,7 +1677,7 @@
     "title": "Whiskey",
     "content": "# Whiskey\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Worldwide\n颜色：#d54a06\n\nWhiskey is a distilled alcoholic beverage made from fermented grain mash. The grains used in whiskey production can include barley, corn, rye, and wheat. The production process involves mashing the grains, fermenting the mash, distilling the liquid, and aging it in wooden barrels, usually made of oak. The aging process imparts flavors and character to the whiskey.\n\nThe flavor, aroma, and characteristics of whiskey can vary widely based on factors such as the type of grains used, the distillation process, the type of barrels used for aging, and the duration of maturation. Whiskey is enjoyed in various ways, including neat, on the rocks, or as a key ingredient in cocktails.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/whiskey",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1686,7 +1686,7 @@
     "title": "White Peach Puree",
     "content": "# White Peach Puree\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nA purée (or mash) is cooked food, usually vegetables, fruits or legumes, that has been ground, pressed, blended or sieved to the consistency of a creamy paste or liquid.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/white-peach-puree",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1695,7 +1695,7 @@
     "title": "White Rum",
     "content": "# White Rum\n\n## 原料档案\n类别：烈酒\n酒精度：40%\n产地：Caribbean\n颜色：#ffffff\n\nWhite rum, also known as light or silver rum, is a type of rum that is clear and colorless. It is often unaged or aged for a very short period in stainless steel or other neutral containers, which prevents it from developing the color and flavor that result from prolonged aging in wooden barrels.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/white-rum",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1704,7 +1704,7 @@
     "title": "White wine",
     "content": "# White wine\n\n## 原料档案\n类别：葡萄酒\n酒精度：11%\n产地：Worldwide\n颜色：#f6e1b0\n\nWhite wine is a type of wine made from green or yellowish grape varieties, where the grape skins are separated from the grape juice before or during fermentation. This absence of prolonged skin contact results in a wine with a pale or straw-like color. White wines can range from crisp and light to full-bodied and complex, and they are typically served chilled. Common white grape varieties include Chardonnay, Sauvignon Blanc, Riesling, and Pinot Grigio. White wine is known for its refreshing qualities and is often enjoyed as an aperitif or paired with a variety of dishes, including seafood, poultry, and lighter fare.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/white-wine",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1713,7 +1713,7 @@
     "title": "Worcestershire Sauce",
     "content": "# Worcestershire Sauce\n\n## 原料档案\n类别：其他\n酒精度：0%\n\nFermented liquid condiment created in the city of Worcester",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/worcestershire-sauce",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
@@ -1722,7 +1722,7 @@
     "title": "Yellow Chartreuse",
     "content": "# Yellow Chartreuse\n\n## 原料档案\n类别：利口酒\n酒精度：40%\n产地：France\n颜色：#fbfb4b\n\nYellow Chartreuse is a herbal liqueur made by the Carthusian monks in France. It is a milder and slightly sweeter version of Green Chartreuse, another famous liqueur produced by the same monks. Yellow Chartreuse is characterized by its yellow color and a complex flavor profile derived from a secret blend of 130 herbs and botanicals. It has a sweet and honeyed taste with herbal, floral, and spicy notes.",
     "source_url": "https://github.com/bar-assistant/data/tree/main/data/ingredients/yellow-chartreuse",
-    "refreshed_at": "2026-08-27",
+    "refreshed_at": "2026-08-28",
     "license": "MIT",
     "category": "ingredient_profile",
     "source_authority": "bar-assistant"
