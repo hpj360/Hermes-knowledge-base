@@ -77,6 +77,11 @@ def get_engine():
         def _set_sqlite_pragma(dbapi_conn, _conn_record):
             cursor = dbapi_conn.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
+            # FTS5 段合并/排序会在系统 Temp（Win32 GetTempPath）创建临时文件，
+            # 受限环境（沙箱/无 TMP 权限）会以 SQLITE_CANTOPEN 失败并让
+            # DELETE 级联整条语句失败（20 个删除级联用例的根因）；改用
+            # temp_store=MEMORY 后合并走内存，量级远小于内存表上限。
+            cursor.execute("PRAGMA temp_store=MEMORY")
             cursor.close()
             _load_sqlite_vec(dbapi_conn)
         # 开启 WAL + busy_timeout
