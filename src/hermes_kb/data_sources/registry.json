@@ -323,5 +323,57 @@
     "access": "curated",
     "import_adapter": "wikidata_cocktails_sync",
     "status": "active"
+  },
+  "xiren_index": {
+    "id": "xiren_index",
+    "name": "喜人奇妙夜 分集作品索引（S1 全量 + S2 部分 + S3 状态）",
+    "type": "reference",
+    "authority_level": 4,
+    "accuracy_notes": "喜剧竞演综艺《喜人奇妙夜》的季/期/作品×小队索引：第一季全 12 期完整目录来自维基百科（CC BY-SA），第二季为多源交叉的部分索引（待按期补全），第三季为未开播状态记录。索引为事实性数据，不含台词正文。",
+    "refresh_cadence_days": 180,
+    "last_verified": "2026-09-30",
+    "license": "CC BY-SA + open-access（事实性索引）",
+    "access": "curated",
+    "import_adapter": "xiren_index",
+    "status": "active"
+  },
+  "xiren_transcripts": {
+    "id": "xiren_transcripts",
+    "name": "喜人奇妙夜 台词转写稿（粉丝转写，个人学习保留）",
+    "type": "reference",
+    "authority_level": 3,
+    "accuracy_notes": "《喜人奇妙夜》部分作品台词转写：1 篇较全稿来自 B站「小小台词君」（硬字幕 OCR + LLM 校对，存在待更占位），5 篇为乐乐文库免费预览节选（非完整台本；完整版需站内付费）。注意：转写稿为播出画面衍生转写，非创作者原始台本；节目版权归米未传媒/腾讯视频，仅供本地个人学习，不对外分发。",
+    "refresh_cadence_days": 180,
+    "last_verified": "2026-09-30",
+    "license": "copyright-all-rights-reserved-personal-study",
+    "access": "curated",
+    "import_adapter": "xiren_transcripts",
+    "status": "active"
+  },
+  "heishenhua_plot": {
+    "id": "heishenhua_plot",
+    "name": "黑神话·悟空 剧情梳理（机核用户投稿，玩家推演）",
+    "type": "reference",
+    "authority_level": 2,
+    "accuracy_notes": "机核 GCORES 用户投稿（作者梁饮，2024-08-23），基于一周目影神图收集的四段式剧情梳理（西行前/西行中/西行后/重启西行）。注意：括号外为影神图原文整理，括号内为作者个人推演，非官方文本；官方逐字文本需解包游戏 Localization。仅供本地个人学习，不对外分发。",
+    "refresh_cadence_days": 730,
+    "last_verified": "2026-09-30",
+    "license": "personal-study-only（用户投稿，未经作者授权禁止转载）",
+    "access": "curated",
+    "import_adapter": "heishenhua_plot",
+    "status": "active"
+  },
+  "xiyouji_chapters": {
+    "id": "xiyouji_chapters",
+    "name": "西游记 全 100 回分章全文（公版）",
+    "type": "reference",
+    "authority_level": 5,
+    "accuracy_notes": "明代吴承恩《西游记》世德堂本全文，按 100 回分章结构化（guoxue3000/xiyouji GitHub 分章文本）。公版书籍，可自由使用；作为《黑神话：悟空》及西游衍生创作的原著原型参照系。",
+    "refresh_cadence_days": 3650,
+    "last_verified": "2026-09-30",
+    "license": "public-domain",
+    "access": "curated",
+    "import_adapter": "xiyouji_chapters",
+    "status": "active"
   }
 }
