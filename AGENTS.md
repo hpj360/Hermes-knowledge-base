@@ -5,6 +5,19 @@
 
 ---
 
+## 仓库角色（2026-11-03 拍板，与主仓六仓归一决策一致）
+
+- **本仓只演进 kb 产品服务**（`src/hermes_kb/`：RAG / 问答 / 文档 / 实验室 / 前端 dist）。
+- **本仓内 `src/hermes/workbench/`（21 个模块的 workbench 副本）冻结为资产源**：
+  不新增能力、不修复 bug（除非证明影响 kb 产品本身）；workbench 底座的唯一演进地在
+  主仓 `hermes/`，任何本仓 workbench 改进（dag/goal/tracing 等）如需落地，一律走
+  "向主仓提需求/移植"而非本仓直改。
+- **唯一网关契约**：`GET /kb/search`（`src/hermes_kb/api/gateway.py`）——主仓
+  `workbench/server_routes/kb.py` 的 `/wb/kb/search` 代理会按该路径调用。改动此
+  契约需同步更新主仓侧代理与契约测试。
+
+---
+
 ## 会话开始检查清单（必做，3 步）
 
 ### 第 1 步：安装依赖（如未安装）
